@@ -39,6 +39,15 @@ function doGet(e) {
       response = getSheetData(ss, 'Files');
     } else if (action === 'getAnnouncements') {
       response = getSheetData(ss, 'Announcements');
+    } else if (action === 'getStudents') {
+      var sheetData = getSheetData(ss, 'Students');
+      if (sheetData.success && sheetData.data) {
+        // Remove password from response
+        for (var k = 0; k < sheetData.data.length; k++) {
+          delete sheetData.data[k]['Password'];
+        }
+      }
+      response = sheetData;
     } else {
       response = { success: false, error: 'Unknown GET action' };
     }

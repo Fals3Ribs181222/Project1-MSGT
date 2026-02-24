@@ -192,6 +192,33 @@
                     <div id="noticeStatus" class="status-msg"></div>
                 </form>
             </div>
+
+            <!-- View Students Panel -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Student List</h3>
+                    <button class="btn btn-primary" id="btnRefreshStudents"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">Refresh List</button>
+                </div>
+                <div id="studentsListStatus" class="status-msg"></div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;" id="studentsTable">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 1rem; color: var(--text-muted);">Name</th>
+                                <th style="padding: 1rem; color: var(--text-muted);">Username</th>
+                                <th style="padding: 1rem; color: var(--text-muted);">Class</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <tr>
+                                <td colspan="3" style="padding: 1rem; text-align: center; color: var(--text-muted);">
+                                    Loading students...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -280,6 +307,49 @@
                 status.className = 'status-msg status-error';
             }
         });
+
+        // Load Students List handler
+        async function loadStudents() {
+            const tbody = document.getElementById('studentsTableBody');
+            const status = document.getElementById('studentsListStatus');
+            const btnRefresh = document.getElementById('btnRefreshStudents');
+
+            if (!tbody || !status || !btnRefresh) return;
+
+            btnRefresh.disabled = true;
+            btnRefresh.textContent = 'Refreshing...';
+            status.style.display = 'none';
+            tbody.innerHTML = '<tr><td colspan="3" style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading students...</td></tr>';
+
+            const response = await api.get('getStudents');
+
+            btnRefresh.disabled = false;
+            btnRefresh.textContent = 'Refresh List';
+
+            if (response.success) {
+                if (response.data && response.data.length > 0) {
+                    tbody.innerHTML = response.data.map(student => `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1rem; color: var(--text-main); font-weight: 500;">${student.Name || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${student.Username || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${student.Class || '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="3" style="padding: 1rem; text-align: center; color: var(--text-muted);">No students found.</td></tr>';
+                }
+            } else {
+                tbody.innerHTML = '';
+                status.textContent = response.error || 'Failed to load students.';
+                status.className = 'status-msg status-error';
+                status.style.display = 'block';
+            }
+        }
+
+        document.getElementById('btnRefreshStudents').addEventListener('click', loadStudents);
+
+        // Load students on initial page load
+        loadStudents();
     </script>
 </body>
 
