@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testimonials | Mitesh Sir's Group Tutions</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=light">
+    <style>
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .testimonial-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            backdrop-filter: blur(16px);
+            transition: var(--transition);
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .testimonial-text {
+            color: var(--text-main);
+            font-size: 1.1rem;
+            font-style: italic;
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .author-info h4 {
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .author-info p {
+            margin: 0;
+            color: var(--primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-logo">Mitesh Sir's Tutions</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="testimonials.html" class="nav-link active">Testimonials</a>
+                <a href="results.html" class="nav-link">Results</a>
+                <a href="login.html" class="nav-link">Student Login</a>
+                <a href="login.html?role=teacher" class="nav-link">Teacher Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container section">
+        <div class="section-header">
+            <h1 class="section-title">Student Success Stories</h1>
+            <p>Hear from our alumni who have achieved extraordinary results in their board exams.</p>
+        </div>
+
+        <div class="testimonials-grid" id="testimonialsList">
+            <div class="empty-state" id="loadingMsg"
+                style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 3rem;">
+                Loading testimonials...
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center text-muted pt-4 pb-4">
+            <p>&copy; 2026 Mitesh Sir's Group Tutions. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const list = document.getElementById('testimonialsList');
+            const loadingMsg = document.getElementById('loadingMsg');
+
+            if (CONFIG.SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
+                loadingMsg.textContent = 'Please configure the Google Apps Script Web App URL to load testimonials.';
+                return;
+            }
+
+            const response = await api.get('getTestimonials');
+
+            if (response.success && response.data && response.data.length > 0) {
+                list.innerHTML = '';
+                response.data.forEach(item => {
+                    const card = createElement('div', 'testimonial-card');
+
+                    const text = createElement('p', 'testimonial-text', `"${item['Testimonial Text']}"`);
+                    card.appendChild(text);
+
+                    const authorDiv = createElement('div', 'testimonial-author');
+
+                    const initial = item['Student Name'] ? item['Student Name'].charAt(0) : 'S';
+                    const avatar = createElement('div', 'author-avatar', initial);
+                    authorDiv.appendChild(avatar);
+
+                    const info = createElement('div', 'author-info');
+                    info.appendChild(createElement('h4', '', item['Student Name']));
+
+                    const subsetInfo = [];
+                    if (item['Subject']) subsetInfo.push(item['Subject']);
+                    if (item['Year']) subsetInfo.push(`Batch ${item['Year']}`);
+
+                    info.appendChild(createElement('p', '', subsetInfo.join(' | ')));
+                    authorDiv.appendChild(info);
+
+                    card.appendChild(authorDiv);
+                    list.appendChild(card);
+                });
+            } else {
+                loadingMsg.textContent = response.error ? `Error: ${response.error}` : 'No testimonials found yet.';
+                if (response.error) loadingMsg.style.color = 'red';
+            }
+        });
+    </script>
+</body>
+
+</html>

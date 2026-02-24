@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard | Mitesh Sir's Group Tutions</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=light">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media(min-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .panel-header {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-header h3 {
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-surface-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .status-msg {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            display: block;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-logo">Mitesh Sir's Tutions</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="testimonials.html" class="nav-link">Testimonials</a>
+                <a href="results.html" class="nav-link">Results</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container section">
+        <div
+            style="background: linear-gradient(135deg, var(--bg-surface), var(--bg-surface-hover)); border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 2rem; border: 1px solid var(--border-color);">
+            <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Welcome, <span id="teacherName"
+                    style="color: var(--primary);">Teacher</span>!</h1>
+            <p class="text-muted">Teacher Portal - Manage study materials and announcements.</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Upload Material Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Upload Study Material</h3>
+                </div>
+
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label class="form-label">Material Title</label>
+                        <input type="text" id="fileTitle" class="form-control" required
+                            placeholder="e.g. Chapter 4 Notes">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Subject</label>
+                        <input type="text" id="fileSubject" class="form-control" required
+                            placeholder="e.g. Mathematics">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Target Class</label>
+                        <input type="text" id="fileClass" class="form-control"
+                            placeholder="e.g. 10th (Leave empty for all)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description (Optional)</label>
+                        <textarea id="fileDesc" class="form-control" rows="3"
+                            placeholder="Brief description..."></textarea>
+                    </div>
+
+                    <div class="form-group"
+                        style="padding: 1.5rem; border: 2px dashed var(--border-color); border-radius: var(--radius-md); text-align: center;">
+                        <input type="file" id="fileInput" required style="max-width: 100%;">
+                        <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">Max file size: 50MB
+                        </p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="btnUpload">Upload
+                        Material</button>
+                    <div id="uploadStatus" class="status-msg"></div>
+                </form>
+            </div>
+
+            <!-- Post Announcement Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Post Announcement</h3>
+                </div>
+
+                <form id="noticeForm">
+                    <div class="form-group">
+                        <label class="form-label">Announcement Title</label>
+                        <input type="text" id="noticeTitle" class="form-control" required
+                            placeholder="e.g. Important Notice">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Target Class</label>
+                        <input type="text" id="noticeClass" class="form-control"
+                            placeholder="e.g. 10th (Leave empty for all)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Message Content</label>
+                        <textarea id="noticeMessage" class="form-control" rows="6" required
+                            placeholder="Type your announcement here..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="btnNotice">Post
+                        Announcement</button>
+                    <div id="noticeStatus" class="status-msg"></div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center text-muted pt-4 pb-4">
+            <p>&copy; 2026 Mitesh Sir's Group Tutions. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Require teacher role
+        const user = auth.requireRole('teacher');
+        document.getElementById('teacherName').textContent = user.name;
+
+        // Upload Material handler
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnUpload');
+            const status = document.getElementById('uploadStatus');
+            const fileInput = document.getElementById('fileInput');
+
+            if (fileInput.files.length === 0) return;
+            const file = fileInput.files[0];
+
+            btn.disabled = true;
+            btn.textContent = 'Uploading...';
+            status.className = 'status-msg';
+
+            const reader = new FileReader();
+            reader.onload = async function (event) {
+                // Remove data URL prefix to get raw base64
+                const base64Data = event.target.result.split(',')[1];
+
+                const response = await api.post('uploadFile', {
+                    filename: file.name,
+                    mimeType: file.type,
+                    fileData: base64Data,
+                    title: document.getElementById('fileTitle').value,
+                    description: document.getElementById('fileDesc').value,
+                    subject: document.getElementById('fileSubject').value,
+                    class: document.getElementById('fileClass').value
+                });
+
+                btn.disabled = false;
+                btn.textContent = 'Upload Material';
+
+                if (response.success) {
+                    status.textContent = 'File uploaded successfully!';
+                    status.className = 'status-msg status-success';
+                    e.target.reset();
+                } else {
+                    status.textContent = response.error || 'Failed to upload.';
+                    status.className = 'status-msg status-error';
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Post Notice handler
+        document.getElementById('noticeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnNotice');
+            const status = document.getElementById('noticeStatus');
+
+            btn.disabled = true;
+            btn.textContent = 'Posting...';
+            status.className = 'status-msg';
+
+            const response = await api.post('addAnnouncement', {
+                title: document.getElementById('noticeTitle').value,
+                message: document.getElementById('noticeMessage').value,
+                targetClass: document.getElementById('noticeClass').value
+            });
+
+            btn.disabled = false;
+            btn.textContent = 'Post Announcement';
+
+            if (response.success) {
+                status.textContent = 'Announcement posted successfully!';
+                status.className = 'status-msg status-success';
+                e.target.reset();
+            } else {
+                status.textContent = response.error || 'Failed to post.';
+                status.className = 'status-msg status-error';
+            }
+        });
+    </script>
+</body>
+
+</html>

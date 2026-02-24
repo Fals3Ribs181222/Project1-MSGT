@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Mitesh Sir's Group Tutions</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=light">
+    <style>
+        .login-container {
+            max-width: 450px;
+            margin: 4rem auto;
+            animation: fadeUp 0.5s ease-out;
+        }
+
+        .login-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h2 {
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .role-toggle {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: var(--radius-full);
+            padding: 0.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .role-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            background: var(--bg-surface-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .error-msg {
+            color: var(--secondary);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-logo">Mitesh Sir's Tutions</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="testimonials.html" class="nav-link">Testimonials</a>
+                <a href="results.html" class="nav-link">Results</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h2>Welcome Back</h2>
+                    <p class="text-muted" id="loginSubtitle">Login to access your dashboard</p>
+                </div>
+
+                <div class="role-toggle">
+                    <div class="role-btn active" id="btnStudent" onclick="setRole('student')">Student Portal</div>
+                    <div class="role-btn" id="btnTeacher" onclick="setRole('teacher')">Teacher Portal</div>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="username" class="form-control" required
+                            placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="password" class="form-control" required placeholder="••••••••">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary login-btn" id="submitBtn">
+                        <span id="btnText">Sign In</span>
+                        <div class="loading-spinner" id="btnSpinner"></div>
+                    </button>
+
+                    <div class="error-msg" id="errorMsg"></div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentRole = 'student';
+
+        // Check query params for role
+        const urlParams = new URLSearchParams(window.location.search);
+        const roleParam = urlParams.get('role');
+        if (roleParam === 'teacher') {
+            setRole('teacher');
+        }
+
+        // If already logged in, redirect
+        const user = auth.getUser();
+        if (user) {
+            auth.redirect(user.role);
+        }
+
+        function setRole(role) {
+            currentRole = role;
+            if (role === 'student') {
+                document.getElementById('btnStudent').classList.add('active');
+                document.getElementById('btnTeacher').classList.remove('active');
+            } else {
+                document.getElementById('btnTeacher').classList.add('active');
+                document.getElementById('btnStudent').classList.remove('active');
+            }
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+
+            // Reset error
+            errorMsg.style.display = 'none';
+
+            // Show loading
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline-block';
+            submitBtn.disabled = true;
+
+            const response = await api.post('login', {
+                role: currentRole,
+                username,
+                password
+            });
+
+            // Hide loading
+            btnText.style.display = 'inline-block';
+            btnSpinner.style.display = 'none';
+            submitBtn.disabled = false;
+
+            if (response.success && response.user) {
+                response.user.role = currentRole;
+                auth.login(response.user);
+            } else {
+                errorMsg.textContent = response.error || 'Invalid credentials. Please try again.';
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

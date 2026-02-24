@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | Mitesh Sir's Group Tutions</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=light">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media(min-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-header h3 {
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-control {
+            padding: 0.5rem 1rem;
+            background: var(--bg-surface-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+        }
+
+        .material-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .material-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+
+        .material-item:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .material-info h4 {
+            margin: 0 0 0.25rem 0;
+        }
+
+        .material-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .announcement-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .announcement-item {
+            padding: 1rem;
+            background: rgba(236, 72, 153, 0.05);
+            border-left: 4px solid var(--secondary);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .announcement-item h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-main);
+        }
+
+        .announcement-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-logo">Mitesh Sir's Tutions</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="testimonials.html" class="nav-link">Testimonials</a>
+                <a href="results.html" class="nav-link">Results</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container section">
+        <div class="welcome-banner"
+            style="background: linear-gradient(135deg, var(--bg-surface), var(--bg-surface-hover)); border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 2rem; border: 1px solid var(--border-color);">
+            <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Welcome, <span id="studentName"
+                    style="color: var(--primary);">Student</span>!</h1>
+            <p class="text-muted" id="studentClassInfo">Student Portal - Access your study materials and notices.</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Study Materials Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Study Materials</h3>
+                </div>
+
+                <div class="filter-group">
+                    <select id="filterSubject" class="filter-control">
+                        <option value="">All Subjects</option>
+                    </select>
+                    <input type="text" id="searchTitle" class="filter-control" placeholder="Search title...">
+                </div>
+
+                <div class="material-list" id="materialsList">
+                    <div class="loading-text">Loading materials...</div>
+                </div>
+            </div>
+
+            <!-- Announcements Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Notice Board</h3>
+                </div>
+                <div class="announcement-list" id="announcementsList">
+                    <div class="loading-text">Loading notices...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center text-muted pt-4 pb-4">
+            <p>&copy; 2026 Mitesh Sir's Group Tutions. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Require student role
+        const user = auth.requireRole('student');
+        document.getElementById('studentName').textContent = user.name;
+        document.getElementById('studentClassInfo').textContent = `Class: ${user.studentClass || 'N/A'} | Access your study materials and notices.`;
+
+        let allFiles = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+            document.getElementById('filterSubject').addEventListener('change', renderFiles);
+            document.getElementById('searchTitle').addEventListener('input', renderFiles);
+        });
+
+        async function fetchData() {
+            if (CONFIG.SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
+                document.getElementById('materialsList').innerHTML = '<div class="loading-text" style="color:red">Setup pending: Configure Apps Script URL</div>';
+                document.getElementById('announcementsList').innerHTML = '<div class="loading-text" style="color:red">Setup pending</div>';
+                return;
+            }
+
+            // Fetch Files
+            const fileRes = await api.get('getFiles');
+            if (fileRes.success) {
+                // Filter files by student's class (or all if not specified)
+                allFiles = fileRes.data.filter(f => !f['Class'] || String(f['Class']) === String(user.studentClass));
+
+                // Populate subjects filter
+                const subjects = new Set();
+                allFiles.forEach(f => { if (f['Subject']) subjects.add(f['Subject']); });
+                const filterSubj = document.getElementById('filterSubject');
+                subjects.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = opt.textContent = s;
+                    filterSubj.appendChild(opt);
+                });
+
+                renderFiles();
+            } else {
+                document.getElementById('materialsList').innerHTML = `<div class="loading-text">Error: ${fileRes.error}</div>`;
+            }
+
+            // Fetch Announcements
+            const annRes = await api.get('getAnnouncements');
+            const annList = document.getElementById('announcementsList');
+            if (annRes.success) {
+                const arr = annRes.data.filter(a => !a['Class'] || String(a['Class']) === String(user.studentClass)).reverse();
+                annList.innerHTML = '';
+
+                if (arr.length === 0) annList.innerHTML = '<div class="loading-text">No new announcements.</div>';
+
+                arr.forEach(a => {
+                    const item = document.createElement('div');
+                    item.className = 'announcement-item';
+                    item.innerHTML = `
+                        <h4>${a['Title']}</h4>
+                        <div class="announcement-meta">${new Date(a['Date']).toLocaleDateString()}</div>
+                        <p style="color: var(--text-muted); margin:0;">${a['Message']}</p>
+                    `;
+                    annList.appendChild(item);
+                });
+            } else {
+                annList.innerHTML = `<div class="loading-text">Error: ${annRes.error}</div>`;
+            }
+        }
+
+        function renderFiles() {
+            const list = document.getElementById('materialsList');
+            const subj = document.getElementById('filterSubject').value;
+            const search = document.getElementById('searchTitle').value.toLowerCase();
+
+            const filtered = allFiles.filter(f => {
+                const matchSubj = subj === '' || f['Subject'] === subj;
+                const matchSearch = search === '' || String(f['Title']).toLowerCase().includes(search) || String(f['Description']).toLowerCase().includes(search);
+                return matchSubj && matchSearch;
+            });
+
+            list.innerHTML = '';
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="loading-text">No materials found.</div>';
+                return;
+            }
+
+            // Reverse to show newest first
+            filtered.reverse().forEach(f => {
+                const item = document.createElement('div');
+                item.className = 'material-item';
+
+                const metaDate = new Date(f['Upload Date']).toLocaleDateString() !== 'Invalid Date' ? new Date(f['Upload Date']).toLocaleDateString() : f['Upload Date'];
+
+                item.innerHTML = `
+                    <div class="material-info">
+                        <h4>${f['Title']}</h4>
+                        <div class="material-meta">
+                            <span>📘 ${f['Subject']}</span>
+                            <span>📅 ${metaDate}</span>
+                        </div>
+                        <p style="margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.9rem;">${f['Description'] || ''}</p>
+                    </div>
+                    <a href="${f['File URL']}" target="_blank" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">View / Download</a>
+                `;
+
+                list.appendChild(item);
+            });
+        }
+    </script>
+</body>
+
+</html>
