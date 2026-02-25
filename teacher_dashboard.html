@@ -205,17 +205,17 @@
 
         <div class="tabs-wrapper">
             <div class="tabs-container">
-                <button class="tab-btn active" data-tab="panel-upload">Manage Materials</button>
-                <button class="tab-btn" data-tab="panel-announcement">Announcements</button>
+                <button class="tab-btn active" data-tab="panel-students">Students</button>
+                <button class="tab-btn" data-tab="panel-upload">Materials</button>
                 <button class="tab-btn" data-tab="panel-test">Tests</button>
-                <button class="tab-btn" data-tab="panel-marks">Manage Marks</button>
-                <button class="tab-btn" data-tab="panel-students">Student List</button>
+                <button class="tab-btn" data-tab="panel-marks">Marks</button>
+                <button class="tab-btn" data-tab="panel-announcement">Announcements</button>
             </div>
         </div>
 
         <div class="panels-container">
             <!-- Upload Material Panel -->
-            <div class="panel tab-panel active" id="panel-upload">
+            <div class="panel tab-panel" id="panel-upload">
                 <div class="panel-header"
                     style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 1rem;">
                     <h3>Manage Materials</h3>
@@ -402,14 +402,14 @@
             </div>
 
             <!-- Manage Students Panel -->
-            <div class="panel tab-panel" id="panel-students">
+            <div class="panel tab-panel active" id="panel-students">
                 <div class="panel-header"
                     style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 1rem;">
                     <h3>Manage Students</h3>
                     <div style="display: flex; gap: 1rem; align-items: center;">
                         <div class="pill-toggle">
                             <button class="btn active" id="pillViewStudents">Student List</button>
-                            <button class="btn" id="pillAddStudent">+ Add Student</button>
+                            <button class="btn" id="pillAddStudent">+ Add New</button>
                         </div>
                     </div>
                 </div>
