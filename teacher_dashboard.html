@@ -216,9 +216,58 @@
         <div class="panels-container">
             <!-- Upload Material Panel -->
             <div class="panel tab-panel active" id="panel-upload">
-                <div id="uploadMaterialContainer">
-                    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">Loading component...</div>
+                <div class="panel-header">
+                    <h3>Upload Study Material</h3>
                 </div>
+
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label class="form-label">Material Title</label>
+                        <input type="text" id="fileTitle" class="form-control" required
+                            placeholder="e.g. Chapter 4 Notes">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Grade</label>
+                        <select id="fileGrade" class="form-control">
+                            <option value="">All Grades</option>
+                            <option value="11th">11th</option>
+                            <option value="12th">12th</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Subjects</label>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; color: var(--text-main);">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="fileSubjects" value="Accounts"
+                                    style="width: 1.2rem; height: 1.2rem;">
+                                Accounts
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="fileSubjects" value="Commerce"
+                                    style="width: 1.2rem; height: 1.2rem;">
+                                Commerce
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description (Optional)</label>
+                        <textarea id="fileDesc" class="form-control" rows="3"
+                            placeholder="Brief description..."></textarea>
+                    </div>
+
+                    <div class="form-group"
+                        style="padding: 1.5rem; border: 2px dashed var(--border-color); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
+                        <input type="file" id="fileInput" required style="max-width: 100%;">
+                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Max file size: 50MB</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="btnUpload">Upload
+                        Material</button>
+                    <div id="uploadStatus" class="status-msg"></div>
+                </form>
             </div>
 
             <!-- Post Announcement Panel -->
@@ -411,97 +460,52 @@
         const user = auth.requireRole('teacher');
         document.getElementById('teacherName').textContent = user.name;
 
-        // Load Upload Material Component
-        async function loadUploadMaterialComponent() {
-            try {
-                const response = await fetch('components/upload_material.html');
-                if (response.ok) {
-                    const html = await response.text();
-                    document.getElementById('uploadMaterialContainer').innerHTML = html;
-                    attachUploadMaterialListeners();
+        // Upload Material handler
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnUpload');
+            const status = document.getElementById('uploadStatus');
+            const fileInput = document.getElementById('fileInput');
+
+            if (fileInput.files.length === 0) return;
+            const file = fileInput.files[0];
+
+            btn.disabled = true;
+            btn.textContent = 'Uploading...';
+            status.className = 'status-msg';
+
+            const reader = new FileReader();
+            reader.onload = async function (event) {
+                // Remove data URL prefix to get raw base64
+                const base64Data = event.target.result.split(',')[1];
+
+                const subjectCheckboxes = document.querySelectorAll('input[name="fileSubjects"]:checked');
+                const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
+
+                const response = await api.post('uploadFile', {
+                    filename: file.name,
+                    mimeType: file.type,
+                    fileData: base64Data,
+                    title: document.getElementById('fileTitle').value,
+                    description: document.getElementById('fileDesc').value,
+                    subject: subjects,
+                    class: document.getElementById('fileGrade').value
+                });
+
+                btn.disabled = false;
+                btn.textContent = 'Upload Material';
+
+                if (response.success) {
+                    status.textContent = 'File uploaded successfully!';
+                    status.className = 'status-msg status-success';
+                    e.target.reset();
                 } else {
-                    console.error('Failed to load upload material component: HTTP Status', response.status);
+                    status.textContent = response.error || 'Failed to upload.';
+                    status.className = 'status-msg status-error';
                 }
-            } catch (err) {
-                console.error('Error loading upload material component:', err);
-            }
-        }
-
-        let uploadIncrement = 1;
-
-        function generateUploadId() {
-            const now = new Date();
-            const dd = String(now.getDate()).padStart(2, '0');
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const yy = String(now.getFullYear()).slice(-2);
-            const id = `UPL-${dd}${mm}${yy}-${String(uploadIncrement).padStart(3, '0')}`;
-            return id;
-        }
-
-        function attachUploadMaterialListeners() {
-            // Auto-fill read-only fields
-            const now = new Date();
-            const yyyy = now.getFullYear();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const dd = String(now.getDate()).padStart(2, '0');
-            document.getElementById('uploadDate').value = `${yyyy}-${mm}-${dd}`;
-            document.getElementById('uploadedBy').value = user.name;
-            document.getElementById('uploadId').value = generateUploadId();
-
-            // Upload Material handler
-            document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const btn = document.getElementById('btnUpload');
-                const status = document.getElementById('uploadStatus');
-                const fileInput = document.getElementById('fileInput');
-
-                if (fileInput.files.length === 0) return;
-                const file = fileInput.files[0];
-
-                btn.disabled = true;
-                btn.textContent = 'Uploading...';
-                status.className = 'status-msg';
-
-                const reader = new FileReader();
-                reader.onload = async function (event) {
-                    const base64Data = event.target.result.split(',')[1];
-
-                    const subjectCheckboxes = document.querySelectorAll('input[name="fileSubjects"]:checked');
-                    const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
-
-                    const response = await api.post('uploadFile', {
-                        uploadId: document.getElementById('uploadId').value,
-                        filename: file.name,
-                        mimeType: file.type,
-                        fileData: base64Data,
-                        title: document.getElementById('fileTitle').value,
-                        subject: subjects,
-                        class: document.getElementById('fileClass').value,
-                        uploadDate: document.getElementById('uploadDate').value,
-                        uploadedBy: document.getElementById('uploadedBy').value
-                    });
-
-                    btn.disabled = false;
-                    btn.textContent = 'Upload Material';
-
-                    if (response.success) {
-                        status.textContent = 'File uploaded successfully!';
-                        status.className = 'status-msg status-success';
-                        e.target.reset();
-                        // Increment and regenerate Upload ID for next upload
-                        uploadIncrement++;
-                        document.getElementById('uploadId').value = generateUploadId();
-                        // Re-fill auto fields after form reset
-                        document.getElementById('uploadDate').value = `${yyyy}-${mm}-${dd}`;
-                        document.getElementById('uploadedBy').value = user.name;
-                    } else {
-                        status.textContent = response.error || 'Failed to upload.';
-                        status.className = 'status-msg status-error';
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-        }
+            };
+            reader.readAsDataURL(file);
+        });
 
         // Post Notice handler
         document.getElementById('noticeForm').addEventListener('submit', async (e) => {
@@ -883,7 +887,6 @@
         loadStudents();
         loadTests();
         loadAddStudentComponent();
-        loadUploadMaterialComponent();
 
         // Tab Switching Logic
         document.querySelectorAll('.tab-btn').forEach(button => {
