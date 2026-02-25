@@ -1,0 +1,48 @@
+<div class="panel-header">
+    <h3>Schedule New Test</h3>
+</div>
+
+<form id="testForm">
+    <div class="form-group">
+        <label class="form-label">Test Title</label>
+        <input type="text" id="testTitle" class="form-control" required placeholder="e.g. Midterm Exam">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Grade</label>
+        <select id="testGrade" class="form-control" required>
+            <option value="">-- Select Grade --</option>
+            <option value="11th">11th</option>
+            <option value="12th">12th</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Subjects</label>
+        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; color: var(--text-main);">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="testSubjects" value="Accounts" style="width: 1.2rem; height: 1.2rem;">
+                Accounts
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="testSubjects" value="Commerce" style="width: 1.2rem; height: 1.2rem;">
+                Commerce
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group" style="display: flex; gap: 1rem;">
+        <div style="flex: 1;">
+            <label class="form-label">Date</label>
+            <input type="date" id="testDate" class="form-control" required>
+        </div>
+        <div style="flex: 1;">
+            <label class="form-label">Max Marks</label>
+            <input type="number" id="testMaxMarks" class="form-control" required min="1">
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="btnScheduleTest">Schedule
+        Test</button>
+    <div id="testStatus" class="status-msg"></div>
+</form>

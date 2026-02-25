@@ -234,7 +234,7 @@
             const fileRes = await api.get('getFiles');
             if (fileRes.success) {
                 // Filter files by student's class (or all if not specified)
-                allFiles = fileRes.data.filter(f => !f['Class'] || String(f['Class']) === String(user.studentClass));
+                allFiles = fileRes.data.filter(f => !f['Grade'] || String(f['Grade']) === String(user.studentClass));
 
                 // Populate subjects filter
                 const subjects = new Set();
@@ -255,7 +255,7 @@
             const annRes = await api.get('getAnnouncements');
             const annList = document.getElementById('announcementsList');
             if (annRes.success) {
-                const arr = annRes.data.filter(a => !a['Class'] || String(a['Class']) === String(user.studentClass)).reverse();
+                const arr = annRes.data.filter(a => !a['Grade'] || String(a['Grade']) === String(user.studentClass)).reverse();
                 annList.innerHTML = '';
 
                 if (arr.length === 0) annList.innerHTML = '<div class="loading-text">No new announcements.</div>';
@@ -286,7 +286,7 @@
                 const marks = marksRes.data || [];
 
                 // Filter tests for this student's class
-                const myTests = tests.filter(t => !t['Class'] || String(t['Class']) === String(user.studentClass)).reverse(); // Newest first
+                const myTests = tests.filter(t => !t['Grade'] || String(t['Grade']) === String(user.studentClass)).reverse(); // Newest first
 
                 // Map marks for easy lookup by testId
                 const myMarks = {};
@@ -327,7 +327,7 @@
 
             const filtered = allFiles.filter(f => {
                 const matchSubj = subj === '' || f['Subject'] === subj;
-                const matchSearch = search === '' || String(f['Title']).toLowerCase().includes(search) || String(f['Description']).toLowerCase().includes(search);
+                const matchSearch = search === '' || String(f['Title']).toLowerCase().includes(search);
                 return matchSubj && matchSearch;
             });
 
@@ -352,7 +352,7 @@
                             <span>📘 ${f['Subject']}</span>
                             <span>📅 ${metaDate}</span>
                         </div>
-                        <p style="margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.9rem;">${f['Description'] || ''}</p>
+
                     </div>
                     <a href="${f['File URL']}" target="_blank" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">View / Download</a>
                 `;

@@ -205,9 +205,9 @@
 
         <div class="tabs-wrapper">
             <div class="tabs-container">
-                <button class="tab-btn active" data-tab="panel-upload">Upload Study Material</button>
-                <button class="tab-btn" data-tab="panel-announcement">Post Announcement</button>
-                <button class="tab-btn" data-tab="panel-test">Schedule Test</button>
+                <button class="tab-btn active" data-tab="panel-upload">Manage Materials</button>
+                <button class="tab-btn" data-tab="panel-announcement">Announcements</button>
+                <button class="tab-btn" data-tab="panel-test">Tests</button>
                 <button class="tab-btn" data-tab="panel-marks">Manage Marks</button>
                 <button class="tab-btn" data-tab="panel-students">Student List</button>
             </div>
@@ -216,147 +216,151 @@
         <div class="panels-container">
             <!-- Upload Material Panel -->
             <div class="panel tab-panel active" id="panel-upload">
-                <div class="panel-header">
-                    <h3>Upload Study Material</h3>
-                </div>
-
-                <form id="uploadForm">
-                    <div class="form-group">
-                        <label class="form-label">Material Title</label>
-                        <input type="text" id="fileTitle" class="form-control" required
-                            placeholder="e.g. Chapter 4 Notes">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Grade</label>
-                        <select id="fileGrade" class="form-control">
-                            <option value="">All Grades</option>
-                            <option value="11th">11th</option>
-                            <option value="12th">12th</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Subjects</label>
-                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; color: var(--text-main);">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="checkbox" name="fileSubjects" value="Accounts"
-                                    style="width: 1.2rem; height: 1.2rem;">
-                                Accounts
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="checkbox" name="fileSubjects" value="Commerce"
-                                    style="width: 1.2rem; height: 1.2rem;">
-                                Commerce
-                            </label>
+                <div class="panel-header"
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 1rem;">
+                    <h3>Manage Materials</h3>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="pill-toggle">
+                            <button class="btn active" id="pillViewMaterials">Materials List</button>
+                            <button class="btn" id="pillAddUpload">+ Upload New</button>
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Description (Optional)</label>
-                        <textarea id="fileDesc" class="form-control" rows="3"
-                            placeholder="Brief description..."></textarea>
+                <!-- Materials List Container (default view) -->
+                <div id="materialsListContainer">
+                    <div id="materialsListStatus" class="status-msg"></div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;" id="materialsTable">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 1rem; color: var(--text-muted);">Title</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Subject</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Grade</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Date</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Uploaded By</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Link</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materialsTableBody">
+                                <tr>
+                                    <td colspan="6"
+                                        style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading
+                                        materials...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="form-group"
-                        style="padding: 1.5rem; border: 2px dashed var(--border-color); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
-                        <input type="file" id="fileInput" required style="max-width: 100%;">
-                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Max file size: 50MB</p>
+                    <div style="text-align: right; margin-top: 1.5rem;">
+                        <button class="btn btn-primary" id="btnRefreshMaterials"
+                            style="padding: 0.5rem 1rem; font-size: 0.9rem;">Refresh List</button>
                     </div>
+                </div>
 
-                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="btnUpload">Upload
-                        Material</button>
-                    <div id="uploadStatus" class="status-msg"></div>
-                </form>
+                <!-- Upload Form Container (loaded via fetch) -->
+                <div id="addUploadContainer"
+                    style="display: none; border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
+                    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">Loading component...</div>
+                </div>
             </div>
 
-            <!-- Post Announcement Panel -->
+            <!-- Announcements Panel -->
             <div class="panel tab-panel" id="panel-announcement">
-                <div class="panel-header">
-                    <h3>Post Announcement</h3>
+                <div class="panel-header"
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 1rem;">
+                    <h3>Manage Announcements</h3>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="pill-toggle">
+                            <button class="btn active" id="pillViewAnnouncements">Announcements List</button>
+                            <button class="btn" id="pillAddAnnouncement">+ Post New</button>
+                        </div>
+                    </div>
                 </div>
 
-                <form id="noticeForm">
-                    <div class="form-group">
-                        <label class="form-label">Announcement Title</label>
-                        <input type="text" id="noticeTitle" class="form-control" required
-                            placeholder="e.g. Important Notice">
+                <!-- Announcements List Container (default view) -->
+                <div id="announcementsListContainer">
+                    <div id="announcementsListStatus" class="status-msg"></div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;"
+                            id="announcementsTable">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 1rem; color: var(--text-muted);">Title</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Grade</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Date</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Posted By</th>
+                                </tr>
+                            </thead>
+                            <tbody id="announcementsTableBody">
+                                <tr>
+                                    <td colspan="4"
+                                        style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading
+                                        announcements...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Grade</label>
-                        <select id="noticeGrade" class="form-control">
-                            <option value="">All Grades</option>
-                            <option value="11th">11th</option>
-                            <option value="12th">12th</option>
-                        </select>
+                    <div style="text-align: right; margin-top: 1.5rem;">
+                        <button class="btn btn-primary" id="btnRefreshAnnouncements"
+                            style="padding: 0.5rem 1rem; font-size: 0.9rem;">Refresh List</button>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Message Content</label>
-                        <textarea id="noticeMessage" class="form-control" rows="6" required
-                            placeholder="Type your announcement here..."></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="btnNotice">Post
-                        Announcement</button>
-                    <div id="noticeStatus" class="status-msg"></div>
-                </form>
+                <!-- Post Announcement Form Container (loaded via fetch) -->
+                <div id="addAnnouncementContainer"
+                    style="display: none; border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
+                    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">Loading component...</div>
+                </div>
             </div>
 
-            <!-- Schedule Test Panel -->
+            <!-- Tests Panel -->
             <div class="panel tab-panel" id="panel-test">
-                <div class="panel-header">
-                    <h3>Schedule Test</h3>
+                <div class="panel-header"
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 1rem;">
+                    <h3>Manage Tests</h3>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="pill-toggle">
+                            <button class="btn active" id="pillViewTests">Tests List</button>
+                            <button class="btn" id="pillAddTest">+ Schedule New</button>
+                        </div>
+                    </div>
                 </div>
 
-                <form id="testForm">
-                    <div class="form-group">
-                        <label class="form-label">Test Title</label>
-                        <input type="text" id="testTitle" class="form-control" required
-                            placeholder="e.g. Midterm Physics Exam">
+                <!-- Tests List Container (default view) -->
+                <div id="testsListContainer">
+                    <div id="testsListStatus" class="status-msg"></div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;" id="testsListTable">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 1rem; color: var(--text-muted);">Title</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Subject</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Grade</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Date</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Max Marks</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Scheduled By</th>
+                                </tr>
+                            </thead>
+                            <tbody id="testsListTableBody">
+                                <tr>
+                                    <td colspan="6"
+                                        style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading
+                                        tests...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Grade</label>
-                        <select id="testGrade" class="form-control" required>
-                            <option value="">-- Select Grade --</option>
-                            <option value="11th">11th</option>
-                            <option value="12th">12th</option>
-                        </select>
+                    <div style="text-align: right; margin-top: 1.5rem;">
+                        <button class="btn btn-primary" id="btnRefreshTestsList"
+                            style="padding: 0.5rem 1rem; font-size: 0.9rem;">Refresh List</button>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Subjects</label>
-                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; color: var(--text-main);">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="checkbox" name="testSubjects" value="Accounts"
-                                    style="width: 1.2rem; height: 1.2rem;">
-                                Accounts
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="checkbox" name="testSubjects" value="Commerce"
-                                    style="width: 1.2rem; height: 1.2rem;">
-                                Commerce
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group" style="display: flex; gap: 1rem;">
-                        <div style="flex: 1;">
-                            <label class="form-label">Date</label>
-                            <input type="date" id="testDate" class="form-control" required>
-                        </div>
-                        <div style="flex: 1;">
-                            <label class="form-label">Max Marks</label>
-                            <input type="number" id="testMaxMarks" class="form-control" required min="1">
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="btnScheduleTest">Schedule
-                        Test</button>
-                    <div id="testStatus" class="status-msg"></div>
-                </form>
+                <!-- Schedule Test Form Container (loaded via fetch) -->
+                <div id="addTestContainer"
+                    style="display: none; border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
+                    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">Loading component...</div>
+                </div>
             </div>
 
             <!-- Manage Marks Panel -->
@@ -460,116 +464,374 @@
         const user = auth.requireRole('teacher');
         document.getElementById('teacherName').textContent = user.name;
 
-        // Upload Material handler
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnUpload');
-            const status = document.getElementById('uploadStatus');
-            const fileInput = document.getElementById('fileInput');
+        // Load Materials List handler
+        async function loadMaterials() {
+            const tbody = document.getElementById('materialsTableBody');
+            const status = document.getElementById('materialsListStatus');
+            const btnRefresh = document.getElementById('btnRefreshMaterials');
 
-            if (fileInput.files.length === 0) return;
-            const file = fileInput.files[0];
+            if (!tbody || !status || !btnRefresh) return;
 
-            btn.disabled = true;
-            btn.textContent = 'Uploading...';
-            status.className = 'status-msg';
+            btnRefresh.disabled = true;
+            btnRefresh.textContent = 'Refreshing...';
+            status.style.display = 'none';
+            tbody.innerHTML = '<tr><td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading materials...</td></tr>';
 
-            const reader = new FileReader();
-            reader.onload = async function (event) {
-                // Remove data URL prefix to get raw base64
-                const base64Data = event.target.result.split(',')[1];
+            const response = await api.get('getFiles');
 
-                const subjectCheckboxes = document.querySelectorAll('input[name="fileSubjects"]:checked');
-                const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
+            btnRefresh.disabled = false;
+            btnRefresh.textContent = 'Refresh List';
 
-                const response = await api.post('uploadFile', {
-                    filename: file.name,
-                    mimeType: file.type,
-                    fileData: base64Data,
-                    title: document.getElementById('fileTitle').value,
-                    description: document.getElementById('fileDesc').value,
-                    subject: subjects,
-                    class: document.getElementById('fileGrade').value
+            if (response.success) {
+                if (response.data && response.data.length > 0) {
+                    tbody.innerHTML = response.data.map(file => `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1rem; color: var(--text-main); font-weight: 500;">${file['Title'] || file.title || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${file['Subject'] || file.subject || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${file['Grade'] || file.grade || 'All'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${file['Upload Date'] || file.uploadDate || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${file['Uploaded By'] || file.uploadedBy || '-'}</td>
+                            <td style="padding: 1rem;"><a href="${file['File URL'] || file.fileUrl || '#'}" target="_blank" style="color: var(--primary); text-decoration: underline;">View</a></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-muted);">No materials uploaded yet.</td></tr>';
+                }
+            } else {
+                tbody.innerHTML = '';
+                status.textContent = response.error || 'Failed to load materials.';
+                status.className = 'status-msg status-error';
+                status.style.display = 'block';
+            }
+        }
+
+        document.getElementById('btnRefreshMaterials').addEventListener('click', loadMaterials);
+
+        // Pill Toggle Logic for Upload Tab
+        const pillViewMaterials = document.getElementById('pillViewMaterials');
+        const pillAddUpload = document.getElementById('pillAddUpload');
+        const materialsListContainer = document.getElementById('materialsListContainer');
+        const addUploadContainer = document.getElementById('addUploadContainer');
+        const btnRefreshMaterials = document.getElementById('btnRefreshMaterials');
+
+        pillViewMaterials.addEventListener('click', () => {
+            pillViewMaterials.classList.add('active');
+            pillAddUpload.classList.remove('active');
+            materialsListContainer.style.display = 'block';
+            addUploadContainer.style.display = 'none';
+            btnRefreshMaterials.style.display = 'inline-block';
+        });
+
+        pillAddUpload.addEventListener('click', () => {
+            pillAddUpload.classList.add('active');
+            pillViewMaterials.classList.remove('active');
+            addUploadContainer.style.display = 'block';
+            materialsListContainer.style.display = 'none';
+            btnRefreshMaterials.style.display = 'none';
+        });
+
+        // Load Upload Component
+        async function loadUploadComponent() {
+            try {
+                const response = await fetch('components/add_upload.html');
+                if (response.ok) {
+                    const html = await response.text();
+                    document.getElementById('addUploadContainer').innerHTML = html;
+                    attachUploadListeners();
+                } else {
+                    console.error('Failed to load upload component: HTTP Status', response.status);
+                }
+            } catch (err) {
+                console.error('Error loading upload component:', err);
+            }
+        }
+
+        function attachUploadListeners() {
+            const form = document.getElementById('uploadForm');
+            if (!form) return;
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnUpload');
+                const status = document.getElementById('uploadStatus');
+                const fileInput = document.getElementById('fileInput');
+
+                if (fileInput.files.length === 0) return;
+                const file = fileInput.files[0];
+
+                btn.disabled = true;
+                btn.textContent = 'Uploading...';
+                status.className = 'status-msg';
+
+                const reader = new FileReader();
+                reader.onload = async function (event) {
+                    const base64Data = event.target.result.split(',')[1];
+
+                    const subjectCheckboxes = document.querySelectorAll('input[name="fileSubjects"]:checked');
+                    const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
+
+                    const response = await api.post('uploadFile', {
+                        filename: file.name,
+                        mimeType: file.type,
+                        fileData: base64Data,
+                        title: document.getElementById('fileTitle').value,
+                        subject: subjects,
+                        grade: document.getElementById('fileGrade').value,
+                        uploadedBy: user.name
+                    });
+
+                    btn.disabled = false;
+                    btn.textContent = 'Upload Material';
+
+                    if (response.success) {
+                        status.textContent = 'File uploaded successfully!';
+                        status.className = 'status-msg status-success';
+                        e.target.reset();
+                        if (typeof loadMaterials === 'function') loadMaterials();
+                    } else {
+                        status.textContent = response.error || 'Failed to upload.';
+                        status.className = 'status-msg status-error';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ====== ANNOUNCEMENTS: List + Component ======
+        async function loadAnnouncements() {
+            const tbody = document.getElementById('announcementsTableBody');
+            const status = document.getElementById('announcementsListStatus');
+            const btnRefresh = document.getElementById('btnRefreshAnnouncements');
+
+            if (!tbody || !status || !btnRefresh) return;
+
+            btnRefresh.disabled = true;
+            btnRefresh.textContent = 'Refreshing...';
+            status.style.display = 'none';
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading announcements...</td></tr>';
+
+            const response = await api.get('getAnnouncements');
+
+            btnRefresh.disabled = false;
+            btnRefresh.textContent = 'Refresh List';
+
+            if (response.success) {
+                if (response.data && response.data.length > 0) {
+                    tbody.innerHTML = response.data.reverse().map(ann => `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1rem; color: var(--text-main); font-weight: 500;">${ann['Title'] || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${ann['Grade'] || 'All'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${ann['Date'] || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${ann['Posted By'] || '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="padding: 1rem; text-align: center; color: var(--text-muted);">No announcements posted yet.</td></tr>';
+                }
+            } else {
+                tbody.innerHTML = '';
+                status.textContent = response.error || 'Failed to load announcements.';
+                status.className = 'status-msg status-error';
+                status.style.display = 'block';
+            }
+        }
+
+        document.getElementById('btnRefreshAnnouncements').addEventListener('click', loadAnnouncements);
+
+        // Pill Toggle for Announcements
+        const pillViewAnn = document.getElementById('pillViewAnnouncements');
+        const pillAddAnn = document.getElementById('pillAddAnnouncement');
+        const annListContainer = document.getElementById('announcementsListContainer');
+        const addAnnContainer = document.getElementById('addAnnouncementContainer');
+        const btnRefreshAnn = document.getElementById('btnRefreshAnnouncements');
+
+        pillViewAnn.addEventListener('click', () => {
+            pillViewAnn.classList.add('active');
+            pillAddAnn.classList.remove('active');
+            annListContainer.style.display = 'block';
+            addAnnContainer.style.display = 'none';
+            btnRefreshAnn.style.display = 'inline-block';
+        });
+
+        pillAddAnn.addEventListener('click', () => {
+            pillAddAnn.classList.add('active');
+            pillViewAnn.classList.remove('active');
+            addAnnContainer.style.display = 'block';
+            annListContainer.style.display = 'none';
+            btnRefreshAnn.style.display = 'none';
+        });
+
+        async function loadAnnouncementComponent() {
+            try {
+                const response = await fetch('components/add_announcement.html');
+                if (response.ok) {
+                    const html = await response.text();
+                    document.getElementById('addAnnouncementContainer').innerHTML = html;
+                    attachAnnouncementListeners();
+                } else {
+                    console.error('Failed to load announcement component: HTTP Status', response.status);
+                }
+            } catch (err) {
+                console.error('Error loading announcement component:', err);
+            }
+        }
+
+        function attachAnnouncementListeners() {
+            const form = document.getElementById('noticeForm');
+            if (!form) return;
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnNotice');
+                const status = document.getElementById('noticeStatus');
+
+                btn.disabled = true;
+                btn.textContent = 'Posting...';
+                status.className = 'status-msg';
+
+                const response = await api.post('addAnnouncement', {
+                    title: document.getElementById('noticeTitle').value,
+                    message: document.getElementById('noticeMessage').value,
+                    grade: document.getElementById('noticeGrade').value,
+                    postedBy: user.name
                 });
 
                 btn.disabled = false;
-                btn.textContent = 'Upload Material';
+                btn.textContent = 'Post Announcement';
 
                 if (response.success) {
-                    status.textContent = 'File uploaded successfully!';
+                    status.textContent = 'Announcement posted successfully!';
                     status.className = 'status-msg status-success';
                     e.target.reset();
+                    if (typeof loadAnnouncements === 'function') loadAnnouncements();
                 } else {
-                    status.textContent = response.error || 'Failed to upload.';
+                    status.textContent = response.error || 'Failed to post.';
                     status.className = 'status-msg status-error';
                 }
-            };
-            reader.readAsDataURL(file);
-        });
-
-        // Post Notice handler
-        document.getElementById('noticeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnNotice');
-            const status = document.getElementById('noticeStatus');
-
-            btn.disabled = true;
-            btn.textContent = 'Posting...';
-            status.className = 'status-msg';
-
-            const response = await api.post('addAnnouncement', {
-                title: document.getElementById('noticeTitle').value,
-                message: document.getElementById('noticeMessage').value,
-                targetClass: document.getElementById('noticeGrade').value
             });
+        }
 
-            btn.disabled = false;
-            btn.textContent = 'Post Announcement';
+        // ====== TESTS: List + Component ======
+        async function loadTestsList() {
+            const tbody = document.getElementById('testsListTableBody');
+            const status = document.getElementById('testsListStatus');
+            const btnRefresh = document.getElementById('btnRefreshTestsList');
+
+            if (!tbody || !status || !btnRefresh) return;
+
+            btnRefresh.disabled = true;
+            btnRefresh.textContent = 'Refreshing...';
+            status.style.display = 'none';
+            tbody.innerHTML = '<tr><td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading tests...</td></tr>';
+
+            const response = await api.get('getTests');
+
+            btnRefresh.disabled = false;
+            btnRefresh.textContent = 'Refresh List';
 
             if (response.success) {
-                status.textContent = 'Announcement posted successfully!';
-                status.className = 'status-msg status-success';
-                e.target.reset();
+                if (response.data && response.data.length > 0) {
+                    tbody.innerHTML = response.data.reverse().map(test => `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1rem; color: var(--text-main); font-weight: 500;">${test['Title'] || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${test['Subject'] || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${test['Grade'] || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${test['Date'] || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${test['Max Marks'] || '-'}</td>
+                            <td style="padding: 1rem; color: var(--text-muted);">${test['Scheduled By'] || '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-muted);">No tests scheduled yet.</td></tr>';
+                }
             } else {
-                status.textContent = response.error || 'Failed to post.';
+                tbody.innerHTML = '';
+                status.textContent = response.error || 'Failed to load tests.';
                 status.className = 'status-msg status-error';
+                status.style.display = 'block';
             }
+        }
+
+        document.getElementById('btnRefreshTestsList').addEventListener('click', loadTestsList);
+
+        // Pill Toggle for Tests
+        const pillViewTests = document.getElementById('pillViewTests');
+        const pillAddTest = document.getElementById('pillAddTest');
+        const testsListContainer = document.getElementById('testsListContainer');
+        const addTestContainer = document.getElementById('addTestContainer');
+        const btnRefreshTestsList = document.getElementById('btnRefreshTestsList');
+
+        pillViewTests.addEventListener('click', () => {
+            pillViewTests.classList.add('active');
+            pillAddTest.classList.remove('active');
+            testsListContainer.style.display = 'block';
+            addTestContainer.style.display = 'none';
+            btnRefreshTestsList.style.display = 'inline-block';
         });
 
-        // Post Schedule Test handler
-        document.getElementById('testForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnScheduleTest');
-            const status = document.getElementById('testStatus');
+        pillAddTest.addEventListener('click', () => {
+            pillAddTest.classList.add('active');
+            pillViewTests.classList.remove('active');
+            addTestContainer.style.display = 'block';
+            testsListContainer.style.display = 'none';
+            btnRefreshTestsList.style.display = 'none';
+        });
 
-            btn.disabled = true;
-            btn.textContent = 'Scheduling...';
-            status.className = 'status-msg';
+        async function loadTestComponent() {
+            try {
+                const response = await fetch('components/add_test.html');
+                if (response.ok) {
+                    const html = await response.text();
+                    document.getElementById('addTestContainer').innerHTML = html;
+                    attachTestListeners();
+                } else {
+                    console.error('Failed to load test component: HTTP Status', response.status);
+                }
+            } catch (err) {
+                console.error('Error loading test component:', err);
+            }
+        }
 
-            const subjectCheckboxes = document.querySelectorAll('input[name="testSubjects"]:checked');
-            const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
+        function attachTestListeners() {
+            const form = document.getElementById('testForm');
+            if (!form) return;
 
-            const response = await api.post('scheduleTest', {
-                title: document.getElementById('testTitle').value,
-                subject: subjects,
-                targetClass: document.getElementById('testGrade').value,
-                date: document.getElementById('testDate').value,
-                maxMarks: document.getElementById('testMaxMarks').value
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnScheduleTest');
+                const status = document.getElementById('testStatus');
+
+                btn.disabled = true;
+                btn.textContent = 'Scheduling...';
+                status.className = 'status-msg';
+
+                const subjectCheckboxes = document.querySelectorAll('input[name="testSubjects"]:checked');
+                const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
+
+                const response = await api.post('scheduleTest', {
+                    title: document.getElementById('testTitle').value,
+                    subject: subjects,
+                    grade: document.getElementById('testGrade').value,
+                    date: document.getElementById('testDate').value,
+                    maxMarks: document.getElementById('testMaxMarks').value,
+                    scheduledBy: user.name
+                });
+
+                btn.disabled = false;
+                btn.textContent = 'Schedule Test';
+
+                if (response.success) {
+                    status.textContent = 'Test scheduled successfully!';
+                    status.className = 'status-msg status-success';
+                    e.target.reset();
+                    loadTests(); // Refresh marks dropdown
+                    if (typeof loadTestsList === 'function') loadTestsList();
+                } else {
+                    status.textContent = response.error || 'Failed to schedule.';
+                    status.className = 'status-msg status-error';
+                }
             });
-
-            btn.disabled = false;
-            btn.textContent = 'Schedule Test';
-
-            if (response.success) {
-                status.textContent = 'Test scheduled successfully!';
-                status.className = 'status-msg status-success';
-                e.target.reset();
-                loadTests(); // Refresh dropdown
-            } else {
-                status.textContent = response.error || 'Failed to schedule.';
-                status.className = 'status-msg status-error';
-            }
-        });
+        }
 
         let currentTests = [];
         let allStudents = [];
@@ -596,7 +858,7 @@
                 currentTests.forEach(test => {
                     const opt = document.createElement('option');
                     opt.value = test['Test ID'];
-                    opt.textContent = `[${test['Class']}] ${test['Title']} - ${test['Subject']} (${test['Date']})`;
+                    opt.textContent = `[${test['Grade']}] ${test['Title']} - ${test['Subject']} (${test['Date']})`;
                     selectTest.appendChild(opt);
                 });
             }
@@ -629,8 +891,8 @@
 
             if (studentsRes.success) allStudents = studentsRes.data;
 
-            const targetClass = String(test['Class']);
-            const studentsInClass = allStudents.filter(s => String(s['Class']) === targetClass);
+            const targetClass = String(test['Grade']);
+            const studentsInClass = allStudents.filter(s => String(s['Grade']) === targetClass || String(s['Class']) === targetClass);
 
             const testMarks = marksRes.success ? (marksRes.data || []).filter(m => m['Test ID'] === testId) : [];
             const marksMap = {};
@@ -883,10 +1145,16 @@
             });
         }
 
-        // Load students on initial page load
+        // Load all data on initial page load
         loadStudents();
         loadTests();
         loadAddStudentComponent();
+        loadMaterials();
+        loadUploadComponent();
+        loadAnnouncements();
+        loadAnnouncementComponent();
+        loadTestsList();
+        loadTestComponent();
 
         // Tab Switching Logic
         document.querySelectorAll('.tab-btn').forEach(button => {

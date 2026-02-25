@@ -1,0 +1,110 @@
+# Project Overview — Mitesh Sir's Group Tuitions
+
+A full-stack **tuition management web application** for ISC Accountancy & Commerce coaching. It uses a **static HTML/CSS/JS frontend** connected to a **Google Apps Script + Google Sheets backend**.
+
+---
+
+## Architecture
+
+```mermaid
+graph LR
+    subgraph Frontend
+        A[index.html] --> B[login.html]
+        B --> C[teacher_dashboard.html]
+        B --> D[student_dashboard.html]
+        A --> E[results.html]
+        A --> F[testimonials.html]
+    end
+    subgraph Shared JS
+        G[js/config.js] --> H[js/app.js]
+    end
+    subgraph Backend
+        I["Google Apps Script (Code.gs)"]
+        J[Google Sheets DB]
+        K[Google Drive Storage]
+    end
+    H -- "fetch API" --> I
+    I --> J
+    I --> K
+```
+
+## File Structure
+
+| Path | Purpose | Lines |
+|---|---|---|
+| [index.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/index.html) | Landing page — hero, stats, footer | 106 |
+| [login.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/login.html) | Student/Teacher login with role toggle | 245 |
+| [teacher_dashboard.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/teacher_dashboard.html) | Teacher panel — upload, announce, schedule, marks, students | 905 |
+| [student_dashboard.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/student_dashboard.html) | Student panel — materials, announcements, marks | 366 |
+| [results.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/results.html) | Public results page with filters | 272 |
+| [testimonials.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/testimonials.html) | Public testimonials page | 162 |
+| [css/styles.css](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/css/styles.css) | Global design system — warm-toned, glassmorphism | 341 |
+| [js/config.js](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/js/config.js) | Google Apps Script Web App URL | 6 |
+| [js/app.js](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/js/app.js) | Core API wrapper, auth, nav, utilities | 127 |
+| [components/add_student.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/components/add_student.html) | Reusable "Add Student" form (loaded into dashboard) | 61 |
+| [backend/Code.gs](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/backend/Code.gs) | Google Apps Script — all server-side logic | 238 |
+| [backend/SETUP_INSTRUCTIONS.md](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/backend/SETUP_INSTRUCTIONS.md) | How to set up the Google Sheets + Drive backend | 51 |
+
+---
+
+## Design System
+
+- **Font**: Outfit (headings) + Inter (body), via Google Fonts
+- **Color palette**: Warm cream base (`#EADDCA`), steel-blue primary (`#7393B3`), sage-green secondary (`#8A9A5B`)
+- **UI style**: Glassmorphism panels with `backdrop-filter: blur(16px)`, soft shadows, warm tones
+- **Animations**: `fadeUp` keyframe, hover lifts (`translateY(-5px)`)
+
+---
+
+## Key Features
+
+### Public Pages
+- **Landing** ([index.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/index.html)) — Hero section, stats (10+ years, 100% passing, 5k+ students, 50+ toppers)
+- **Results** ([results.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/results.html)) — Filterable table of student results (by subject, year, name search)
+- **Testimonials** ([testimonials.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/testimonials.html)) — Student success stories loaded from Google Sheets
+
+### Authentication ([login.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/login.html))
+- Role toggle (Student / Teacher) with URL param support (`?role=teacher`)
+- Credentials validated against Google Sheets (Students/Teachers tabs)
+- `localStorage`-based session via `auth` module in [app.js](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/js/app.js)
+
+### Teacher Dashboard ([teacher_dashboard.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/teacher_dashboard.html)) — 5 Tabs
+1. **Upload Material** — File upload to Google Drive with title, grade, subjects (Accounts/Commerce)
+2. **Post Announcement** — Announcements targeted by grade
+3. **Schedule Test** — Create tests with subject, grade, max marks
+4. **Manage Marks** — Select test → enter marks per student
+5. **Student List** — View all students + "Add Student" form with auto-generated IDs (`STU-YYYY-NNN`)
+
+### Student Dashboard ([student_dashboard.html](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/student_dashboard.html))
+- **Study Materials** — Filterable by subject, searchable by title
+- **Announcements** — Latest notices
+- **Tests & Marks** — Table of test results
+
+---
+
+## Backend (Google Apps Script)
+
+All data lives in a **single Google Sheets** spreadsheet with these tabs:
+
+| Sheet Tab | Columns |
+|---|---|
+| Teachers | Username, Password, Name, Role |
+| Students | Student ID, Name, Role, Username, Password, Grade, Subjects |
+| Files | File ID, Title, Description, Subject, Class, Upload Date, File URL |
+| Results | Student Name, Class, Subject, Score, Rank, File Link |
+| Testimonials | ID, Student Name, Year, Subject, Testimonial Text, Photo URL |
+| Announcements | Date, Title, Message, Class |
+| Tests | Test ID, Date, Title, Subject, Class, Max Marks |
+| Marks | Test ID, Student Username, Marks |
+
+**API Endpoints** (via [doGet](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/backend/Code.gs#34-65) / [doPost](file:///c:/Users/ADMIN/Downloads/Software/AG%20Project%202/backend/Code.gs#8-33)):
+- `GET`: getResults, getTestimonials, getFiles, getAnnouncements, getTests, getMarks, getStudents
+- `POST`: login, uploadFile, addAnnouncement, scheduleTest, enterMarks, addStudent
+
+File uploads go to a configured **Google Drive folder** and are linked in the spreadsheet.
+
+---
+
+## Skills & Workflows
+
+The `.agent/` directory contains 6 custom skills: `brainstorming-ideas`, `committing-changes`, `creating-skills`, `creating-walkthroughs`, `planning-projects`, and `pushing-code`.
