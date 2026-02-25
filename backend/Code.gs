@@ -110,7 +110,7 @@ function handleFileUpload(data) {
   }
   
   var fileName = data.fileName || data.filename || 'uploaded_file';
-  var studentClass = data.studentClass || data.class || '';
+  var grade = data.grade || data.class || '';
   
   var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), data.mimeType, fileName);
   var file = folder.createFile(blob);
@@ -119,32 +119,72 @@ function handleFileUpload(data) {
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   
   var fileUrl = file.getUrl();
-  var fileId = file.getId();
   
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Files');
-  var date = new Date().toISOString().split('T')[0];
+  var now = new Date();
+  var date = now.toISOString().split('T')[0];
   
-  // Columns: File ID, Title, Description, Subject, Class, Upload Date, File URL
-  sheet.appendRow([fileId, data.title, data.description, data.subject, studentClass, date, fileUrl]);
+  // Auto-generate Upload ID: UPL-DDMMYY-NNN
+  var dd = ('0' + now.getDate()).slice(-2);
+  var mm = ('0' + (now.getMonth() + 1)).slice(-2);
+  var yy = String(now.getFullYear()).slice(-2);
+  var lastRow = Math.max(sheet.getLastRow(), 1);
+  var count = lastRow - 1;
+  var paddedId = ('000' + (count + 1)).slice(-3);
+  var uploadId = 'UPL-' + dd + mm + yy + '-' + paddedId;
   
-  return { success: true, fileUrl: fileUrl, fileId: fileId };
+  var uploadedBy = data.uploadedBy || '';
+  
+  // Columns: Upload ID, Title, Grade, Subject, Upload Date, Uploaded By, File URL
+  sheet.appendRow([uploadId, data.title, grade, data.subject, date, uploadedBy, fileUrl]);
+  
+  return { success: true, fileUrl: fileUrl, uploadId: uploadId };
 }
 
 function handleAddAnnouncement(data) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Announcements');
-  var date = new Date().toISOString().split('T')[0];
-  // Columns: Date, Title, Message, Class
-  sheet.appendRow([date, data.title, data.message, data.targetClass]);
-  return { success: true };
+  if (!sheet) return { success: false, error: 'Announcements sheet not found' };
+  
+  var now = new Date();
+  var date = now.toISOString().split('T')[0];
+  
+  // Auto-generate Announcement ID: ANN-DDMMYY-NNN
+  var dd = ('0' + now.getDate()).slice(-2);
+  var mm = ('0' + (now.getMonth() + 1)).slice(-2);
+  var yy = String(now.getFullYear()).slice(-2);
+  var lastRow = Math.max(sheet.getLastRow(), 1);
+  var count = lastRow - 1;
+  var paddedId = ('000' + (count + 1)).slice(-3);
+  var annId = 'ANN-' + dd + mm + yy + '-' + paddedId;
+  
+  var grade = data.grade || data.targetClass || '';
+  var postedBy = data.postedBy || '';
+  
+  // Columns: Announcement ID, Title, Grade, Message, Date, Posted By
+  sheet.appendRow([annId, data.title, grade, data.message, date, postedBy]);
+  return { success: true, announcementId: annId };
 }
 
 function handleScheduleTest(data) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tests');
   if (!sheet) return { success: false, error: 'Tests sheet not found' };
   
-  var testId = Utilities.getUuid();
-  // Columns: Test ID, Date, Title, Subject, Class, Max Marks
-  sheet.appendRow([testId, data.date, data.title, data.subject, data.targetClass, data.maxMarks]);
+  var now = new Date();
+  
+  // Auto-generate Test ID: TST-DDMMYY-NNN
+  var dd = ('0' + now.getDate()).slice(-2);
+  var mm = ('0' + (now.getMonth() + 1)).slice(-2);
+  var yy = String(now.getFullYear()).slice(-2);
+  var lastRow = Math.max(sheet.getLastRow(), 1);
+  var count = lastRow - 1;
+  var paddedId = ('000' + (count + 1)).slice(-3);
+  var testId = 'TST-' + dd + mm + yy + '-' + paddedId;
+  
+  var grade = data.grade || data.targetClass || '';
+  var scheduledBy = data.scheduledBy || '';
+  
+  // Columns: Test ID, Title, Grade, Subject, Date, Max Marks, Scheduled By
+  sheet.appendRow([testId, data.title, grade, data.subject, data.date, data.maxMarks, scheduledBy]);
   
   return { success: true, testId: testId };
 }

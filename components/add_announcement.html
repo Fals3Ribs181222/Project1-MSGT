@@ -1,0 +1,29 @@
+<div class="panel-header">
+    <h3>Post New Announcement</h3>
+</div>
+
+<form id="noticeForm">
+    <div class="form-group">
+        <label class="form-label">Announcement Title</label>
+        <input type="text" id="noticeTitle" class="form-control" required placeholder="e.g. Important Notice">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Grade</label>
+        <select id="noticeGrade" class="form-control">
+            <option value="">All Grades</option>
+            <option value="11th">11th</option>
+            <option value="12th">12th</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Message Content</label>
+        <textarea id="noticeMessage" class="form-control" rows="6" required
+            placeholder="Type your announcement here..."></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="btnNotice">Post
+        Announcement</button>
+    <div id="noticeStatus" class="status-msg"></div>
+</form>

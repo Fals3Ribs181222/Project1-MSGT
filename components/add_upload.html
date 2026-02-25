@@ -1,0 +1,43 @@
+<div class="panel-header">
+    <h3>Upload New Material</h3>
+</div>
+
+<form id="uploadForm">
+    <div class="form-group">
+        <label class="form-label">Material Title</label>
+        <input type="text" id="fileTitle" class="form-control" required placeholder="e.g. Chapter 4 Notes">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Grade</label>
+        <select id="fileGrade" class="form-control">
+            <option value="">All Grades</option>
+            <option value="11th">11th</option>
+            <option value="12th">12th</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Subjects</label>
+        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; color: var(--text-main);">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="fileSubjects" value="Accounts" style="width: 1.2rem; height: 1.2rem;">
+                Accounts
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="fileSubjects" value="Commerce" style="width: 1.2rem; height: 1.2rem;">
+                Commerce
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group"
+        style="padding: 1.5rem; border: 2px dashed var(--border-color); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
+        <input type="file" id="fileInput" required style="max-width: 100%;">
+        <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Max file size: 50MB</p>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="btnUpload">Upload
+        Material</button>
+    <div id="uploadStatus" class="status-msg"></div>
+</form>
