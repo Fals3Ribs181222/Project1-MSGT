@@ -55,15 +55,6 @@
             transition: var(--transition);
             font-weight: 500;
             color: var(--text-muted);
-            background: transparent;
-            border: none;
-            font-family: inherit;
-            font-size: 1rem;
-        }
-
-        .role-btn:focus-visible {
-            outline: 2px solid var(--primary);
-            outline-offset: 2px;
         }
 
         .role-btn.active {
@@ -154,19 +145,19 @@
                     <p class="text-muted" id="loginSubtitle">Login to access your dashboard</p>
                 </div>
 
-                <div class="role-toggle" role="group" aria-label="Login Role Selection">
-                    <button type="button" class="role-btn active" id="btnStudent" onclick="setRole('student')" aria-pressed="true">Student Portal</button>
-                    <button type="button" class="role-btn" id="btnTeacher" onclick="setRole('teacher')" aria-pressed="false">Teacher Portal</button>
+                <div class="role-toggle">
+                    <div class="role-btn active" id="btnStudent" onclick="setRole('student')">Student Portal</div>
+                    <div class="role-btn" id="btnTeacher" onclick="setRole('teacher')">Teacher Portal</div>
                 </div>
 
                 <form id="loginForm">
                     <div class="form-group">
-                        <label class="form-label" for="username">Username</label>
+                        <label class="form-label">Username</label>
                         <input type="text" id="username" class="form-control" required
                             placeholder="Enter your username">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="password">Password</label>
+                        <label class="form-label">Password</label>
                         <input type="password" id="password" class="form-control" required placeholder="••••••••">
                     </div>
 
@@ -201,19 +192,12 @@
 
         function setRole(role) {
             currentRole = role;
-            const btnStudent = document.getElementById('btnStudent');
-            const btnTeacher = document.getElementById('btnTeacher');
-
             if (role === 'student') {
-                btnStudent.classList.add('active');
-                btnStudent.setAttribute('aria-pressed', 'true');
-                btnTeacher.classList.remove('active');
-                btnTeacher.setAttribute('aria-pressed', 'false');
+                document.getElementById('btnStudent').classList.add('active');
+                document.getElementById('btnTeacher').classList.remove('active');
             } else {
-                btnTeacher.classList.add('active');
-                btnTeacher.setAttribute('aria-pressed', 'true');
-                btnStudent.classList.remove('active');
-                btnStudent.setAttribute('aria-pressed', 'false');
+                document.getElementById('btnTeacher').classList.add('active');
+                document.getElementById('btnStudent').classList.remove('active');
             }
             document.getElementById('errorMsg').style.display = 'none';
         }
