@@ -135,40 +135,10 @@ function handleFileUpload(data) {
 }
 
 function handleAddAnnouncement(data) {
-  // Input validation
-  if (!data.title || typeof data.title !== 'string' || data.title.trim().length === 0) {
-    return { success: false, error: 'Title is required and must be a non-empty string.' };
-  }
-  if (data.title.length > 200) {
-    return { success: false, error: 'Title must be less than 200 characters.' };
-  }
-
-  if (!data.message || typeof data.message !== 'string' || data.message.trim().length === 0) {
-    return { success: false, error: 'Message is required and must be a non-empty string.' };
-  }
-  if (data.message.length > 5000) {
-    return { success: false, error: 'Message must be less than 5000 characters.' };
-  }
-
-  var targetClass = data.targetClass;
-  if (targetClass !== undefined && targetClass !== null && targetClass !== '') {
-    if (typeof targetClass !== 'string') {
-      return { success: false, error: 'Target class must be a string.' };
-    }
-    if (targetClass.length > 100) {
-      return { success: false, error: 'Target class must be less than 100 characters.' };
-    }
-  }
-
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Announcements');
   var date = new Date().toISOString().split('T')[0];
   // Columns: Date, Title, Message, Class
-  sheet.appendRow([
-    date,
-    data.title.trim(),
-    data.message.trim(),
-    targetClass ? targetClass.trim() : ''
-  ]);
+  sheet.appendRow([date, data.title, data.message, data.targetClass]);
   return { success: true };
 }
 
