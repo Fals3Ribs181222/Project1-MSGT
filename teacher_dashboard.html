@@ -228,15 +228,28 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Subject</label>
-                        <input type="text" id="fileSubject" class="form-control" required
-                            placeholder="e.g. Mathematics">
+                        <label class="form-label">Grade</label>
+                        <select id="fileGrade" class="form-control">
+                            <option value="">All Grades</option>
+                            <option value="11th">11th</option>
+                            <option value="12th">12th</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Target Class</label>
-                        <input type="text" id="fileClass" class="form-control"
-                            placeholder="e.g. 10th (Leave empty for all)">
+                        <label class="form-label">Subjects</label>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; color: var(--text-main);">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="fileSubjects" value="Accounts"
+                                    style="width: 1.2rem; height: 1.2rem;">
+                                Accounts
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="fileSubjects" value="Commerce"
+                                    style="width: 1.2rem; height: 1.2rem;">
+                                Commerce
+                            </label>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -271,9 +284,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Target Class</label>
-                        <input type="text" id="noticeClass" class="form-control"
-                            placeholder="e.g. 10th (Leave empty for all)">
+                        <label class="form-label">Grade</label>
+                        <select id="noticeGrade" class="form-control">
+                            <option value="">All Grades</option>
+                            <option value="11th">11th</option>
+                            <option value="12th">12th</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
@@ -302,13 +318,28 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Subject</label>
-                        <input type="text" id="testSubject" class="form-control" required placeholder="e.g. Physics">
+                        <label class="form-label">Grade</label>
+                        <select id="testGrade" class="form-control" required>
+                            <option value="">-- Select Grade --</option>
+                            <option value="11th">11th</option>
+                            <option value="12th">12th</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Target Class</label>
-                        <input type="text" id="testClass" class="form-control" required placeholder="e.g. 10th">
+                        <label class="form-label">Subjects</label>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; color: var(--text-main);">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="testSubjects" value="Accounts"
+                                    style="width: 1.2rem; height: 1.2rem;">
+                                Accounts
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="testSubjects" value="Commerce"
+                                    style="width: 1.2rem; height: 1.2rem;">
+                                Commerce
+                            </label>
+                        </div>
                     </div>
 
                     <div class="form-group" style="display: flex; gap: 1rem;">
@@ -448,14 +479,17 @@
                 // Remove data URL prefix to get raw base64
                 const base64Data = event.target.result.split(',')[1];
 
+                const subjectCheckboxes = document.querySelectorAll('input[name="fileSubjects"]:checked');
+                const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
+
                 const response = await api.post('uploadFile', {
                     filename: file.name,
                     mimeType: file.type,
                     fileData: base64Data,
                     title: document.getElementById('fileTitle').value,
                     description: document.getElementById('fileDesc').value,
-                    subject: document.getElementById('fileSubject').value,
-                    class: document.getElementById('fileClass').value
+                    subject: subjects,
+                    class: document.getElementById('fileGrade').value
                 });
 
                 btn.disabled = false;
@@ -486,7 +520,7 @@
             const response = await api.post('addAnnouncement', {
                 title: document.getElementById('noticeTitle').value,
                 message: document.getElementById('noticeMessage').value,
-                targetClass: document.getElementById('noticeClass').value
+                targetClass: document.getElementById('noticeGrade').value
             });
 
             btn.disabled = false;
@@ -512,10 +546,13 @@
             btn.textContent = 'Scheduling...';
             status.className = 'status-msg';
 
+            const subjectCheckboxes = document.querySelectorAll('input[name="testSubjects"]:checked');
+            const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
+
             const response = await api.post('scheduleTest', {
                 title: document.getElementById('testTitle').value,
-                subject: document.getElementById('testSubject').value,
-                targetClass: document.getElementById('testClass').value,
+                subject: subjects,
+                targetClass: document.getElementById('testGrade').value,
                 date: document.getElementById('testDate').value,
                 maxMarks: document.getElementById('testMaxMarks').value
             });

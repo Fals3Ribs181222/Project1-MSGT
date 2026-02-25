@@ -209,13 +209,13 @@ function handleAddStudent(data) {
     
     if (!sheet) return { success: false, error: 'Students sheet not found' };
     
-    // Auto-generate hidden Student ID (e.g. MSGT-2026-001)
+    // Auto-generate hidden Student ID (e.g. STU-2026-001)
     var year = new Date().getFullYear();
     var lastRow = Math.max(sheet.getLastRow(), 1); 
     var count = lastRow - 1; 
     var rawId = count + 1;
     var paddedId = ('000' + rawId).slice(-3); // Pads to 3 digits
-    var studentId = 'MSGT-' + year + '-' + paddedId;
+    var studentId = 'STU-' + year + '-' + paddedId;
     
     // Append the row. Match this to your exact Google Sheets columns:
     // [Student ID, Name, Role, Username, Password, Grade, Subjects]

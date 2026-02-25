@@ -212,7 +212,7 @@
         // Require student role
         const user = auth.requireRole('student');
         document.getElementById('studentName').textContent = user.name;
-        document.getElementById('studentClassInfo').textContent = `Class: ${user.studentClass || 'N/A'} | Access your study materials and notices.`;
+        document.getElementById('studentClassInfo').textContent = `Grade: ${user.studentClass || 'N/A'} | Access your study materials and notices.`;
 
         let allFiles = [];
 
