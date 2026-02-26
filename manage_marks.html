@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Marks | Mitesh Sir's Group Tuitions</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=light">
+    <style>
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(16px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-surface-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .status-msg {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            display: block;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-logo">Mitesh Sir's Group Tuitions</a>
+            <div class="nav-links">
+                <a href="teacher_dashboard.html" class="nav-link">Dashboard</a>
+                <a href="index.html" class="nav-link">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container section">
+        <div style="margin-bottom: 2rem;">
+            <a href="teacher_dashboard.html" class="text-muted"
+                style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                ← Back to Dashboard
+            </a>
+            <h1 id="testTitle" style="font-size: 2.5rem; margin-top: 1rem; margin-bottom: 0.5rem;">Loading Test...</h1>
+            <p id="testMeta" class="text-muted">Fetching test details...</p>
+        </div>
+
+        <!-- Performance Summary Cards -->
+        <div class="performance-grid" id="performanceGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="statAverage">-</div>
+                <div class="stat-label">Class Average</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statHighest">-</div>
+                <div class="stat-label">Highest Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statLowest">-</div>
+                <div class="stat-label">Lowest Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statAvgPercent">-</div>
+                <div class="stat-label">Avg Percentage</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Enter Marks</h3>
+                <span id="studentCount" class="text-muted">0 Students found</span>
+            </div>
+
+            <div id="marksStatus" class="status-msg"></div>
+
+            <div id="marksTableContainer" style="display: none; overflow-x: auto;">
+                <form id="marksForm">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 1rem; color: var(--text-muted);">Name</th>
+                                <th style="padding: 1rem; color: var(--text-muted);">Username</th>
+                                <th style="padding: 1rem; color: var(--text-muted);">Marks Obtained</th>
+                                <th style="padding: 1rem; color: var(--text-muted);">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="marksTableBody">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 2rem; text-align: right;">
+                        <button type="submit" class="btn btn-primary" id="btnSaveMarks"
+                            style="padding: 0.8rem 2rem; font-size: 1rem;">Save All Marks</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="loadingState" style="text-align: center; padding: 3rem;">
+                <div class="text-muted">Loading students and existing marks...</div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center text-muted pt-4 pb-4">
+            <p>&copy; 2026 Mitesh Sir's Group Tuitions. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        const user = auth.requireRole('teacher');
+        const urlParams = new URLSearchParams(window.location.search);
+        const testId = urlParams.get('testId');
+
+        if (!testId) {
+            alert('No Test ID specified.');
+            window.location.href = 'teacher_dashboard.html';
+        }
+
+        let currentTest = null;
+        let allStudents = [];
+        let existingMarks = [];
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        async function init() {
+            try {
+                // Fetch all required data
+                const [testsRes, studentsRes, marksRes] = await Promise.all([
+                    api.get('getTests'),
+                    api.get('getStudents'),
+                    api.get('getMarks')
+                ]);
+
+                if (!testsRes.success || !studentsRes.success || !marksRes.success) {
+                    throw new Error('Failed to fetch data from server.');
+                }
+
+                currentTest = testsRes.data.find(t => t['Test ID'] === testId);
+                if (!currentTest) {
+                    throw new Error('Test not found.');
+                }
+
+                allStudents = studentsRes.data;
+                existingMarks = marksRes.data.filter(m => m['Test ID'] === testId);
+
+                renderPage();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loadingState').innerHTML = `<div style="color:red">Error: ${err.message}</div>`;
+            }
+        }
+
+        function renderPage() {
+            document.getElementById('testTitle').textContent = currentTest['Title'];
+            document.getElementById('testMeta').textContent = `Subject: ${currentTest['Subject']} | Grade: ${currentTest['Grade']} | Date: ${currentTest['Date']} | Max Marks: ${currentTest['Max Marks']}`;
+
+            // Filter students by Grade AND Subject (case-insensitive string match)
+            const targetGrade = String(currentTest['Grade']).trim();
+            const targetSubject = String(currentTest['Subject']).trim().toLowerCase();
+
+            const eligibleStudents = allStudents.filter(s => {
+                const sGrade = String(s['Grade'] || s['Class'] || '').trim();
+                const sSubjects = String(s['Subjects'] || '').toLowerCase();
+
+                return sGrade === targetGrade && sSubjects.includes(targetSubject);
+            });
+
+            document.getElementById('studentCount').textContent = `${eligibleStudents.length} Students found`;
+
+            const tbody = document.getElementById('marksTableBody');
+            const marksMap = {};
+            existingMarks.forEach(m => {
+                marksMap[m['Student Name']] = m['Marks'];
+            });
+
+            if (eligibleStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">No students found matching this Grade and Subject.</td></tr>';
+            } else {
+                tbody.innerHTML = eligibleStudents.map(s => {
+                    const existingMark = marksMap[s.Name];
+                    const maxM = Number(currentTest['Max Marks']) || 100;
+                    const pct = existingMark !== undefined ? ((Number(existingMark) / maxM) * 100).toFixed(1) + '%' : '-';
+                    return `
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 1rem; color: var(--text-main); font-weight: 500;">${s.Name}</td>
+                        <td style="padding: 1rem; color: var(--text-muted);">${s.Username || '-'}</td>
+                        <td style="padding: 1rem;">
+                            <input type="number" 
+                                class="form-control student-mark-input" 
+                                data-name="${s.Name}" 
+                                value="${existingMark !== undefined ? existingMark : ''}" 
+                                min="0" 
+                                max="${currentTest['Max Marks']}" 
+                                placeholder="Max: ${currentTest['Max Marks']}"
+                                style="max-width: 150px;"
+                            >
+                        </td>
+                        <td style="padding: 1rem; color: var(--text-muted);" class="pct-cell">${pct}</td>
+                    </tr>
+                `}).join('');
+            }
+
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('marksTableContainer').style.display = 'block';
+
+            updatePerformanceSummary();
+        }
+
+        function updatePerformanceSummary() {
+            const inputs = document.querySelectorAll('.student-mark-input');
+            const max = Number(currentTest['Max Marks']) || 100;
+            const marksValues = Array.from(inputs)
+                .map(i => i.value.trim())
+                .filter(v => v !== '')
+                .map(Number);
+
+            // Update per-row percentage cells live
+            const pctCells = document.querySelectorAll('.pct-cell');
+            inputs.forEach((input, idx) => {
+                const val = input.value.trim();
+                if (pctCells[idx]) {
+                    pctCells[idx].textContent = val !== '' ? ((Number(val) / max) * 100).toFixed(1) + '%' : '-';
+                }
+            });
+
+            if (marksValues.length === 0) {
+                document.getElementById('statAverage').textContent = '-';
+                document.getElementById('statHighest').textContent = '-';
+                document.getElementById('statLowest').textContent = '-';
+                document.getElementById('statAvgPercent').textContent = '-';
+                return;
+            }
+
+            const high = Math.max(...marksValues);
+            const low = Math.min(...marksValues);
+            const avg = marksValues.reduce((a, b) => a + b, 0) / marksValues.length;
+            const avgPercent = (avg / max) * 100;
+
+            document.getElementById('statAverage').textContent = avg.toFixed(1);
+            document.getElementById('statHighest').textContent = high;
+            document.getElementById('statLowest').textContent = low;
+            document.getElementById('statAvgPercent').textContent = avgPercent.toFixed(1) + '%';
+        }
+
+        document.getElementById('marksForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveMarks');
+            const status = document.getElementById('marksStatus');
+            const inputs = document.querySelectorAll('.student-mark-input');
+
+            const marksPayload = Array.from(inputs)
+                .map(i => ({
+                    name: i.dataset.name,
+                    marks: i.value.trim()
+                }))
+                .filter(m => m.marks !== '');
+
+            if (marksPayload.length === 0) {
+                status.textContent = 'Please enter at least one mark.';
+                status.className = 'status-msg status-error';
+                status.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Saving Marks...';
+            status.style.display = 'none';
+
+            try {
+                const response = await api.post('enterMarks', {
+                    testId: testId,
+                    marks: marksPayload
+                });
+
+                if (response.success) {
+                    status.textContent = 'All marks saved successfully!';
+                    status.className = 'status-msg status-success';
+                    status.style.display = 'block';
+                    updatePerformanceSummary();
+                } else {
+                    throw new Error(response.error || 'Failed to save marks.');
+                }
+            } catch (err) {
+                status.textContent = err.message;
+                status.className = 'status-msg status-error';
+                status.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save All Marks';
+            }
+        });
+
+        // Live update summary as teacher types
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('student-mark-input')) {
+                updatePerformanceSummary();
+            }
+        });
+    </script>
+</body>
+
+</html>

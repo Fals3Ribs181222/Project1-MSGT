@@ -208,7 +208,6 @@
                 <button class="tab-btn active" data-tab="panel-students">Students</button>
                 <button class="tab-btn" data-tab="panel-upload">Materials</button>
                 <button class="tab-btn" data-tab="panel-test">Tests</button>
-                <button class="tab-btn" data-tab="panel-marks">Marks</button>
                 <button class="tab-btn" data-tab="panel-announcement">Announcements</button>
             </div>
         </div>
@@ -339,6 +338,7 @@
                                     <th style="padding: 1rem; color: var(--text-muted);">Date</th>
                                     <th style="padding: 1rem; color: var(--text-muted);">Max Marks</th>
                                     <th style="padding: 1rem; color: var(--text-muted);">Scheduled By</th>
+                                    <th style="padding: 1rem; color: var(--text-muted);">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="testsListTableBody">
@@ -363,43 +363,6 @@
                 </div>
             </div>
 
-            <!-- Manage Marks Panel -->
-            <div class="panel tab-panel" id="panel-marks">
-                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>Manage Marks</h3>
-                    <button class="btn btn-primary" id="btnRefreshTests"
-                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">Refresh Tests</button>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Select Test</label>
-                    <select id="selectTestMarks" class="form-control" required>
-                        <option value="">-- Choose a Test --</option>
-                    </select>
-                </div>
-
-                <div id="marksStatus" class="status-msg"></div>
-
-                <div id="marksTableContainer" style="display: none; overflow-x: auto; margin-top: 1rem;">
-                    <form id="marksForm">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left;" id="marksTable">
-                            <thead>
-                                <tr style="border-bottom: 2px solid var(--border-color);">
-                                    <th style="padding: 1rem; color: var(--text-muted);">Name</th>
-                                    <th style="padding: 1rem; color: var(--text-muted);">Username</th>
-                                    <th style="padding: 1rem; color: var(--text-muted);">Marks Obtained</th>
-                                </tr>
-                            </thead>
-                            <tbody id="marksTableBody">
-                                <!-- Dynamic rows -->
-                            </tbody>
-                        </table>
-                        <div style="margin-top: 1.5rem; text-align: right;">
-                            <button type="submit" class="btn btn-primary" id="btnSaveMarks">Save Marks</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
 
             <!-- Manage Students Panel -->
             <div class="panel tab-panel active" id="panel-students">
@@ -739,6 +702,9 @@
                             <td style="padding: 1rem; color: var(--text-muted);">${test['Date'] || '-'}</td>
                             <td style="padding: 1rem; color: var(--text-muted);">${test['Max Marks'] || '-'}</td>
                             <td style="padding: 1rem; color: var(--text-muted);">${test['Scheduled By'] || '-'}</td>
+                            <td style="padding: 1rem;">
+                                <a href="manage_marks.html?testId=${test['Test ID']}" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;">Manage Marks</a>
+                            </td>
                         </tr>
                     `).join('');
                 } else {
@@ -824,7 +790,6 @@
                     status.textContent = 'Test scheduled successfully!';
                     status.className = 'status-msg status-success';
                     e.target.reset();
-                    loadTests(); // Refresh marks dropdown
                     if (typeof loadTestsList === 'function') loadTestsList();
                 } else {
                     status.textContent = response.error || 'Failed to schedule.';
@@ -836,133 +801,6 @@
         let currentTests = [];
         let allStudents = [];
 
-        // Load Tests for dropdown
-        async function loadTests() {
-            const selectTest = document.getElementById('selectTestMarks');
-            const btnRefresh = document.getElementById('btnRefreshTests');
-
-            btnRefresh.disabled = true;
-            btnRefresh.textContent = 'Refreshing...';
-
-            const response = await api.get('getTests');
-
-            btnRefresh.disabled = false;
-            btnRefresh.textContent = 'Refresh Tests';
-
-            if (response.success) {
-                currentTests = response.data || [];
-                // Sort by date descending
-                currentTests.sort((a, b) => new Date(b['Date']) - new Date(a['Date']));
-
-                selectTest.innerHTML = '<option value="">-- Choose a Test --</option>';
-                currentTests.forEach(test => {
-                    const opt = document.createElement('option');
-                    opt.value = test['Test ID'];
-                    opt.textContent = `[${test['Grade']}] ${test['Title']} - ${test['Subject']} (${test['Date']})`;
-                    selectTest.appendChild(opt);
-                });
-            }
-        }
-
-        document.getElementById('btnRefreshTests').addEventListener('click', loadTests);
-
-        // Handle Test Selection for Marks
-        document.getElementById('selectTestMarks').addEventListener('change', async (e) => {
-            const testId = e.target.value;
-            const container = document.getElementById('marksTableContainer');
-            const tbody = document.getElementById('marksTableBody');
-
-            if (!testId) {
-                container.style.display = 'none';
-                return;
-            }
-
-            const test = currentTests.find(t => t['Test ID'] === testId);
-            if (!test) return;
-
-            container.style.display = 'block';
-            tbody.innerHTML = '<tr><td colspan="3" style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading students & marks...</td></tr>';
-
-            // Ensure we have current students and marks
-            const [studentsRes, marksRes] = await Promise.all([
-                allStudents.length === 0 ? api.get('getStudents') : Promise.resolve({ success: true, data: allStudents }),
-                api.get('getMarks')
-            ]);
-
-            if (studentsRes.success) allStudents = studentsRes.data;
-
-            const targetClass = String(test['Grade']);
-            const studentsInClass = allStudents.filter(s => String(s['Grade']) === targetClass || String(s['Class']) === targetClass);
-
-            const testMarks = marksRes.success ? (marksRes.data || []).filter(m => m['Test ID'] === testId) : [];
-            const marksMap = {};
-            testMarks.forEach(m => {
-                marksMap[m['Student Username']] = m['Marks'];
-            });
-
-            if (studentsInClass.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="padding: 1rem; text-align: center; color: var(--text-muted);">No students found in this class.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = studentsInClass.map(student => `
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 1rem; color: var(--text-main); font-weight: 500;">${student.Name || '-'}</td>
-                    <td style="padding: 1rem; color: var(--text-muted);">${student.Username || '-'}</td>
-                    <td style="padding: 1rem;">
-                        <input type="number" class="form-control student-mark-input" data-username="${student.Username}" value="${marksMap[student.Username] !== undefined ? marksMap[student.Username] : ''}" min="0" max="${test['Max Marks']}" placeholder="Max: ${test['Max Marks']}" style="max-width: 150px;">
-                    </td>
-                </tr>
-            `).join('');
-        });
-
-        // Save Marks
-        document.getElementById('marksForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnSaveMarks');
-            const status = document.getElementById('marksStatus');
-            const testId = document.getElementById('selectTestMarks').value;
-
-            if (!testId) return;
-
-            const inputs = document.querySelectorAll('.student-mark-input');
-            const marks = [];
-            inputs.forEach(input => {
-                const val = input.value.trim();
-                if (val !== '') {
-                    marks.push({
-                        username: input.dataset.username,
-                        marks: val
-                    });
-                }
-            });
-
-            if (marks.length === 0) {
-                status.textContent = 'No marks entered to save.';
-                status.className = 'status-msg status-error';
-                status.style.display = 'block';
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
-            status.style.display = 'none';
-
-            const response = await api.post('enterMarks', { testId, marks });
-
-            btn.disabled = false;
-            btn.textContent = 'Save Marks';
-
-            if (response.success) {
-                status.textContent = 'Marks saved successfully!';
-                status.className = 'status-msg status-success';
-                status.style.display = 'block';
-            } else {
-                status.textContent = response.error || 'Failed to save marks.';
-                status.className = 'status-msg status-error';
-                status.style.display = 'block';
-            }
-        });
 
         // Load Students List handler
         async function loadStudents() {
@@ -1147,7 +985,6 @@
 
         // Load all data on initial page load
         loadStudents();
-        loadTests();
         loadAddStudentComponent();
         loadMaterials();
         loadUploadComponent();

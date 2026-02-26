@@ -120,6 +120,42 @@
             text-align: center;
             padding: 2rem;
         }
+
+        /* Performance Card Styles */
+        .performance-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            backdrop-filter: blur(16px);
+        }
+
+        .perf-stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .perf-stat:not(:last-child) {
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .perf-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .perf-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 
@@ -137,10 +173,26 @@
 
     <main class="container section">
         <div class="welcome-banner"
-            style="background: linear-gradient(135deg, var(--bg-surface), var(--bg-surface-hover)); border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 2rem; border: 1px solid var(--border-color);">
+            style="background: linear-gradient(135deg, var(--bg-surface), var(--bg-surface-hover)); border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
             <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Welcome, <span id="studentName"
                     style="color: var(--primary);">Student</span>!</h1>
             <p class="text-muted" id="studentClassInfo">Student Portal - Access your study materials and notices.</p>
+        </div>
+
+        <!-- My Performance Card -->
+        <div class="performance-card" id="studentPerfCard" style="display: none;">
+            <div class="perf-stat">
+                <div class="perf-value" id="statTestsTaken">0</div>
+                <div class="perf-label">Tests Taken</div>
+            </div>
+            <div class="perf-stat">
+                <div class="perf-value" id="statAvgMarks">0%</div>
+                <div class="perf-label">Avg. Score</div>
+            </div>
+            <div class="perf-stat">
+                <div class="perf-value" id="statBestScore">0%</div>
+                <div class="perf-label">Best Score</div>
+            </div>
         </div>
 
         <div class="dashboard-grid">
@@ -286,22 +338,45 @@
                 const marks = marksRes.data || [];
 
                 // Filter tests for this student's class
-                const myTests = tests.filter(t => !t['Grade'] || String(t['Grade']) === String(user.studentClass)).reverse(); // Newest first
+                const myTests = tests.filter(t => !t['Grade'] || String(t['Grade']) === String(user.studentClass)).reverse();
 
                 // Map marks for easy lookup by testId
-                const myMarks = {};
+                const myMarksMap = {};
                 marks.forEach(m => {
-                    if (String(m['Student Username']) === String(user.username)) {
-                        myMarks[m['Test ID']] = m['Marks'];
+                    if (String(m['Student Name']) === String(user.name)) {
+                        myMarksMap[m['Test ID']] = m['Marks'];
                     }
                 });
+
+                // Calculate Performance Stats
+                let totalPercent = 0;
+                let testsWithMarks = 0;
+                let bestPercent = 0;
+
+                myTests.forEach(t => {
+                    const earned = myMarksMap[t['Test ID']];
+                    if (earned !== undefined) {
+                        const max = Number(t['Max Marks']) || 100;
+                        const percent = (Number(earned) / max) * 100;
+                        totalPercent += percent;
+                        testsWithMarks++;
+                        if (percent > bestPercent) bestPercent = percent;
+                    }
+                });
+
+                if (testsWithMarks > 0) {
+                    document.getElementById('statTestsTaken').textContent = testsWithMarks;
+                    document.getElementById('statAvgMarks').textContent = Math.round(totalPercent / testsWithMarks) + '%';
+                    document.getElementById('statBestScore').textContent = Math.round(bestPercent) + '%';
+                    document.getElementById('studentPerfCard').style.display = 'flex';
+                }
 
                 if (myTests.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" style="padding: 1rem; text-align: center; color: var(--text-muted);">No tests scheduled.</td></tr>';
                 } else {
                     tbody.innerHTML = myTests.map(t => {
-                        const earned = myMarks[t['Test ID']];
-                        const earnedDisplay = earned !== undefined ? `<span style="font-weight: 600; color: var(--primary);">${earned}</span>` : `<span class="text-muted" style="font-size: 0.9em;">Not Uploaded</span>`;
+                        const earned = myMarksMap[t['Test ID']];
+                        const earnedDisplay = earned !== undefined ? `<span style="font-weight: 600; color: var(--primary);">${earned}</span>` : `<span class="text-muted" style="font-size: 0.9em;">Pending</span>`;
                         const metaDate = new Date(t['Date']).toLocaleDateString() !== 'Invalid Date' ? new Date(t['Date']).toLocaleDateString() : t['Date'];
 
                         return `

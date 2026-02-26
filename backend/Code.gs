@@ -124,14 +124,8 @@ function handleFileUpload(data) {
   var now = new Date();
   var date = now.toISOString().split('T')[0];
   
-  // Auto-generate Upload ID: UPL-DDMMYY-NNN
-  var dd = ('0' + now.getDate()).slice(-2);
-  var mm = ('0' + (now.getMonth() + 1)).slice(-2);
-  var yy = String(now.getFullYear()).slice(-2);
-  var lastRow = Math.max(sheet.getLastRow(), 1);
-  var count = lastRow - 1;
-  var paddedId = ('000' + (count + 1)).slice(-3);
-  var uploadId = 'UPL-' + dd + mm + yy + '-' + paddedId;
+  // Auto-generate Upload ID: UPL-XXXX-YYY
+  var uploadId = generateRandomId('UPL');
   
   var uploadedBy = data.uploadedBy || '';
   
@@ -148,14 +142,8 @@ function handleAddAnnouncement(data) {
   var now = new Date();
   var date = now.toISOString().split('T')[0];
   
-  // Auto-generate Announcement ID: ANN-DDMMYY-NNN
-  var dd = ('0' + now.getDate()).slice(-2);
-  var mm = ('0' + (now.getMonth() + 1)).slice(-2);
-  var yy = String(now.getFullYear()).slice(-2);
-  var lastRow = Math.max(sheet.getLastRow(), 1);
-  var count = lastRow - 1;
-  var paddedId = ('000' + (count + 1)).slice(-3);
-  var annId = 'ANN-' + dd + mm + yy + '-' + paddedId;
+  // Auto-generate Announcement ID: ANN-XXXX-YYY
+  var annId = generateRandomId('ANN');
   
   var grade = data.grade || data.targetClass || '';
   var postedBy = data.postedBy || '';
@@ -171,14 +159,8 @@ function handleScheduleTest(data) {
   
   var now = new Date();
   
-  // Auto-generate Test ID: TST-DDMMYY-NNN
-  var dd = ('0' + now.getDate()).slice(-2);
-  var mm = ('0' + (now.getMonth() + 1)).slice(-2);
-  var yy = String(now.getFullYear()).slice(-2);
-  var lastRow = Math.max(sheet.getLastRow(), 1);
-  var count = lastRow - 1;
-  var paddedId = ('000' + (count + 1)).slice(-3);
-  var testId = 'TST-' + dd + mm + yy + '-' + paddedId;
+  // Auto-generate Test ID: TST-XXXX-YYY
+  var testId = generateRandomId('TST');
   
   var grade = data.grade || data.targetClass || '';
   var scheduledBy = data.scheduledBy || '';
@@ -194,27 +176,29 @@ function handleEnterMarks(data) {
   if (!sheet) return { success: false, error: 'Marks sheet not found' };
   
   var testId = data.testId;
-  var marksList = data.marks; // Array of { username: "...", marks: "..." }
+  var marksList = data.marks; // Array of { name: "...", marks: "..." }
   
-  // Columns: Test ID, Student Username, Marks
+  // Columns: Mark ID, Test ID, Student Name, Marks
   // We should ideally update existing marks if present, or append if new
   var rows = sheet.getDataRange().getValues();
   var existingMarks = {};
   for (var i = 1; i < rows.length; i++) {
-    if (rows[i][0] === testId) {
-      existingMarks[rows[i][1]] = i + 1; // 1-indexed row number
+    if (rows[i][1] === testId) {
+      existingMarks[rows[i][2]] = i + 1; // 1-indexed row number
     }
   }
   
   for (var j = 0; j < marksList.length; j++) {
     var m = marksList[j];
-    var rowIndex = existingMarks[m.username];
+    var rowIndex = existingMarks[m.name];
     if (rowIndex) {
       // Update existing
-      sheet.getRange(rowIndex, 3).setValue(m.marks);
+      sheet.getRange(rowIndex, 4).setValue(m.marks);
     } else {
-      // Append new
-      sheet.appendRow([testId, m.username, m.marks]);
+      // Append new with short hash ID
+      var markId = generateShortHash('MRK');
+      // Columns: Mark ID, Test ID, Student Name, Marks
+      sheet.appendRow([markId, testId, m.name, m.marks]);
     }
   }
   
@@ -249,13 +233,8 @@ function handleAddStudent(data) {
     
     if (!sheet) return { success: false, error: 'Students sheet not found' };
     
-    // Auto-generate hidden Student ID (e.g. STU-2026-001)
-    var year = new Date().getFullYear();
-    var lastRow = Math.max(sheet.getLastRow(), 1); 
-    var count = lastRow - 1; 
-    var rawId = count + 1;
-    var paddedId = ('000' + rawId).slice(-3); // Pads to 3 digits
-    var studentId = 'STU-' + year + '-' + paddedId;
+    // Auto-generate Student ID: STU-XXXX-YYY
+    var studentId = generateRandomId('STU');
     
     // Append the row. Match this to your exact Google Sheets columns:
     // [Student ID, Name, Role, Username, Password, Grade, Subjects]
@@ -274,4 +253,29 @@ function handleAddStudent(data) {
   } catch (err) {
     return { success: false, error: err.toString() };
   }
+}
+
+/**
+ * Generates a random ID in the format: PREFIX-XXXX-YYY
+ * @param {string} prefix The ID prefix (e.g., UPL, ANN, TST, STU)
+ * @returns {string} The formatted ID
+ */
+function generateRandomId(prefix) {
+  var part1 = Math.floor(1000 + Math.random() * 9000); // 4 random numbers
+  var part2 = Math.floor(100 + Math.random() * 900);   // 3 random numbers
+  return prefix + '-' + part1 + '-' + part2;
+}
+
+/**
+ * Generates a short random hex hash ID: PREFIX-XXXXXX
+ * @param {string} prefix The ID prefix (e.g., MRK)
+ * @returns {string} The formatted ID
+ */
+function generateShortHash(prefix) {
+  var hash = '';
+  var chars = '0123456789ABCDEF';
+  for (var i = 0; i < 6; i++) {
+    hash += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return prefix + '-' + hash;
 }
