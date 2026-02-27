@@ -203,7 +203,7 @@ button:disabled {
    HERO SECTION
    ============================================================ */
 .hero {
-    padding: 8rem 0 4rem;
+    padding: 0.25rem 0 4rem;
     text-align: center;
     min-height: calc(100vh - 80px);
     display: flex;
@@ -291,7 +291,7 @@ button:disabled {
    SECTION GENERIC
    ============================================================ */
 .section {
-    padding: 6rem 0;
+    padding: 3rem 0 6rem;
 }
 
 .section__header {
@@ -363,7 +363,7 @@ button:disabled {
    ============================================================ */
 .login {
     max-width: 450px;
-    margin: 4rem auto;
+    margin: 2rem auto;
     animation: fadeUp 0.5s ease-out;
 }
 
