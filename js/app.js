@@ -68,31 +68,35 @@ const auth = {
 
     updateNavigation() {
         const user = this.getUser();
-        const navLinks = document.querySelector('.nav-links');
+        const navLinks = document.querySelector('.navbar__links');
         if (!navLinks) return;
 
         if (user) {
             // Remove login links
-            const loginLinks = navLinks.querySelectorAll('a[href^="login.html"]');
+            const loginLinks = navLinks.querySelectorAll('li:has(a[href^="login.html"])');
             loginLinks.forEach(link => link.remove());
 
             // Add dashboard link
+            const dashLi = document.createElement('li');
             const dashLink = document.createElement('a');
-            dashLink.className = 'nav-link';
+            dashLink.className = 'navbar__link';
             dashLink.href = user.role === 'teacher' ? 'teacher_dashboard.html' : 'student_dashboard.html';
             dashLink.textContent = 'Dashboard';
-            navLinks.appendChild(dashLink);
+            dashLi.appendChild(dashLink);
+            navLinks.appendChild(dashLi);
 
             // Add logout link
+            const logoutLi = document.createElement('li');
             const logoutLink = document.createElement('a');
-            logoutLink.className = 'nav-link';
+            logoutLink.className = 'navbar__link';
             logoutLink.href = '#';
             logoutLink.textContent = 'Logout';
             logoutLink.onclick = (e) => {
                 e.preventDefault();
                 this.logout();
             };
-            navLinks.appendChild(logoutLink);
+            logoutLi.appendChild(logoutLink);
+            navLinks.appendChild(logoutLi);
         }
     }
 };
@@ -103,11 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set active link in nav
     const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-    document.querySelectorAll('.nav-link').forEach(link => {
+    document.querySelectorAll('.navbar__link').forEach(link => {
         if (link.getAttribute('href') === currentPath) {
-            link.classList.add('active');
+            link.classList.add('navbar__link--active');
         } else {
-            link.classList.remove('active');
+            link.classList.remove('navbar__link--active');
         }
     });
 });
