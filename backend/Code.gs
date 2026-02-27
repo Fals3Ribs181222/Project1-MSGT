@@ -66,7 +66,7 @@ function doGet(e) {
 function handleLogin(data) {
   var role = data.role; // 'student' or 'teacher'
   var username = data.username;
-  var password = data.password; // For simplicity, we compare raw or basic hashed on client. Real hash should be done securely.
+  var password = data.password;
   
   var sheetName = role === 'teacher' ? 'Teachers' : 'Students';
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -77,17 +77,27 @@ function handleLogin(data) {
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   
+  // Find column indices dynamically from headers
+  var usernameCol = headers.indexOf('Username');
+  var passwordCol = headers.indexOf('Password');
+  var nameCol = headers.indexOf('Name');
+  var gradeCol = headers.indexOf('Grade');
+  
+  if (usernameCol === -1 || passwordCol === -1) {
+    return { success: false, error: 'Sheet columns misconfigured: Username or Password column not found' };
+  }
+  
   for (var i = 1; i < rows.length; i++) {
     var userRow = rows[i];
-    if (String(userRow[0]) === String(username) && String(userRow[1]) === String(password)) {
-      // Columns: Username, Password, Name, Role, Class (students only)
+    if (String(userRow[usernameCol]).trim() === String(username).trim() && 
+        String(userRow[passwordCol]).trim() === String(password).trim()) {
       return {
         success: true,
         user: {
-          username: userRow[0],
-          name: userRow[2],
-          role: userRow[3] || role,
-          studentClass: role === 'student' ? userRow[4] : null
+          username: userRow[usernameCol],
+          name: nameCol !== -1 ? userRow[nameCol] : '',
+          role: role,
+          studentClass: (role === 'student' && gradeCol !== -1) ? userRow[gradeCol] : null
         }
       };
     }
