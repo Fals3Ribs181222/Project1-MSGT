@@ -223,6 +223,7 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
     <script>
@@ -243,7 +244,7 @@
             status.style.display = 'none';
             tbody.innerHTML = '<tr><td colspan="6" class="loading-text">Loading materials...</td></tr>';
 
-            const response = await api.get('getFiles');
+            const response = await api.get('files');
 
             btnRefresh.disabled = false;
             btnRefresh.textContent = 'Refresh List';
@@ -329,25 +330,35 @@
                 btn.textContent = 'Uploading...';
                 status.className = 'status';
 
-                const reader = new FileReader();
-                reader.onload = async function (event) {
-                    const base64Data = event.target.result.split(',')[1];
+                try {
+                    // 1. Upload to Supabase Storage
+                    const filePath = `materials/${Date.now()}_${file.name}`;
+                    const { data: storageData, error: storageError } = await supabaseClient
+                        .storage
+                        .from('materials')
+                        .upload(filePath, file);
 
+                    if (storageError) throw storageError;
+
+                    // 2. Get Public URL
+                    const { data: { publicUrl } } = supabaseClient
+                        .storage
+                        .from('materials')
+                        .getPublicUrl(filePath);
+
+                    // 3. Insert into files table
                     const subjectCheckboxes = document.querySelectorAll('input[name="fileSubjects"]:checked');
                     const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
 
-                    const response = await api.post('uploadFile', {
-                        filename: file.name,
-                        mimeType: file.type,
-                        fileData: base64Data,
+                    const payload = {
                         title: document.getElementById('fileTitle').value,
                         subject: subjects,
                         grade: document.getElementById('fileGrade').value,
-                        uploadedBy: user.name
-                    });
+                        file_url: publicUrl,
+                        uploaded_by: user.id
+                    };
 
-                    btn.disabled = false;
-                    btn.textContent = 'Upload Material';
+                    const response = await api.post('files', payload);
 
                     if (response.success) {
                         status.textContent = 'File uploaded successfully!';
@@ -355,11 +366,16 @@
                         e.target.reset();
                         if (typeof loadMaterials === 'function') loadMaterials();
                     } else {
-                        status.textContent = response.error || 'Failed to upload.';
-                        status.className = 'status status--error';
+                        throw new Error(response.error);
                     }
-                };
-                reader.readAsDataURL(file);
+                } catch (err) {
+                    console.error('Upload Error:', err);
+                    status.textContent = err.message || 'Failed to upload.';
+                    status.className = 'status status--error';
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Upload Material';
+                }
             });
         }
 
@@ -376,7 +392,7 @@
             status.style.display = 'none';
             tbody.innerHTML = '<tr><td colspan="4" class="loading-text">Loading announcements...</td></tr>';
 
-            const response = await api.get('getAnnouncements');
+            const response = await api.get('announcements');
 
             btnRefresh.disabled = false;
             btnRefresh.textContent = 'Refresh List';
@@ -455,11 +471,11 @@
                 btn.textContent = 'Posting...';
                 status.className = 'status';
 
-                const response = await api.post('addAnnouncement', {
+                const response = await api.post('announcements', {
                     title: document.getElementById('noticeTitle').value,
                     message: document.getElementById('noticeMessage').value,
                     grade: document.getElementById('noticeGrade').value,
-                    postedBy: user.name
+                    posted_by: user.id
                 });
 
                 btn.disabled = false;
@@ -490,7 +506,7 @@
             status.style.display = 'none';
             tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Loading tests...</td></tr>';
 
-            const response = await api.get('getTests');
+            const response = await api.get('tests');
 
             btnRefresh.disabled = false;
             btnRefresh.textContent = 'Refresh List';
@@ -577,13 +593,13 @@
                 const subjectCheckboxes = document.querySelectorAll('input[name="testSubjects"]:checked');
                 const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
 
-                const response = await api.post('scheduleTest', {
+                const response = await api.post('tests', {
                     title: document.getElementById('testTitle').value,
                     subject: subjects,
                     grade: document.getElementById('testGrade').value,
                     date: document.getElementById('testDate').value,
-                    maxMarks: document.getElementById('testMaxMarks').value,
-                    scheduledBy: user.name
+                    max_marks: document.getElementById('testMaxMarks').value,
+                    scheduled_by: user.id
                 });
 
                 btn.disabled = false;
@@ -617,7 +633,7 @@
             status.style.display = 'none';
             tbody.innerHTML = '<tr><td colspan="4" class="loading-text">Loading students...</td></tr>';
 
-            const response = await api.get('getStudents');
+            const response = await api.get('profiles', { role: 'student' });
 
             btnRefresh.disabled = false;
             btnRefresh.textContent = 'Refresh List';
@@ -627,10 +643,10 @@
                 if (response.data && response.data.length > 0) {
                     tbody.innerHTML = response.data.map(student => `
                         <tr class="data-table__row">
-                            <td class="data-table__td--main">${student.Name || '-'}</td>
-                            <td class="data-table__td">${student.Username || '-'}</td>
-                            <td class="data-table__td">${student.Password || '-'}</td>
-                            <td class="data-table__td">${student.Grade || student.Class || '-'}</td>
+                            <td class="data-table__td--main">${student.name || '-'}</td>
+                            <td class="data-table__td">${student.username || '-'}</td>
+                            <td class="data-table__td"><em>(Secured in Auth)</em></td>
+                            <td class="data-table__td">${student.grade || '-'}</td>
                         </tr>
                     `).join('');
                 } else {
@@ -687,97 +703,32 @@
 
         function attachAddStudentListeners() {
             const form = document.getElementById('addStudentForm');
-            const autoGenCheck = document.getElementById('autoGenerateCheckbox');
-            const customFields = document.getElementById('customCredentialsFields');
-            const studentNameInput = document.getElementById('studentName');
-
             if (!form) return;
 
-            autoGenCheck.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    customFields.style.display = 'none';
-                    document.getElementById('studentUsername').removeAttribute('required');
-                    document.getElementById('studentPassword').removeAttribute('required');
-                } else {
-                    customFields.style.display = 'block';
-                    document.getElementById('studentUsername').setAttribute('required', 'true');
-                    document.getElementById('studentPassword').setAttribute('required', 'true');
-                }
-            });
-
-            form.addEventListener('submit', async (e) => {
+            form.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const btn = document.getElementById('btnAddStudent');
                 const status = document.getElementById('addStudentStatus');
-
-                btn.disabled = true;
-                btn.textContent = 'Registering...';
-                status.style.display = 'none';
-                status.className = 'status';
-
-                const name = studentNameInput.value.trim();
+                const name = document.getElementById('studentName').value.trim();
                 const grade = document.getElementById('studentGrade').value;
+                const username = document.getElementById('studentUsername').value.trim().toLowerCase();
 
                 const subjectCheckboxes = document.querySelectorAll('input[name="studentSubjects"]:checked');
                 const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
 
-                let username = '';
-                let password = '';
-
-                if (autoGenCheck.checked) {
-                    let firstName = name.split(' ')[0] || '';
-                    let lastName = name.split(' ').length > 1 ? name.split(' ')[name.split(' ').length - 1] : '';
-                    let lastInitial = lastName ? lastName.charAt(0).toLowerCase() : '';
-
-                    let randUser = Math.floor(100 + Math.random() * 900);
-                    username = `${firstName.toLowerCase()}.${lastInitial}${randUser}`;
-
-                    let randPass = Math.floor(1000 + Math.random() * 9000);
-                    let capFirst = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-                    password = `${capFirst}@${randPass}`;
-                } else {
-                    username = document.getElementById('studentUsername').value.trim();
-                    password = document.getElementById('studentPassword').value;
-                }
-
-                const payload = {
+                const email = `${username}@tuitions.internal`;
+                const metadata = {
                     name: name,
+                    username: username,
                     grade: grade,
                     subjects: subjects,
-                    username: username,
-                    password: password
+                    role: 'student'
                 };
 
-                const response = await api.post('addStudent', payload);
+                document.getElementById('genEmail').textContent = email;
+                document.getElementById('genMetadata').textContent = JSON.stringify(metadata, null, 2);
 
-                btn.disabled = false;
-                btn.textContent = 'Register Student';
-
-                if (response.success) {
-                    status.innerHTML = `
-                        <strong>✅ Student Registered Successfully</strong><br><br>
-                        <strong>Name:</strong> ${name}<br>
-                        <strong>Grade:</strong> ${grade} | <strong>Subjects:</strong> ${subjects || 'None'}<br><br>
-                        <strong>Username:</strong> ${username}<br>
-                        <strong>Password:</strong> ${password}<br><br>
-                        <em>(Please copy these credentials and share them with the student)</em>
-                    `;
-                    status.className = 'status status--success';
-                    status.style.display = 'block';
-
-                    form.reset();
-                    if (!autoGenCheck.checked) {
-                        autoGenCheck.checked = true;
-                        customFields.style.display = 'none';
-                        document.getElementById('studentUsername').removeAttribute('required');
-                        document.getElementById('studentPassword').removeAttribute('required');
-                    }
-                    if (typeof loadStudents === 'function') loadStudents();
-                } else {
-                    status.textContent = response.error || 'Failed to register student.';
-                    status.className = 'status status--error';
-                    status.style.display = 'block';
-                }
+                status.style.display = 'block';
+                status.className = 'status status--info';
             });
         }
 

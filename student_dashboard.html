@@ -110,13 +110,14 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
     <script>
         // Require student role
         const user = auth.requireRole('student');
         document.getElementById('studentName').textContent = user.name;
-        document.getElementById('studentClassInfo').textContent = `Grade: ${user.studentClass || 'N/A'} | Access your study materials and notices.`;
+        document.getElementById('studentClassInfo').textContent = `Grade: ${user.grade || 'N/A'} | Access your study materials and notices.`;
 
         let allFiles = [];
 
@@ -127,20 +128,13 @@
         });
 
         async function fetchData() {
-            if (CONFIG.SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
-                document.getElementById('materialsList').innerHTML = '<div class="status status--error">Setup pending: Configure Apps Script URL</div>';
-                document.getElementById('announcementsList').innerHTML = '<div class="status status--error">Setup pending</div>';
-                document.getElementById('testsTableBody').innerHTML = '<tr><td colspan="5" class="status status--error text-center">Setup pending</td></tr>';
-                return;
-            }
-
-            // Fetch Files
-            const fileRes = await api.get('getFiles');
+            // Fetch Files filtered by Grade
+            const fileRes = await api.get('files', { grade: user.grade });
             if (fileRes.success) {
-                allFiles = fileRes.data.filter(f => !f['Grade'] || String(f['Grade']) === String(user.studentClass));
+                allFiles = fileRes.data;
 
                 const subjects = new Set();
-                allFiles.forEach(f => { if (f['Subject']) subjects.add(f['Subject']); });
+                allFiles.forEach(f => { if (f.subject) subjects.add(f.subject); });
                 const filterSubj = document.getElementById('filterSubject');
                 subjects.forEach(s => {
                     const opt = document.createElement('option');
@@ -153,11 +147,12 @@
                 document.getElementById('materialsList').innerHTML = `<div class="loading-text">Error: ${fileRes.error}</div>`;
             }
 
-            // Fetch Announcements
-            const annRes = await api.get('getAnnouncements');
+            // Fetch Announcements (Specific grade + 'All')
+            // Note: Since api.get only handles basic eq, we'll fetch all and filter client side or use a custom query
+            const annRes = await api.get('announcements');
             const annList = document.getElementById('announcementsList');
             if (annRes.success) {
-                const arr = annRes.data.filter(a => !a['Grade'] || String(a['Grade']) === String(user.studentClass)).reverse();
+                const arr = annRes.data.filter(a => !a.grade || a.grade === 'All' || a.grade === user.grade).reverse();
                 annList.innerHTML = '';
 
                 if (arr.length === 0) annList.innerHTML = '<div class="loading-text">No new announcements.</div>';
@@ -166,9 +161,9 @@
                     const item = document.createElement('article');
                     item.className = 'notice-list__item';
                     item.innerHTML = `
-                        <h4>${a['Title']}</h4>
-                        <p class="notice-list__meta">${new Date(a['Date']).toLocaleDateString()}</p>
-                        <p class="notice-list__body">${a['Message']}</p>
+                        <h4>${a.title}</h4>
+                        <p class="notice-list__meta">${new Date(a.created_at).toLocaleDateString()}</p>
+                        <p class="notice-list__body">${a.message}</p>
                     `;
                     annList.appendChild(item);
                 });
@@ -176,65 +171,50 @@
                 annList.innerHTML = `<div class="loading-text">Error: ${annRes.error}</div>`;
             }
 
-            // Fetch Tests and Marks
-            const [testsRes, marksRes] = await Promise.all([
-                api.get('getTests'),
-                api.get('getMarks')
-            ]);
-
+            // Fetch My Marks (with Test details)
+            const marksRes = await api.get('marks', { student_id: user.id }, '*, tests(*)');
             const tbody = document.getElementById('testsTableBody');
-            if (testsRes.success && marksRes.success) {
-                const tests = testsRes.data || [];
-                const marks = marksRes.data || [];
 
-                const myTests = tests.filter(t => !t['Grade'] || String(t['Grade']) === String(user.studentClass)).reverse();
-
-                const myMarksMap = {};
-                marks.forEach(m => {
-                    if (String(m['Student Name']) === String(user.name)) {
-                        myMarksMap[m['Test ID']] = m['Marks'];
-                    }
-                });
+            if (marksRes.success) {
+                const myMarks = marksRes.data.reverse();
 
                 // Calculate Performance Stats
                 let totalPercent = 0;
-                let testsWithMarks = 0;
                 let bestPercent = 0;
 
-                myTests.forEach(t => {
-                    const earned = myMarksMap[t['Test ID']];
-                    if (earned !== undefined) {
-                        const max = Number(t['Max Marks']) || 100;
-                        const percent = (Number(earned) / max) * 100;
+                myMarks.forEach(m => {
+                    const test = m.tests;
+                    if (test) {
+                        const earned = Number(m.marks_obtained);
+                        const max = Number(test.max_marks) || 100;
+                        const percent = (earned / max) * 100;
                         totalPercent += percent;
-                        testsWithMarks++;
                         if (percent > bestPercent) bestPercent = percent;
                     }
                 });
 
-                if (testsWithMarks > 0) {
-                    document.getElementById('statTestsTaken').textContent = testsWithMarks;
-                    document.getElementById('statAvgMarks').textContent = Math.round(totalPercent / testsWithMarks) + '%';
+                if (myMarks.length > 0) {
+                    document.getElementById('statTestsTaken').textContent = myMarks.length;
+                    document.getElementById('statAvgMarks').textContent = Math.round(totalPercent / myMarks.length) + '%';
                     document.getElementById('statBestScore').textContent = Math.round(bestPercent) + '%';
                     document.getElementById('studentPerfCard').classList.add('perf-card--visible');
                 }
 
-                if (myTests.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="loading-text">No tests scheduled.</td></tr>';
+                if (myMarks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="loading-text">No tests found for your record.</td></tr>';
                 } else {
-                    tbody.innerHTML = myTests.map(t => {
-                        const earned = myMarksMap[t['Test ID']];
-                        const earnedDisplay = earned !== undefined
-                            ? `<span class="data-table__score">${earned}</span>`
-                            : `<span class="data-table__td">Pending</span>`;
-                        const metaDate = new Date(t['Date']).toLocaleDateString() !== 'Invalid Date' ? new Date(t['Date']).toLocaleDateString() : t['Date'];
+                    tbody.innerHTML = myMarks.map(m => {
+                        const test = m.tests || {};
+                        const earned = m.marks_obtained;
+                        const earnedDisplay = `<span class="data-table__score">${earned}</span>`;
+                        const metaDate = new Date(test.date).toLocaleDateString();
 
                         return `
                             <tr class="data-table__row">
                                 <td class="data-table__td">${metaDate}</td>
-                                <td class="data-table__td">${t['Subject'] || '-'}</td>
-                                <td class="data-table__td--main">${t['Title']}</td>
-                                <td class="data-table__td">${t['Max Marks']}</td>
+                                <td class="data-table__td">${test.subject || '-'}</td>
+                                <td class="data-table__td--main">${test.title || 'Untitled Test'}</td>
+                                <td class="data-table__td">${test.max_marks || '-'}</td>
                                 <td class="data-table__td">${earnedDisplay}</td>
                             </tr>
                         `;
@@ -251,8 +231,8 @@
             const search = document.getElementById('searchTitle').value.toLowerCase();
 
             const filtered = allFiles.filter(f => {
-                const matchSubj = subj === '' || f['Subject'] === subj;
-                const matchSearch = search === '' || String(f['Title']).toLowerCase().includes(search);
+                const matchSubj = subj === '' || f.subject === subj;
+                const matchSearch = search === '' || String(f.title).toLowerCase().includes(search);
                 return matchSubj && matchSearch;
             });
 
@@ -267,17 +247,17 @@
                 const item = document.createElement('article');
                 item.className = 'material-list__item';
 
-                const metaDate = new Date(f['Upload Date']).toLocaleDateString() !== 'Invalid Date' ? new Date(f['Upload Date']).toLocaleDateString() : f['Upload Date'];
+                const metaDate = new Date(f.created_at).toLocaleDateString();
 
                 item.innerHTML = `
                     <div class="material-list__info">
-                        <h4>${f['Title']}</h4>
+                        <h4>${f.title}</h4>
                         <div class="material-list__meta">
-                            <span>📘 ${f['Subject']}</span>
+                            <span>📘 ${f.subject}</span>
                             <span>📅 ${metaDate}</span>
                         </div>
                     </div>
-                    <a href="${f['File URL']}" target="_blank" class="btn btn--primary btn--sm">View / Download</a>
+                    <a href="${f.file_url}" target="_blank" class="btn btn--primary btn--sm">View / Download</a>
                 `;
 
                 list.appendChild(item);

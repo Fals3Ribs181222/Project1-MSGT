@@ -1,3 +1,9 @@
+<div class="panel__info">
+    <h3>Student Registration Assistant</h3>
+    <p>To ensure maximum security, use the <strong>Supabase Dashboard</strong> to create new student accounts. This form
+        helps you generate the metadata needed for a smooth setup.</p>
+</div>
+
 <form id="addStudentForm">
     <div class="form__group">
         <label class="form__label" for="studentName">Student Full Name</label>
@@ -27,28 +33,24 @@
         </div>
     </div>
 
-    <div class="form__group form__toggle">
-        <label class="form__toggle-label">
-            <input type="checkbox" id="autoGenerateCheckbox" checked class="form__checkbox">
-            Auto-generate Username &amp; Password
-        </label>
-        <p class="form__toggle-hint">
-            Automatically generates a standard, secure Username (e.g. rahul.s123) and Password. Uncheck to provide
-            custom credentials.
-        </p>
+    <div class="form__group">
+        <label class="form__label" for="studentUsername">Desired Username</label>
+        <input type="text" id="studentUsername" class="form__control" required placeholder="e.g. rahul.sharma">
     </div>
 
-    <div id="customCredentialsFields" class="form__custom-fields">
-        <div class="form__group">
-            <label class="form__label" for="studentUsername">Custom Username</label>
-            <input type="text" id="studentUsername" class="form__control" placeholder="e.g. rahul.sharma">
-        </div>
-        <div class="form__group">
-            <label class="form__label" for="studentPassword">Custom Password</label>
-            <input type="text" id="studentPassword" class="form__control" placeholder="Enter secure password">
-        </div>
-    </div>
+    <button type="submit" class="btn btn--primary btn--full" id="btnAddStudent">Generate Registration Info</button>
 
-    <button type="submit" class="btn btn--primary btn--full" id="btnAddStudent">Register Student</button>
-    <div id="addStudentStatus" class="status"></div>
+    <div id="addStudentStatus" class="status" style="display:none;">
+        <strong>Step 1:</strong> Go to <a href="https://supabase.com/dashboard/project/knevelyboxvzkscvzagd/auth/users"
+            target="_blank" class="navbar__link">Supabase Dashboard > Authentication</a><br>
+        <strong>Step 2:</strong> Click <strong>"Add User" > "Create new user"</strong><br>
+        <strong>Step 3:</strong> Use these details:<br>
+        <ul>
+            <li><strong>Email:</strong> <span id="genEmail" style="color:var(--primary);"></span></li>
+            <li><strong>Password:</strong> (Set a secure password)</li>
+        </ul>
+        <strong>Step 4:</strong> Click <strong>"User Metadata"</strong> and paste this JSON:<br>
+        <pre id="genMetadata"
+            style="background:var(--gray-900); padding:1rem; border-radius:8px; margin-top:0.5rem; color:#fff; font-size:0.8rem;"></pre>
+    </div>
 </form>

@@ -81,6 +81,7 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
     <script>
@@ -94,21 +95,45 @@
             document.getElementById('searchName').addEventListener('input', renderResults);
         });
 
-        async function loadResults() {
-            if (CONFIG.SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
-                document.getElementById('loadingMsg').textContent = 'Please configure the Google Apps Script Web App URL.';
-                return;
-            }
+        // Helper for creating elements with classes and text
+        function createElement(tag, className = '', text = '') {
+            const el = document.createElement(tag);
+            if (className) el.className = className;
+            if (text) el.textContent = text;
+            return el;
+        }
 
-            const response = await api.get('getResults');
+        async function loadResults() {
+            // Fetch marks with associated test and student profile names
+            const response = await api.get('marks', {}, '*, tests(*), profiles(name)');
 
             if (response.success) {
-                allResults = response.data;
+                // Transform data into a cleaner results format
+                allResults = response.data.map(m => {
+                    const test = m.tests || {};
+                    const profile = m.profiles || {};
+                    const year = test.date ? new Date(test.date).getFullYear() : '-';
+                    const max = Number(test.max_marks) || 100;
+                    const obtained = Number(m.marks_obtained);
+                    const percent = ((obtained / max) * 100).toFixed(1) + '%';
+
+                    return {
+                        studentName: profile.name || 'Anonymous',
+                        subject: test.subject || '-',
+                        marks: obtained,
+                        overall: `${obtained} / ${max} (${percent})`,
+                        year: year
+                    };
+                });
+
                 populateFilters();
                 renderResults();
             } else {
-                document.getElementById('loadingMsg').textContent = 'Error loading results: ' + (response.error || 'Unknown error');
-                document.getElementById('loadingMsg').style.color = 'red';
+                const msg = document.getElementById('loadingMsg');
+                if (msg) {
+                    msg.textContent = 'Error loading results: ' + (response.error || 'Unknown error');
+                    msg.style.color = 'red';
+                }
             }
         }
 
@@ -117,18 +142,22 @@
             const years = new Set();
 
             allResults.forEach(item => {
-                if (item['Subject']) subjects.add(item['Subject']);
-                if (item['Year']) years.add(item['Year']);
+                if (item.subject && item.subject !== '-') subjects.add(item.subject);
+                if (item.year && item.year !== '-') years.add(item.year);
             });
 
             const subjSelect = document.getElementById('filterSubject');
             subjects.forEach(subject => {
-                subjSelect.appendChild(createElement('option', '', subject)).value = subject;
+                const opt = createElement('option', '', subject);
+                opt.value = subject;
+                subjSelect.appendChild(opt);
             });
 
             const yearSelect = document.getElementById('filterYear');
             years.forEach(yr => {
-                yearSelect.appendChild(createElement('option', '', yr)).value = yr;
+                const opt = createElement('option', '', yr);
+                opt.value = yr;
+                yearSelect.appendChild(opt);
             });
         }
 
@@ -139,17 +168,14 @@
             const searchFilter = document.getElementById('searchName').value.toLowerCase();
 
             let filtered = allResults.filter(item => {
-                const matchSubj = subjectFilter === "" || item['Subject'] === subjectFilter;
-                const matchYear = yearFilter === "" || String(item['Year']) === String(yearFilter);
-                const matchName = searchFilter === "" || String(item['Student Name']).toLowerCase().includes(searchFilter);
+                const matchSubj = subjectFilter === "" || item.subject === subjectFilter;
+                const matchYear = yearFilter === "" || String(item.year) === String(yearFilter);
+                const matchName = searchFilter === "" || String(item.studentName).toLowerCase().includes(searchFilter);
                 return matchSubj && matchYear && matchName;
             });
 
-            filtered.sort((a, b) => {
-                const marksA = parseFloat(a['Marks']) || 0;
-                const marksB = parseFloat(b['Marks']) || 0;
-                return marksB - marksA;
-            });
+            // Sort by absolute marks descending
+            filtered.sort((a, b) => (b.marks || 0) - (a.marks || 0));
 
             tbody.innerHTML = '';
 
@@ -165,11 +191,11 @@
             filtered.forEach(item => {
                 const tr = createElement('tr');
 
-                tr.appendChild(createElement('td', '', item['Student Name'] || '-'));
-                tr.appendChild(createElement('td', '', item['Subject'] || '-'));
-                tr.appendChild(createElement('td', 'data-table__score', item['Marks'] || '-'));
-                tr.appendChild(createElement('td', '', item['Overall'] || '-'));
-                tr.appendChild(createElement('td', '', item['Year'] || '-'));
+                tr.appendChild(createElement('td', '', item.studentName));
+                tr.appendChild(createElement('td', '', item.subject));
+                tr.appendChild(createElement('td', 'data-table__score', item.marks));
+                tr.appendChild(createElement('td', '', item.overall));
+                tr.appendChild(createElement('td', '', item.year));
 
                 tbody.appendChild(tr);
             });

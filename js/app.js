@@ -1,46 +1,95 @@
 // Core Application Logic
 
-// API interaction wrapper
+// Initialize Supabase Client
+const { createClient } = supabase;
+const supabaseClient = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+// API interaction wrapper (Supabase implementation)
 const api = {
-    async get(action, params = {}) {
-        const url = new URL(CONFIG.SCRIPT_URL);
-        url.searchParams.append('action', action);
-        for (const [key, value] of Object.entries(params)) {
-            url.searchParams.append(key, value);
+    async get(tableName, filters = {}, select = '*') {
+        let req = supabaseClient.from(tableName).select(select);
+
+        // Add basic filters if needed
+        for (const [key, value] of Object.entries(filters)) {
+            req = req.eq(key, value);
         }
 
-        try {
-            const response = await fetch(url);
-            return await response.json();
-        } catch (error) {
-            console.error('API Get Error:', error);
+        const { data, error } = await req;
+        if (error) {
+            console.error(`Supabase Get Error (${tableName}):`, error);
             return { success: false, error: error.message };
         }
+        return { success: true, data };
     },
 
-    async post(action, data) {
-        try {
-            const response = await fetch(CONFIG.SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action, ...data }),
-                // Headers are deliberately omitted to avoid CORS preflight issues with Google Apps Script
-            });
-            return await response.json();
-        } catch (error) {
-            console.error('API Post Error:', error);
+    async post(tableName, data) {
+        const { data: result, error } = await supabaseClient
+            .from(tableName)
+            .insert([data])
+            .select();
+
+        if (error) {
+            console.error(`Supabase Post Error (${tableName}):`, error);
             return { success: false, error: error.message };
         }
+        return { success: true, data: result[0] };
+    },
+
+    async upsert(tableName, data, onConflict = 'id') {
+        const { data: result, error } = await supabaseClient
+            .from(tableName)
+            .upsert(data, { onConflict: onConflict })
+            .select();
+
+        if (error) {
+            console.error(`Supabase Upsert Error (${tableName}):`, error);
+            return { success: false, error: error.message };
+        }
+        return { success: true, data: result };
     }
 };
 
 // Auth State Management
 const auth = {
-    login(user) {
+    async login(username, password) {
+        const email = `${username.toLowerCase()}@tuitions.internal`;
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) {
+            console.error('Login Error:', error);
+            return { success: false, error: error.message };
+        }
+
+        // Fetch profile
+        const { data: profile, error: profError } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+
+        if (profError) {
+            console.error('Profile Fetch Error:', profError);
+            return { success: false, error: 'Could not fetch user profile.' };
+        }
+
+        const user = {
+            id: data.user.id,
+            username: profile.username,
+            name: profile.name,
+            role: profile.role,
+            studentClass: profile.grade
+        };
+
         localStorage.setItem('mitesh_tutions_user', JSON.stringify(user));
         this.redirect(user.role);
+        return { success: true };
     },
 
-    logout() {
+    async logout() {
+        await supabaseClient.auth.signOut();
         localStorage.removeItem('mitesh_tutions_user');
         window.location.href = 'login.html';
     },

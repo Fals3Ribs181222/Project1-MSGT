@@ -93,6 +93,7 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
     <script>
@@ -114,22 +115,22 @@
         async function init() {
             try {
                 const [testsRes, studentsRes, marksRes] = await Promise.all([
-                    api.get('getTests'),
-                    api.get('getStudents'),
-                    api.get('getMarks')
+                    api.get('tests'),
+                    api.get('profiles', { role: 'student' }),
+                    api.get('marks', { test_id: testId })
                 ]);
 
                 if (!testsRes.success || !studentsRes.success || !marksRes.success) {
-                    throw new Error('Failed to fetch data from server.');
+                    throw new Error('Failed to fetch data from Supabase.');
                 }
 
-                currentTest = testsRes.data.find(t => t['Test ID'] === testId);
+                currentTest = testsRes.data.find(t => t.id === testId);
                 if (!currentTest) {
                     throw new Error('Test not found.');
                 }
 
                 allStudents = studentsRes.data;
-                existingMarks = marksRes.data.filter(m => m['Test ID'] === testId);
+                existingMarks = marksRes.data;
 
                 renderPage();
             } catch (err) {
@@ -139,15 +140,15 @@
         }
 
         function renderPage() {
-            document.getElementById('testTitle').textContent = currentTest['Title'];
-            document.getElementById('testMeta').textContent = `Subject: ${currentTest['Subject']} | Grade: ${currentTest['Grade']} | Date: ${currentTest['Date']} | Max Marks: ${currentTest['Max Marks']}`;
+            document.getElementById('testTitle').textContent = currentTest.title;
+            document.getElementById('testMeta').textContent = `Subject: ${currentTest.subject} | Grade: ${currentTest.grade} | Date: ${currentTest.date} | Max Marks: ${currentTest.max_marks}`;
 
-            const targetGrade = String(currentTest['Grade']).trim();
-            const targetSubject = String(currentTest['Subject']).trim().toLowerCase();
+            const targetGrade = String(currentTest.grade).trim();
+            const targetSubject = String(currentTest.subject).trim().toLowerCase();
 
             const eligibleStudents = allStudents.filter(s => {
-                const sGrade = String(s['Grade'] || s['Class'] || '').trim();
-                const sSubjects = String(s['Subjects'] || '').toLowerCase();
+                const sGrade = String(s.grade).trim();
+                const sSubjects = String(s.subjects || '').toLowerCase();
                 return sGrade === targetGrade && sSubjects.includes(targetSubject);
             });
 
@@ -156,28 +157,30 @@
             const tbody = document.getElementById('marksTableBody');
             const marksMap = {};
             existingMarks.forEach(m => {
-                marksMap[m['Student Name']] = m['Marks'];
+                marksMap[m.student_id] = { id: m.id, marks: m.marks_obtained };
             });
 
             if (eligibleStudents.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" class="loading-text">No students found matching this Grade and Subject.</td></tr>';
             } else {
                 tbody.innerHTML = eligibleStudents.map(s => {
-                    const existingMark = marksMap[s.Name];
-                    const maxM = Number(currentTest['Max Marks']) || 100;
-                    const pct = existingMark !== undefined ? ((Number(existingMark) / maxM) * 100).toFixed(1) + '%' : '-';
+                    const markData = marksMap[s.id] || {};
+                    const existingMark = markData.marks;
+                    const maxM = Number(currentTest.max_marks) || 100;
+                    const pct = existingMark !== undefined && existingMark !== '' ? ((Number(existingMark) / maxM) * 100).toFixed(1) + '%' : '-';
                     return `
                     <tr class="data-table__row">
-                        <td class="data-table__td--main">${s.Name}</td>
-                        <td class="data-table__td">${s.Username || '-'}</td>
+                        <td class="data-table__td--main">${s.name}</td>
+                        <td class="data-table__td">${s.username || '-'}</td>
                         <td class="data-table__td">
                             <input type="number"
                                 class="form__control form__control--narrow student-mark-input"
-                                data-name="${s.Name}"
+                                data-student-id="${s.id}"
+                                data-mark-id="${markData.id || ''}"
                                 value="${existingMark !== undefined ? existingMark : ''}"
                                 min="0"
-                                max="${currentTest['Max Marks']}"
-                                placeholder="Max: ${currentTest['Max Marks']}"
+                                max="${currentTest.max_marks}"
+                                placeholder="Max: ${currentTest.max_marks}"
                             >
                         </td>
                         <td class="data-table__td pct-cell">${pct}</td>
@@ -233,11 +236,17 @@
             const inputs = document.querySelectorAll('.student-mark-input');
 
             const marksPayload = Array.from(inputs)
-                .map(i => ({
-                    name: i.dataset.name,
-                    marks: i.value.trim()
-                }))
-                .filter(m => m.marks !== '');
+                .map(i => {
+                    const row = {
+                        test_id: testId,
+                        student_id: i.dataset.studentId,
+                        marks_obtained: i.value.trim()
+                    };
+                    // If we have an existing mark ID, include it for upsert
+                    if (i.dataset.markId) row.id = i.dataset.markId;
+                    return row;
+                })
+                .filter(m => m.marks_obtained !== '');
 
             if (marksPayload.length === 0) {
                 status.textContent = 'Please enter at least one mark.';
@@ -251,16 +260,20 @@
             status.style.display = 'none';
 
             try {
-                const response = await api.post('enterMarks', {
-                    testId: testId,
-                    marks: marksPayload
-                });
+                // Upsert handles both new and existing marks
+                const response = await api.upsert('marks', marksPayload);
 
                 if (response.success) {
                     status.textContent = 'All marks saved successfully!';
                     status.className = 'status status--success';
                     status.style.display = 'block';
-                    updatePerformanceSummary();
+
+                    // Refresh marks to get new IDs
+                    const refreshRes = await api.get('marks', { test_id: testId });
+                    if (refreshRes.success) {
+                        existingMarks = refreshRes.data;
+                        renderPage();
+                    }
                 } else {
                     throw new Error(response.error || 'Failed to save marks.');
                 }
