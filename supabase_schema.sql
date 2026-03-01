@@ -131,3 +131,66 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 7. Board Results (Independent from internal tests/marks)
+CREATE TABLE IF NOT EXISTS board_results (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_name TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  marks_obtained INTEGER NOT NULL,
+  max_marks INTEGER NOT NULL DEFAULT 100,
+  passing_year INTEGER NOT NULL,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE board_results ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public board results are viewable by everyone" ON board_results;
+CREATE POLICY "Public board results are viewable by everyone" ON board_results FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Teachers can manage board results" ON board_results;
+CREATE POLICY "Teachers can manage board results" ON board_results FOR ALL
+USING (public.is_teacher());
+
+-- 8. Testimonials
+CREATE TABLE IF NOT EXISTS testimonials (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_name TEXT NOT NULL,
+  testimonial_text TEXT NOT NULL,
+  subject TEXT,
+  year TEXT,
+  media_url TEXT,
+  media_type TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public testimonials are viewable by everyone" ON testimonials;
+CREATE POLICY "Public testimonials are viewable by everyone" ON testimonials FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Teachers can manage testimonials" ON testimonials;
+CREATE POLICY "Teachers can manage testimonials" ON testimonials FOR ALL
+USING (public.is_teacher());
+
+-- 9. Storage Buckets & Policies
+-- Note: Replace inserts with Supabase dashboard UI creation if errors persist
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('materials', 'materials', true),
+       ('testimonials', 'testimonials', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage Policies for materials
+DROP POLICY IF EXISTS "Public Access materials" ON storage.objects;
+CREATE POLICY "Public Access materials" ON storage.objects FOR SELECT USING (bucket_id = 'materials');
+
+DROP POLICY IF EXISTS "Teacher Upload materials" ON storage.objects;
+CREATE POLICY "Teacher Upload materials" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'materials' AND public.is_teacher());
+
+-- Storage Policies for testimonials
+DROP POLICY IF EXISTS "Public Access testimonials" ON storage.objects;
+CREATE POLICY "Public Access testimonials" ON storage.objects FOR SELECT USING (bucket_id = 'testimonials');
+
+DROP POLICY IF EXISTS "Teacher Upload/Delete testimonials" ON storage.objects;
+CREATE POLICY "Teacher Upload/Delete testimonials" ON storage.objects FOR ALL USING (bucket_id = 'testimonials' AND public.is_teacher());

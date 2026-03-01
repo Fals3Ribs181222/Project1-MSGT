@@ -95,25 +95,21 @@
         });
 
         async function loadResults() {
-            // Fetch marks with associated test and student profile names
-            const response = await api.get('marks', {}, '*, tests(*), profiles(name)');
+            // Fetch board results from the dedicated table
+            const response = await api.get('board_results');
 
             if (response.success) {
-                // Transform data into a cleaner results format
-                allResults = response.data.map(m => {
-                    const test = m.tests || {};
-                    const profile = m.profiles || {};
-                    const year = test.date ? new Date(test.date).getFullYear() : '-';
-                    const max = Number(test.max_marks) || 100;
-                    const obtained = Number(m.marks_obtained);
+                allResults = response.data.map(br => {
+                    const max = Number(br.max_marks) || 100;
+                    const obtained = Number(br.marks_obtained);
                     const percent = ((obtained / max) * 100).toFixed(1) + '%';
 
                     return {
-                        studentName: profile.name || 'Anonymous',
-                        subject: test.subject || '-',
+                        studentName: br.student_name || 'Anonymous',
+                        subject: br.subject || '-',
                         marks: obtained,
                         overall: `${obtained} / ${max} (${percent})`,
-                        year: year
+                        year: br.passing_year || '-'
                     };
                 });
 
@@ -145,7 +141,7 @@
             });
 
             const yearSelect = document.getElementById('filterYear');
-            years.forEach(yr => {
+            [...years].sort((a, b) => b - a).forEach(yr => {
                 const opt = createElement('option', '', yr);
                 opt.value = yr;
                 yearSelect.appendChild(opt);

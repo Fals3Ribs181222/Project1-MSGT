@@ -56,13 +56,31 @@
             const list = document.getElementById('testimonialsList');
             const loadingMsg = document.getElementById('loadingMsg');
 
-            const response = await api.get('testimonials');
+            const response = await api.get('testimonials', {}, 'id, student_name, subject, year, testimonial_text, media_url, media_type, created_at');
 
             if (response.success && response.data && response.data.length > 0) {
                 list.innerHTML = '';
                 response.data.forEach(item => {
                     const card = createElement('article', 'testimonials__card');
                     card.setAttribute('role', 'listitem');
+
+                    if (item.media_url) {
+                        const mediaWrapper = createElement('div', 'testimonials__media');
+                        if (item.media_type && item.media_type.startsWith('video/')) {
+                            const video = document.createElement('video');
+                            video.src = item.media_url;
+                            video.controls = true;
+                            video.preload = "metadata";
+                            mediaWrapper.appendChild(video);
+                        } else {
+                            const img = document.createElement('img');
+                            img.src = item.media_url;
+                            img.alt = `${studentName}'s Testimonial Photo`;
+                            img.loading = 'lazy';
+                            mediaWrapper.appendChild(img);
+                        }
+                        card.appendChild(mediaWrapper);
+                    }
 
                     const text = createElement('p', 'testimonials__text', `"${item.testimonial_text || ''}"`);
                     card.appendChild(text);
