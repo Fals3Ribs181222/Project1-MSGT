@@ -1,34 +1,33 @@
-<form id="testimonialForm" class="form">
+<form id="testimonialForm">
     <div class="form__group">
         <label for="testimStudentName" class="form__label">Student Name *</label>
-        <input type="text" id="testimStudentName" class="form__input" required placeholder="e.g. John Doe">
+        <input type="text" id="testimStudentName" class="form__control" required placeholder="e.g. John Doe">
     </div>
 
     <div class="form__group">
         <label for="testimSubject" class="form__label">Subject (Optional)</label>
-        <input type="text" id="testimSubject" class="form__input" placeholder="e.g. Physics & Math">
+        <input type="text" id="testimSubject" class="form__control" placeholder="e.g. Physics & Math">
     </div>
 
     <div class="form__group">
         <label for="testimYear" class="form__label">Batch Year (Optional)</label>
-        <input type="text" id="testimYear" class="form__input" placeholder="e.g. 2024">
+        <input type="text" id="testimYear" class="form__control" placeholder="e.g. 2024">
     </div>
 
     <div class="form__group">
         <label for="testimText" class="form__label">Testimonial Text *</label>
-        <textarea id="testimText" class="form__textarea" required placeholder="Enter the testimonial text..."
+        <textarea id="testimText" class="form__control" required placeholder="Enter the testimonial text..."
             rows="4"></textarea>
     </div>
 
     <div class="form__group">
         <label for="testimMedia" class="form__label">Media Upload (Photo or Video - Optional)</label>
-        <input type="file" id="testimMedia" class="form__input" accept="image/*,video/*">
-        <small class="form__help">Upload a student photo or video testimonial.</small>
+        <input type="file" id="testimMedia" class="form__control" accept="image/*,video/*">
+        <small class="form__help"
+            style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; display: block;">Upload a student
+            photo or video testimonial.</small>
     </div>
 
-    <div class="form__group">
-        <button type="submit" class="btn btn--primary btn--full" id="btnAddTestimonial">Add Testimonial</button>
-    </div>
-
-    <div id="testimonialStatus" class="status" style="display: none;"></div>
+    <button type="submit" class="btn btn--primary btn--full" id="btnAddTestimonial">Add Testimonial</button>
+    <div id="testimonialStatus" class="status"></div>
 </form>

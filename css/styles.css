@@ -177,6 +177,16 @@ a {
     border-color: var(--primary);
 }
 
+.btn--danger {
+    background: rgba(239, 68, 68, 1);
+    color: white;
+}
+
+.btn--danger:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: translateY(-2px);
+}
+
 .btn--full {
     width: 100%;
     padding: 1rem;
@@ -1250,6 +1260,243 @@ button:disabled {
 /* Stats section bottom padding */
 .section--stats {
     padding-bottom: 6rem;
+}
+
+/* ============================================================
+   TESTIMONIALS REDESIGN (GSAP + MASONRY)
+   ============================================================ */
+.hero-interactive {
+    position: relative;
+    height: 70vh;
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--bg-surface), var(--bg-surface-hover));
+    border-radius: var(--radius-lg);
+    margin-bottom: 4rem;
+    border: 1px solid var(--border-color);
+}
+
+.hero-interactive__content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    pointer-events: none;
+    max-width: 600px;
+    padding: 2rem;
+}
+
+.hero-interactive__title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-interactive__subtitle {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+}
+
+.hero-interactive__media-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hero-interactive__element {
+    position: absolute;
+    width: 150px;
+    height: 200px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background: var(--bg-surface);
+    border: 4px solid white;
+    transform-origin: center center;
+    will-change: transform;
+    pointer-events: auto;
+    /* Allow hovering/playing if needed */
+}
+
+.hero-interactive__element img,
+.hero-interactive__element video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-interactive__element--text {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.content-split {
+    padding-top: 0;
+}
+
+.video-section {
+    margin-bottom: 4rem;
+}
+
+.video-grid {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+    -webkit-overflow-scrolling: touch;
+}
+
+.video-grid::-webkit-scrollbar {
+    height: 8px;
+}
+
+.video-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.video-grid::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 10px;
+}
+
+.video-card {
+    flex: 0 0 320px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.video-card__media {
+    width: 100%;
+    height: 450px;
+    background: #000;
+}
+
+.video-card__media video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-card__author {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.masonry-grid {
+    width: 100%;
+}
+
+.testimonials__card {
+    width: calc(33.333% - 16px);
+    margin-bottom: 24px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    box-shadow: var(--shadow-glow);
+}
+
+.testimonials__media {
+    width: 100%;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.testimonials__media img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.testimonials__text {
+    font-size: 1.05rem;
+    color: var(--text-main);
+    line-height: 1.6;
+    font-style: italic;
+}
+
+.testimonials__author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.testimonials__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.testimonials__author-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+}
+
+.testimonials__author-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Responsive updates for testimonials */
+@media (max-width: 992px) {
+    .testimonials__card {
+        width: calc(50% - 12px);
+    }
+}
+
+@media (max-width: 768px) {
+    .testimonials__card {
+        width: 100%;
+    }
+
+    .hero-interactive {
+        height: 50vh;
+        min-height: 400px;
+    }
+
+    .hero-interactive__element {
+        width: 100px;
+        height: 140px;
+    }
 }
 
 /* ============================================================

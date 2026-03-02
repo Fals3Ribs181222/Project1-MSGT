@@ -27,17 +27,36 @@
         </div>
     </nav>
 
-    <main class="container section">
-        <header class="section__header">
-            <h1 class="section__title">Student Success Stories</h1>
-            <p>Hear from our alumni who have achieved extraordinary results in their board exams.</p>
-        </header>
-
-        <div class="testimonials" id="testimonialsList" role="list">
-            <div class="empty-state" id="loadingMsg">
-                Loading testimonials...
+    <main>
+        <!-- Interactive Hero Section -->
+        <section class="hero-interactive" id="heroInteractive">
+            <div class="hero-interactive__content">
+                <h1 class="hero-interactive__title">Collaborate and conquer.</h1>
+                <p class="hero-interactive__subtitle">Hear from our alumni who have achieved extraordinary results in
+                    their board exams.</p>
             </div>
-        </div>
+            <!-- Floating media elements injected via JS -->
+            <div id="heroMediaContainer" class="hero-interactive__media-container"></div>
+        </section>
+
+        <!-- Lower Section (Video & Text Split) -->
+        <section class="container section content-split">
+            <!-- Video Testimonials -->
+            <div class="video-section">
+                <div class="video-grid" id="videoList" role="list">
+                    <!-- Video cards injected via JS -->
+                </div>
+            </div>
+
+            <!-- Text Testimonials -->
+            <div class="text-section" style="margin-top: 5rem;">
+                <div class="masonry-grid" id="textList" role="list">
+                    <div class="empty-state" id="loadingMsg">
+                        Loading testimonials...
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="footer">
@@ -49,67 +68,210 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const list = document.getElementById('testimonialsList');
+            const videoList = document.getElementById('videoList');
+            const textList = document.getElementById('textList');
+            const heroMediaContainer = document.getElementById('heroMediaContainer');
             const loadingMsg = document.getElementById('loadingMsg');
 
             const response = await api.get('testimonials', {}, 'id, student_name, subject, year, testimonial_text, media_url, media_type, created_at');
 
             if (response.success && response.data && response.data.length > 0) {
-                list.innerHTML = '';
-                response.data.forEach(item => {
-                    const card = createElement('article', 'testimonials__card');
-                    card.setAttribute('role', 'listitem');
+                loadingMsg.style.display = 'none';
 
-                    if (item.media_url) {
-                        const mediaWrapper = createElement('div', 'testimonials__media');
-                        if (item.media_type && item.media_type.startsWith('video/')) {
-                            const video = document.createElement('video');
-                            video.src = item.media_url;
-                            video.controls = true;
-                            video.preload = "metadata";
-                            mediaWrapper.appendChild(video);
-                        } else {
-                            const img = document.createElement('img');
-                            img.src = item.media_url;
-                            img.alt = `${studentName}'s Testimonial Photo`;
-                            img.loading = 'lazy';
-                            mediaWrapper.appendChild(img);
-                        }
-                        card.appendChild(mediaWrapper);
-                    }
+                // Segregate data
+                const videos = response.data.filter(item => item.media_url && item.media_type && item.media_type.startsWith('video/'));
+                const textsAndPhotos = response.data.filter(item => !(item.media_url && item.media_type && item.media_type.startsWith('video/')));
 
-                    const text = createElement('p', 'testimonials__text', `"${item.testimonial_text || ''}"`);
-                    card.appendChild(text);
+                // Render Videos
+                if (videos.length > 0) {
+                    videos.forEach(item => {
+                        const card = createVideoCard(item);
+                        videoList.appendChild(card);
+                    });
+                } else {
+                    videoList.innerHTML = '<p class="empty-state">No video testimonials yet.</p>';
+                    videoList.style.display = 'block';
+                }
 
-                    const authorDiv = createElement('div', 'testimonials__author');
+                // Render Texts and Photos
+                if (textsAndPhotos.length > 0) {
+                    textsAndPhotos.forEach(item => {
+                        const card = createTextCard(item);
+                        textList.appendChild(card);
+                    });
 
-                    const studentName = item.student_name || 'Student';
-                    const initial = studentName.charAt(0);
-                    const avatar = createElement('div', 'testimonials__avatar', initial);
-                    authorDiv.appendChild(avatar);
+                    // Initialize Masonry after rendering text cards
+                    setTimeout(() => {
+                        new Masonry('#textList', {
+                            itemSelector: '.testimonials__card',
+                            gutter: 24,
+                            percentPosition: true
+                        });
+                    }, 100);
+                } else {
+                    textList.innerHTML = '<p class="empty-state">No text testimonials yet.</p>';
+                }
 
-                    const info = createElement('div', 'testimonials__author-info');
-                    info.appendChild(createElement('h4', '', studentName));
+                // Setup Hero Parallax subset (mix of some videos and photos)
+                const parallaxSubset = response.data.slice(0, 10); // Take up to 10
+                setupHeroParallax(parallaxSubset, heroMediaContainer);
 
-                    const subsetInfo = [];
-                    if (item.subject) subsetInfo.push(item.subject);
-                    if (item.year) subsetInfo.push(`Batch ${item.year}`);
-
-                    info.appendChild(createElement('p', '', subsetInfo.join(' | ')));
-                    authorDiv.appendChild(info);
-
-                    card.appendChild(authorDiv);
-                    list.appendChild(card);
-                });
             } else {
                 loadingMsg.textContent = response.error ? `Error: ${response.error}` : 'No testimonials found yet.';
                 if (response.error) loadingMsg.style.color = 'red';
             }
         });
+
+        // Helper functions
+        function createVideoCard(item) {
+            const card = createElement('article', 'video-card');
+            card.setAttribute('role', 'listitem');
+
+            const mediaWrapper = createElement('div', 'video-card__media');
+            const video = document.createElement('video');
+            video.src = item.media_url;
+            video.controls = true;
+            video.preload = "metadata";
+            mediaWrapper.appendChild(video);
+            card.appendChild(mediaWrapper);
+
+            const authorDiv = createElement('div', 'video-card__author');
+            const studentName = item.student_name || 'Student';
+
+            const initial = studentName.charAt(0);
+            const avatar = createElement('div', 'testimonials__avatar', initial);
+            authorDiv.appendChild(avatar);
+
+            const info = createElement('div', 'testimonials__author-info');
+            info.appendChild(createElement('h4', '', studentName));
+
+            const subsetInfo = [];
+            if (item.subject) subsetInfo.push(item.subject);
+            if (item.year) subsetInfo.push(`Batch ${item.year}`);
+            info.appendChild(createElement('p', '', subsetInfo.join(' | ')));
+
+            authorDiv.appendChild(info);
+            card.appendChild(authorDiv);
+            return card;
+        }
+
+        function createTextCard(item) {
+            const card = createElement('article', 'testimonials__card');
+            card.setAttribute('role', 'listitem');
+
+            const studentName = item.student_name || 'Student';
+
+            if (item.media_url) {
+                const mediaWrapper = createElement('div', 'testimonials__media');
+                const img = document.createElement('img');
+                img.src = item.media_url;
+                img.alt = `${studentName}'s Testimonial Photo`;
+                img.loading = 'lazy';
+                // Trigger masonry layout after image loads
+                img.onload = () => {
+                    const msnry = Masonry.data('#textList');
+                    if (msnry) msnry.layout();
+                };
+                mediaWrapper.appendChild(img);
+                card.appendChild(mediaWrapper);
+            }
+
+            const text = createElement('p', 'testimonials__text', `"${item.testimonial_text || ''}"`);
+            card.appendChild(text);
+
+            const authorDiv = createElement('div', 'testimonials__author');
+
+            const initial = studentName.charAt(0);
+            const avatar = createElement('div', 'testimonials__avatar', initial);
+            authorDiv.appendChild(avatar);
+
+            const info = createElement('div', 'testimonials__author-info');
+            info.appendChild(createElement('h4', '', studentName));
+
+            const subsetInfo = [];
+            if (item.subject) subsetInfo.push(item.subject);
+            if (item.year) subsetInfo.push(`Batch ${item.year}`);
+
+            info.appendChild(createElement('p', '', subsetInfo.join(' | ')));
+            authorDiv.appendChild(info);
+
+            card.appendChild(authorDiv);
+            return card;
+        }
+
+        function setupHeroParallax(items, container) {
+            items.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'hero-interactive__element';
+
+                // Random position logic for initial placement around the edges
+                // We leave center empty for text
+                let top, left;
+                if (index % 4 === 0) { top = 5 + Math.random() * 25; left = Math.random() * 25; } // Top left
+                else if (index % 4 === 1) { top = 5 + Math.random() * 25; left = 70 + Math.random() * 25; } // Top right
+                else if (index % 4 === 2) { top = 65 + Math.random() * 25; left = Math.random() * 25; } // Bottom left
+                else { top = 65 + Math.random() * 25; left = 70 + Math.random() * 25; } // Bottom right
+
+                el.style.top = `${top}%`;
+                el.style.left = `${left}%`;
+
+                // Add random scale
+                const scale = 0.5 + Math.random() * 0.7; // Range: 0.5 to 1.2
+                el.style.transform = `scale(${scale})`;
+
+                // Set data attributes for parallax speed depending on perceived depth
+                const depth = 0.5 + Math.random() * 1.5;
+                el.setAttribute('data-depth', depth);
+
+                if (item.media_url) {
+                    if (item.media_type && item.media_type.startsWith('video/')) {
+                        const video = document.createElement('video');
+                        video.src = item.media_url;
+                        video.muted = true;
+                        video.loop = true;
+                        video.autoplay = true;
+                        video.playsInline = true;
+                        el.appendChild(video);
+                    } else {
+                        const img = document.createElement('img');
+                        img.src = item.media_url;
+                        el.appendChild(img);
+                    }
+                } else {
+                    // Fallback to text snippet if no media
+                    const p = document.createElement('p');
+                    p.textContent = `"${item.testimonial_text.substring(0, 40)}..."`;
+                    el.appendChild(p);
+                    el.classList.add('hero-interactive__element--text');
+                }
+
+                container.appendChild(el);
+            });
+
+            // GSAP Mousemove Parallax Logic
+            document.addEventListener('mousemove', (e) => {
+                if (window.innerWidth < 768) return; // Disable parallax on mobile
+
+                const xPos = (e.clientX / window.innerWidth - 0.5) * 2; // -1 to 1
+                const yPos = (e.clientY / window.innerHeight - 0.5) * 2; // -1 to 1
+
+                gsap.utils.toArray('.hero-interactive__element').forEach(el => {
+                    const depth = parseFloat(el.getAttribute('data-depth'));
+                    gsap.to(el, {
+                        x: xPos * 60 * depth, // 60px base movement, scaled by depth
+                        y: yPos * 60 * depth,
+                        duration: 1.2,
+                        ease: 'power2.out'
+                    });
+                });
+            });
+        }
     </script>
 </body>
 
