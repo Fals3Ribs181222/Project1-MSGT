@@ -1239,6 +1239,476 @@ button:disabled {
 }
 
 /* ============================================================
+   BATCH DETAIL VIEW
+   ============================================================ */
+.batch-detail {
+    animation: fadeIn 0.3s ease;
+}
+
+.batch-detail__header {
+    margin-bottom: 2rem;
+}
+
+.batch-detail__header h3 {
+    font-size: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-main);
+}
+
+.batch-detail__meta {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.batch-detail__body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .batch-detail__body {
+        grid-template-columns: 1fr;
+    }
+}
+
+.batch-detail__members h4,
+.student-picker h4 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.batch-detail__footer {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* ============================================================
+   STUDENT PICKER
+   ============================================================ */
+.student-picker {
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+}
+
+.student-picker__search {
+    margin-bottom: 1rem;
+}
+
+.student-picker__list {
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+
+.student-picker__list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.student-picker__list::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 10px;
+}
+
+.student-picker__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.student-picker__item:hover {
+    background: rgba(115, 147, 179, 0.08);
+}
+
+.student-picker__name {
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.student-picker__info {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.student-picker__actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.student-picker__count {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* ============================================================
+   STATUS INFO VARIANT
+   ============================================================ */
+.status--info {
+    background: rgba(115, 147, 179, 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(115, 147, 179, 0.3);
+    display: block;
+}
+
+/* ============================================================
+   DAY PICKER (MULTI-SELECT PILLS)
+   ============================================================ */
+.day-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.day-picker__label {
+    cursor: pointer;
+    user-select: none;
+}
+
+.day-picker__input {
+    display: none;
+    /* Hide the actual checkbox */
+}
+
+.day-picker__text {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.day-picker__input:checked+.day-picker__text {
+    background: var(--secondary);
+    border-color: var(--secondary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(138, 154, 91, 0.3);
+}
+
+.day-picker__label:hover .day-picker__text {
+    border-color: var(--secondary);
+}
+
+/* ============================================================
+   CUSTOM TIME PICKER
+   ============================================================ */
+.time-picker-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.time-picker-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-picker-display:hover {
+    border-color: var(--border-focus);
+}
+
+.time-picker-display i {
+    color: var(--text-light);
+    font-size: 1.1rem;
+}
+
+.time-picker-panel {
+    width: calc(50% - 0.75rem);
+    background: transparent;
+    /* Match the backdrop instead of a solid surface */
+    border: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: auto;
+    transition: margin-left 0.3s ease;
+    padding: 0.5rem 0;
+    /* Only vertical padding */
+    gap: 0.5rem;
+}
+
+/* Redefining what used to be columns as semantic rows */
+.time-col {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    /* Match day picker gap */
+    border-bottom: none;
+    /* Remove dividers for cleaner pill look */
+    padding-bottom: 0;
+}
+
+.time-col:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.time-option {
+    flex: 1 1 calc(16.666% - 0.5rem);
+    padding: 0.5rem 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-main);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-option:hover {
+    border-color: var(--primary);
+}
+
+.time-option--selected {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(138, 154, 91, 0.3);
+    /* Match day picker shadow */
+    font-weight: 500;
+}
+
+/* ============================================================
+   CALENDAR & SCHEDULE
+   ============================================================ */
+.calendar {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    backdrop-filter: blur(16px);
+}
+
+.calendar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.calendar__title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-main);
+}
+
+.calendar__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.calendar__day-header {
+    background: rgba(0, 0, 0, 0.03);
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.calendar__day {
+    background: var(--bg-surface);
+    min-height: 120px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.calendar__day--empty {
+    background: rgba(0, 0, 0, 0.01);
+}
+
+.calendar__date {
+    font-weight: 500;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    align-self: flex-end;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.calendar__date--today {
+    background: var(--primary);
+    color: white;
+}
+
+.calendar__pills {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.calendar__pill {
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius-full);
+    /* Fully rounded pill */
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.calendar__pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.calendar__pill--regular {
+    background: var(--primary);
+    /* Theme blue */
+    color: white;
+}
+
+.calendar__pill--extra {
+    background: var(--secondary);
+    color: white;
+    box-shadow: 0 4px 6px rgba(138, 154, 91, 0.2);
+}
+
+.calendar__pill-time {
+    font-weight: 700;
+    margin-bottom: 0.1rem;
+}
+
+.calendar__pill-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============================================================
+   CLASS DETAIL MODAL
+   ============================================================ */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.class-modal {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-xl);
+    animation: fadeUp 0.3s ease;
+}
+
+.class-modal__header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.class-modal__header h3 {
+    margin: 0 0 0.25rem 0;
+}
+
+.class-modal__meta {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.class-modal__close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.class-modal__content {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.class-modal__notes {
+    background: rgba(0, 0, 0, 0.02);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--primary-light);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.class-modal__content h4 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.class-modal__footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ============================================================
    TEXT ALIGN RIGHT (for button containers)
    ============================================================ */
 .text-right {

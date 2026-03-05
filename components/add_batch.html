@@ -1,0 +1,42 @@
+<div class="panel__info">
+    <h3>Create New Batch</h3>
+    <p>Set up a new batch with a name, subject, grade, and schedule. You can add students after creating the batch.</p>
+</div>
+
+<form id="batchForm">
+    <div class="form__group">
+        <label class="form__label" for="batchName">Batch Name</label>
+        <input type="text" id="batchName" class="form__control" required
+            placeholder="e.g. 12th Commerce — Mon/Wed Batch">
+    </div>
+
+    <div class="form__group">
+        <label class="form__label" for="batchGrade">Grade</label>
+        <select id="batchGrade" class="form__control" required>
+            <option value="">-- Select Grade --</option>
+            <option value="11th">11th</option>
+            <option value="12th">12th</option>
+        </select>
+    </div>
+
+    <div class="form__group">
+        <label class="form__label">Subjects</label>
+        <div class="form__checkbox-group">
+            <label class="form__checkbox-label">
+                <input type="checkbox" name="batchSubjects" value="Accounts" class="form__checkbox">
+                Accounts
+            </label>
+            <label class="form__checkbox-label">
+                <input type="checkbox" name="batchSubjects" value="Commerce" class="form__checkbox">
+                Commerce
+            </label>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn--primary btn--full" id="btnCreateBatch">
+        <span id="btnCreateBatchText">Create Batch</span>
+        <span class="spinner" id="btnCreateBatchSpinner" style="display:none;" aria-hidden="true"></span>
+    </button>
+
+    <div id="batchFormStatus" class="status" style="display:none;"></div>
+</form>

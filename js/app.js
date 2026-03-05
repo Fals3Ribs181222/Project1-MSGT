@@ -46,6 +46,35 @@ const api = {
             return { success: false, error: error.message };
         }
         return { success: true, data: result };
+    },
+
+    async delete(tableName, id) {
+        const { error } = await supabaseClient
+            .from(tableName)
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error(`Supabase Delete Error (${tableName}):`, error);
+            return { success: false, error: error.message };
+        }
+        return { success: true };
+    },
+
+    async deleteMany(tableName, eqConstraints) {
+        let query = supabaseClient.from(tableName).delete();
+
+        for (const [column, value] of Object.entries(eqConstraints)) {
+            query = query.eq(column, value);
+        }
+
+        const { error } = await query;
+
+        if (error) {
+            console.error(`Supabase DeleteMany Error (${tableName}):`, error);
+            return { success: false, error: error.message };
+        }
+        return { success: true };
     }
 };
 

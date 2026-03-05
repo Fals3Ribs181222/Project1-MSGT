@@ -194,3 +194,66 @@ CREATE POLICY "Public Access testimonials" ON storage.objects FOR SELECT USING (
 
 DROP POLICY IF EXISTS "Teacher Upload/Delete testimonials" ON storage.objects;
 CREATE POLICY "Teacher Upload/Delete testimonials" ON storage.objects FOR ALL USING (bucket_id = 'testimonials' AND public.is_teacher());
+
+-- 10. Batches
+CREATE TABLE IF NOT EXISTS batches (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  subject TEXT,
+  grade TEXT,
+  schedule TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE batches ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public batches are viewable by everyone" ON batches;
+CREATE POLICY "Public batches are viewable by everyone" ON batches FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Teachers can manage batches" ON batches;
+CREATE POLICY "Teachers can manage batches" ON batches FOR ALL
+USING (public.is_teacher());
+
+-- 11. Batch Students (Junction Table)
+CREATE TABLE IF NOT EXISTS batch_students (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  batch_id UUID REFERENCES batches(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(batch_id, student_id)
+);
+
+ALTER TABLE batch_students ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public batch students are viewable by everyone" ON batch_students;
+CREATE POLICY "Public batch students are viewable by everyone" ON batch_students FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Teachers can manage batch students" ON batch_students;
+CREATE POLICY "Teachers can manage batch students" ON batch_students FOR ALL
+USING (public.is_teacher());
+
+-- 12. Classes (Schedule)
+CREATE TABLE IF NOT EXISTS classes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  batch_id UUID REFERENCES batches(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  type TEXT CHECK (type IN ('regular', 'extra')) DEFAULT 'regular',
+  day_of_week INTEGER,          -- 0=Sun..6=Sat (for regular classes)
+  class_date DATE,              -- specific date (for extra classes)
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  notes TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  class_group_id UUID
+);
+
+ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public classes are viewable by everyone" ON classes;
+CREATE POLICY "Public classes are viewable by everyone" ON classes FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Teachers can manage classes" ON classes;
+CREATE POLICY "Teachers can manage classes" ON classes FOR ALL
+USING (public.is_teacher());
