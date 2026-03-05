@@ -257,3 +257,47 @@ CREATE POLICY "Public classes are viewable by everyone" ON classes FOR SELECT US
 DROP POLICY IF EXISTS "Teachers can manage classes" ON classes;
 CREATE POLICY "Teachers can manage classes" ON classes FOR ALL
 USING (public.is_teacher());
+
+-- 13. Attendance
+CREATE TABLE IF NOT EXISTS attendance (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  batch_id UUID REFERENCES batches(id) ON DELETE CASCADE,
+  class_id UUID REFERENCES classes(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  status TEXT CHECK (status IN ('present', 'absent', 'late')) DEFAULT 'present',
+  marked_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(class_id, student_id, date)
+);
+
+ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public attendance is viewable by everyone" ON attendance;
+CREATE POLICY "Public attendance is viewable by everyone" ON attendance FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Teachers can manage attendance" ON attendance;
+CREATE POLICY "Teachers can manage attendance" ON attendance FOR ALL
+USING (public.is_teacher());
+
+-- 14. Batch Transfers (Cross-Batch Attendance)
+CREATE TABLE IF NOT EXISTS batch_transfers (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  from_batch_id UUID REFERENCES batches(id) ON DELETE CASCADE,
+  to_batch_id UUID REFERENCES batches(id) ON DELETE CASCADE,
+  transfer_date DATE NOT NULL,
+  end_date DATE,
+  reason TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE batch_transfers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public batch transfers are viewable by everyone" ON batch_transfers;
+CREATE POLICY "Public batch transfers are viewable by everyone" ON batch_transfers FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Teachers can manage batch transfers" ON batch_transfers;
+CREATE POLICY "Teachers can manage batch transfers" ON batch_transfers FOR ALL
+USING (public.is_teacher());

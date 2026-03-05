@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
-<body>
+<body class="is-home-active">
     <nav class="navbar" aria-label="Main navigation">
         <div class="container navbar__container">
             <a href="index.html" class="navbar__logo">Mitesh Sir's Group Tuitions</a>
@@ -30,20 +30,57 @@
             <p class="welcome__sub">Teacher Portal - Manage study materials and announcements.</p>
         </header>
 
-        <div class="tabs" role="tablist" aria-label="Dashboard sections">
-            <div class="tabs__nav">
-                <button class="tabs__btn tabs__btn--active" data-tab="panel-students" role="tab">Students</button>
-                <button class="tabs__btn" data-tab="panel-upload" role="tab">Materials</button>
-                <button class="tabs__btn" data-tab="panel-test" role="tab">Tests</button>
-                <button class="tabs__btn" data-tab="panel-announcement" role="tab">Announcements</button>
-                <button class="tabs__btn" data-tab="panel-batches" role="tab">Batches</button>
-                <button class="tabs__btn" data-tab="panel-schedule" role="tab">Schedule</button>
-                <button class="tabs__btn" data-tab="panel-board-results" role="tab">Board Results</button>
-                <button class="tabs__btn" data-tab="panel-testimonials" role="tab">Testimonials</button>
-            </div>
-        </div>
 
         <div class="panels-container">
+            <div class="back-to-home-container" style="margin-bottom: 2rem; display: none;">
+                <button class="btn btn--outline btn--sm" id="btnBackToHome">← Back to Overview</button>
+            </div>
+
+            <!-- Home Panel -->
+            <section class="panel tabs__panel tabs__panel--active" id="panel-home" role="tabpanel" aria-label="Home">
+                <header class="panel__header" style="margin-bottom: 2rem;">
+                    <h2>Dashboard Overview</h2>
+                </header>
+                <div class="landing-grid">
+                    <button class="landing-pill" data-target="panel-students">
+                        <span class="landing-pill__icon">🎓</span>
+                        <span class="landing-pill__text">Students</span>
+                    </button>
+                    <button class="landing-pill" data-target="panel-attendance">
+                        <span class="landing-pill__icon">✅</span>
+                        <span class="landing-pill__text">Attendance</span>
+                    </button>
+                    <button class="landing-pill" data-target="panel-upload">
+                        <span class="landing-pill__icon">📚</span>
+                        <span class="landing-pill__text">Materials</span>
+                    </button>
+                    <button class="landing-pill" data-target="panel-test">
+                        <span class="landing-pill__icon">📝</span>
+                        <span class="landing-pill__text">Tests</span>
+                    </button>
+                    <button class="landing-pill" data-target="panel-announcement">
+                        <span class="landing-pill__icon">📢</span>
+                        <span class="landing-pill__text">Announcements</span>
+                    </button>
+                    <button class="landing-pill" data-target="panel-batches">
+                        <span class="landing-pill__icon">🧑‍🤝‍🧑</span>
+                        <span class="landing-pill__text">Batches</span>
+                    </button>
+                    <button class="landing-pill" data-target="panel-schedule">
+                        <span class="landing-pill__icon">📅</span>
+                        <span class="landing-pill__text">Schedule</span>
+                    </button>
+                    <button class="landing-pill" data-target="panel-board-results">
+                        <span class="landing-pill__icon">🏆</span>
+                        <span class="landing-pill__text">Board Results</span>
+                    </button>
+                    <button class="landing-pill" data-target="panel-testimonials">
+                        <span class="landing-pill__icon">💬</span>
+                        <span class="landing-pill__text">Testimonials</span>
+                    </button>
+                </div>
+            </section>
+
             <!-- Upload Material Panel -->
             <section class="panel tabs__panel" id="panel-upload" role="tabpanel" aria-label="Materials">
                 <header class="panel__header">
@@ -175,8 +212,7 @@
             </section>
 
             <!-- Manage Students Panel -->
-            <section class="panel tabs__panel tabs__panel--active" id="panel-students" role="tabpanel"
-                aria-label="Students">
+            <section class="panel tabs__panel" id="panel-students" role="tabpanel" aria-label="Students">
                 <header class="panel__header">
                     <h2>Manage Students</h2>
                     <div class="pill-toggle">
@@ -189,19 +225,38 @@
                 <!-- View Container -->
                 <div id="studentsListContainer">
                     <div id="studentsListStatus" class="status"></div>
+
+                    <!-- Search & Filter Toolbar -->
+                    <div class="students-toolbar">
+                        <input type="text" class="students-toolbar__search" id="studentSearchInput"
+                            placeholder="🔍 Search by name or username...">
+                        <select class="students-toolbar__filter" id="studentGradeFilter">
+                            <option value="">All Grades</option>
+                            <option value="11th">11th</option>
+                            <option value="12th">12th</option>
+                        </select>
+                        <select class="students-toolbar__filter" id="studentSubjectFilter">
+                            <option value="">All Subjects</option>
+                            <option value="Accounts">Accounts</option>
+                            <option value="Commerce">Commerce</option>
+                        </select>
+                        <span class="students-toolbar__count" id="studentsCount"></span>
+                    </div>
+
                     <div class="table-wrap">
                         <table id="studentsTable" aria-label="Students list">
                             <thead>
                                 <tr>
                                     <th scope="col">Name</th>
                                     <th scope="col">Username</th>
-                                    <th scope="col">Password</th>
                                     <th scope="col">Grade</th>
+                                    <th scope="col">Subjects</th>
+                                    <th scope="col">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="studentsTableBody">
                                 <tr>
-                                    <td colspan="4" class="loading-text">Loading students...</td>
+                                    <td colspan="5" class="loading-text">Loading students...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -215,193 +270,382 @@
                 <div id="addStudentContainer" class="panel__divider">
                     <div class="loading-text">Loading component...</div>
                 </div>
-            </section>
 
-            <!-- Board Results Panel -->
-            <section class="panel tabs__panel" id="panel-board-results" role="tabpanel" aria-label="Board Results">
-                <header class="panel__header">
-                    <h2>Manage Board Results</h2>
-                    <div class="pill-toggle">
-                        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewBoardResults">Results
-                            List</button>
-                        <button class="pill-toggle__btn" id="pillAddBoardResult">+ Add New</button>
+                <!-- Student Detail View -->
+                <div id="studentDetailContainer" class="student-detail" style="display:none;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+                        <button class="btn btn--outline btn--sm" id="btnBackToStudents">Back to Students</button>
+                        <button class="btn btn--danger btn--sm" id="btnDeleteStudentDetail">Delete Student</button>
                     </div>
-                </header>
 
-                <!-- Board Results List Container (default view) -->
-                <div id="boardResultsListContainer">
-                    <div id="boardResultsListStatus" class="status"></div>
+                    <div class="panel__header">
+                        <h2>Profile Information</h2>
+                    </div>
+
+                    <div class="profile-card"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; background: var(--surface-bg); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-light); margin-bottom: 2rem;">
+                        <div>
+                            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Name</p>
+                            <p class="stat-card__value" id="studentDetailName" style="font-size: 1.25rem;">-</p>
+                        </div>
+                        <div>
+                            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Username / ID</p>
+                            <p class="stat-card__value" id="studentDetailUsername" style="font-size: 1.25rem;">-</p>
+                        </div>
+                        <div>
+                            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Password</p>
+                            <p class="stat-card__value" id="studentDetailPassword" style="font-size: 1.25rem;">••••••••
+                            </p>
+                        </div>
+                        <div>
+                            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Grade</p>
+                            <p class="stat-card__value" id="studentDetailGrade" style="font-size: 1.25rem;">-</p>
+                        </div>
+                        <div>
+                            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Subjects</p>
+                            <p class="stat-card__value" id="studentDetailSubjects" style="font-size: 1.25rem;">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Stats -->
+                    <div class="student-detail__stats" id="studentDetailStats">
+                        <div class="student-detail__stat">
+                            <div class="student-detail__stat-value" id="sdTotalClasses">-</div>
+                            <div class="student-detail__stat-label">Total Classes</div>
+                        </div>
+                        <div class="student-detail__stat">
+                            <div class="student-detail__stat-value student-detail__stat-value--green" id="sdPresent">-
+                            </div>
+                            <div class="student-detail__stat-label">Present</div>
+                        </div>
+                        <div class="student-detail__stat">
+                            <div class="student-detail__stat-value student-detail__stat-value--red" id="sdAbsent">-
+                            </div>
+                            <div class="student-detail__stat-label">Absent</div>
+                        </div>
+                        <div class="student-detail__stat">
+                            <div class="student-detail__stat-value student-detail__stat-value--amber" id="sdLate">-
+                            </div>
+                            <div class="student-detail__stat-label">Late</div>
+                        </div>
+                        <div class="student-detail__stat">
+                            <div class="student-detail__stat-value" id="sdAttendanceRate">-</div>
+                            <div class="student-detail__stat-label">Attendance %</div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Memberships -->
+                    <div class="panel__header">
+                        <h2>Batch Memberships</h2>
+                    </div>
                     <div class="table-wrap">
-                        <table id="boardResultsTable" aria-label="Board results list">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Student Name</th>
-                                    <th scope="col">Subject</th>
-                                    <th scope="col">Marks</th>
-                                    <th scope="col">Max Marks</th>
-                                    <th scope="col">Year</th>
-                                    <th scope="col">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="boardResultsTableBody">
-                                <tr>
-                                    <td colspan="6" class="loading-text">Loading board results...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="text-right">
-                        <button class="btn btn--primary btn--sm" id="btnRefreshBoardResults">Refresh List</button>
-                    </div>
-                </div>
-
-                <!-- Add Board Result Form Container (loaded via fetch) -->
-                <div id="addBoardResultContainer" class="panel__divider">
-                    <div class="loading-text">Loading component...</div>
-                </div>
-            </section>
-
-            <!-- Testimonials Panel -->
-            <section class="panel tabs__panel" id="panel-testimonials" role="tabpanel" aria-label="Testimonials">
-                <header class="panel__header">
-                    <h2>Manage Testimonials</h2>
-                    <div class="pill-toggle">
-                        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewTestimonials">Testimonials
-                            List</button>
-                        <button class="pill-toggle__btn" id="pillAddTestimonial">+ Add New</button>
-                    </div>
-                </header>
-
-                <!-- Testimonials List Container (default view) -->
-                <div id="testimonialsListContainer">
-                    <div id="testimonialsListStatus" class="status"></div>
-                    <div class="table-wrap">
-                        <table id="testimonialsTable" aria-label="Testimonials list">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Student Name</th>
-                                    <th scope="col">Subject</th>
-                                    <th scope="col">Year</th>
-                                    <th scope="col">Testimonial Text</th>
-                                    <th scope="col">Media</th>
-                                    <th scope="col">Date Added</th>
-                                    <th scope="col">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="testimonialsTableBody">
-                                <tr>
-                                    <td colspan="7" class="loading-text">Loading testimonials...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="text-right">
-                        <button class="btn btn--primary btn--sm" id="btnRefreshTestimonials">Refresh List</button>
-                    </div>
-                </div>
-
-                <!-- Add Testimonial Form Container (loaded via fetch) -->
-                <div id="addTestimonialContainer" class="panel__divider">
-                    <div class="loading-text">Loading component...</div>
-                </div>
-            </section>
-
-            <!-- Batches Panel -->
-            <section class="panel tabs__panel" id="panel-batches" role="tabpanel" aria-label="Batches">
-                <header class="panel__header">
-                    <h2>Manage Batches</h2>
-                    <div class="pill-toggle">
-                        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewBatches">Batch
-                            List</button>
-                        <button class="pill-toggle__btn" id="pillAddBatch">+ Create New</button>
-                    </div>
-                </header>
-
-                <!-- Batch List Container (default view) -->
-                <div id="batchesListContainer">
-                    <div id="batchesListStatus" class="status"></div>
-                    <div class="table-wrap">
-                        <table id="batchesTable" aria-label="Batches list">
+                        <table id="studentBatchesTable">
                             <thead>
                                 <tr>
                                     <th scope="col">Batch Name</th>
                                     <th scope="col">Subject</th>
                                     <th scope="col">Grade</th>
                                     <th scope="col">Schedule</th>
-                                    <th scope="col">Students</th>
-                                    <th scope="col">Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="batchesTableBody">
+                            <tbody id="studentBatchesBody">
                                 <tr>
-                                    <td colspan="6" class="loading-text">Loading batches...</td>
+                                    <td colspan="4" class="loading-text">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="text-right">
-                        <button class="btn btn--primary btn--sm" id="btnRefreshBatches">Refresh List</button>
-                    </div>
                 </div>
 
-                <!-- Create Batch Form Container (loaded via fetch) -->
-                <div id="addBatchContainer" class="panel__divider">
-                    <div class="loading-text">Loading component...</div>
+                <!-- Test Scores -->
+                <div class="panel__header">
+                    <h2>Attendance Summary</h2>
                 </div>
-
-                <!-- Batch Detail Overlay -->
-                <div id="batchDetailContainer" class="batch-detail" style="display:none;">
-                    <div class="batch-detail__header">
-                        <button class="btn btn--outline btn--sm" id="btnBackToBatches">← Back to Batches</button>
-                        <h3 id="batchDetailName">Batch Name</h3>
-                        <p id="batchDetailMeta" class="batch-detail__meta"></p>
-                    </div>
-
-                    <div class="batch-detail__body">
-                        <!-- Current Members -->
-                        <div class="batch-detail__members">
-                            <h4>Current Members <span class="badge" id="batchMemberCount">0</span></h4>
-                            <div id="batchDetailStatus" class="status" style="display:none;"></div>
-                            <div class="table-wrap">
-                                <table id="batchMembersTable">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Name</th>
-                                            <th scope="col">Username</th>
-                                            <th scope="col">Grade</th>
-                                            <th scope="col">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="batchMembersBody">
-                                        <tr>
-                                            <td colspan="4" class="loading-text">Loading members...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Student Picker -->
-                        <div class="student-picker">
-                            <h4>Add Students</h4>
-                            <input type="text" id="studentPickerSearch" class="form__control student-picker__search"
-                                placeholder="Search students by name...">
-                            <div class="student-picker__list" id="studentPickerList">
-                                <p class="loading-text">Loading students...</p>
-                            </div>
-                            <div class="student-picker__actions">
-                                <button class="btn btn--primary btn--sm" id="btnAddSelectedStudents">Add
-                                    Selected</button>
-                                <span id="selectedCount" class="student-picker__count">0 selected</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="batch-detail__footer">
-                        <button class="btn btn--danger btn--sm" id="btnDeleteBatch">Delete This Batch</button>
-                    </div>
+                <div class="table-wrap">
+                    <table id="studentMarksTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Test</th>
+                                <th scope="col">Subject</th>
+                                <th scope="col">Marks</th>
+                                <th scope="col">Max</th>
+                                <th scope="col">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentMarksBody">
+                            <tr>
+                                <td colspan="5" class="loading-text">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
         </div>
+        </div>
+        </section>
+
+        <!-- Attendance Panel -->
+        <section class="panel tabs__panel" id="panel-attendance" role="tabpanel" aria-label="Attendance">
+            <header class="panel__header">
+                <h2>Manage Attendance</h2>
+                <div class="pill-toggle" id="attendanceHeaderActions" style="display:none;">
+                    <button class="pill-toggle__btn" id="btnSwitchClassAttendance">← Switch Class</button>
+                </div>
+            </header>
+
+            <!-- Pre-Selection Container -->
+            <div id="attendancePreSelectionContainer">
+                <p class="text-muted" style="margin-bottom: 1.5rem;">Select a class scheduled for today to mark
+                    attendance.</p>
+                <div id="todaysClassesGrid" class="classes-grid"
+                    style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                    <div class="loading-text">Loading today's classes...</div>
+                </div>
+            </div>
+
+            <!-- Grid-Based Attendance Container -->
+            <div id="attendanceGridContainer" style="display:none;">
+                <div class="attendance-topbar" style="margin-bottom: 1.5rem;">
+                    <h3 id="attendanceClassName" style="font-size: 1.25rem;">Class Name</h3>
+                    <p id="attendanceClassMeta" class="text-muted">Batch • Time</p>
+                </div>
+
+                <div class="table-wrap">
+                    <table id="attendanceTable" class="attendance-table" aria-label="Attendance list">
+                        <thead>
+                            <tr>
+                                <th scope="col">Student Name</th>
+                                <th scope="col" style="text-align: right;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody">
+                            <tr>
+                                <td colspan="2" class="loading-text">Loading roster...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="form__actions"
+                    style="margin-top: 1.5rem; display: flex; gap: 0.75rem; align-items: center;">
+                    <button class="btn btn--outline" id="btnAddGuest" style="font-size: 0.9rem;">+ Add
+                        Student</button>
+                    <button class="btn btn--outline" id="btnMarkAllPresent">Mark All Present</button>
+                    <button class="btn btn--primary" id="btnSaveAttendance">Save Attendance</button>
+                </div>
+
+                <!-- Add Guest / Transfer Form -->
+                <div id="addGuestForm"
+                    style="display:none; margin-top: 1.5rem; padding: 1.25rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); backdrop-filter: blur(16px);">
+                    <h4 style="margin: 0 0 1rem 0; color: var(--primary);">Cross-Batch Transfer</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form__group">
+                            <label class="form__label" for="guestBatchSelect">From Batch</label>
+                            <select class="form__control" id="guestBatchSelect">
+                                <option value="">Select a batch...</option>
+                            </select>
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="guestStudentSelect">Student</label>
+                            <select class="form__control" id="guestStudentSelect" disabled>
+                                <option value="">Pick a batch first...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form__actions" style="margin-top: 1rem; justify-content: flex-end; gap: 0.75rem;">
+                        <button class="btn btn--outline" id="btnCancelGuest">Cancel</button>
+                        <button class="btn btn--primary" id="btnConfirmGuest">Add to Roster</button>
+                    </div>
+                    <div id="guestStatus" class="status" style="display:none; margin-top: 0.75rem;"></div>
+                </div>
+
+                <div id="attendanceSaveStatus" class="status" style="display:none; margin-top: 1rem;"></div>
+            </div>
+        </section>
+
+        <!-- Board Results Panel -->
+        <section class="panel tabs__panel" id="panel-board-results" role="tabpanel" aria-label="Board Results">
+            <header class="panel__header">
+                <h2>Manage Board Results</h2>
+                <div class="pill-toggle">
+                    <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewBoardResults">Results
+                        List</button>
+                    <button class="pill-toggle__btn" id="pillAddBoardResult">+ Add New</button>
+                </div>
+            </header>
+
+            <!-- Board Results List Container (default view) -->
+            <div id="boardResultsListContainer">
+                <div id="boardResultsListStatus" class="status"></div>
+                <div class="table-wrap">
+                    <table id="boardResultsTable" aria-label="Board results list">
+                        <thead>
+                            <tr>
+                                <th scope="col">Student Name</th>
+                                <th scope="col">Subject</th>
+                                <th scope="col">Marks</th>
+                                <th scope="col">Max Marks</th>
+                                <th scope="col">Year</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="boardResultsTableBody">
+                            <tr>
+                                <td colspan="6" class="loading-text">Loading board results...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-right">
+                    <button class="btn btn--primary btn--sm" id="btnRefreshBoardResults">Refresh List</button>
+                </div>
+            </div>
+
+            <!-- Add Board Result Form Container (loaded via fetch) -->
+            <div id="addBoardResultContainer" class="panel__divider">
+                <div class="loading-text">Loading component...</div>
+            </div>
+        </section>
+
+        <!-- Testimonials Panel -->
+        <section class="panel tabs__panel" id="panel-testimonials" role="tabpanel" aria-label="Testimonials">
+            <header class="panel__header">
+                <h2>Manage Testimonials</h2>
+                <div class="pill-toggle">
+                    <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewTestimonials">Testimonials
+                        List</button>
+                    <button class="pill-toggle__btn" id="pillAddTestimonial">+ Add New</button>
+                </div>
+            </header>
+
+            <!-- Testimonials List Container (default view) -->
+            <div id="testimonialsListContainer">
+                <div id="testimonialsListStatus" class="status"></div>
+                <div class="table-wrap">
+                    <table id="testimonialsTable" aria-label="Testimonials list">
+                        <thead>
+                            <tr>
+                                <th scope="col">Student Name</th>
+                                <th scope="col">Subject</th>
+                                <th scope="col">Year</th>
+                                <th scope="col">Testimonial Text</th>
+                                <th scope="col">Media</th>
+                                <th scope="col">Date Added</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testimonialsTableBody">
+                            <tr>
+                                <td colspan="7" class="loading-text">Loading testimonials...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-right">
+                    <button class="btn btn--primary btn--sm" id="btnRefreshTestimonials">Refresh List</button>
+                </div>
+            </div>
+
+            <!-- Add Testimonial Form Container (loaded via fetch) -->
+            <div id="addTestimonialContainer" class="panel__divider">
+                <div class="loading-text">Loading component...</div>
+            </div>
+        </section>
+
+        <!-- Batches Panel -->
+        <section class="panel tabs__panel" id="panel-batches" role="tabpanel" aria-label="Batches">
+            <header class="panel__header">
+                <h2>Manage Batches</h2>
+                <div class="pill-toggle">
+                    <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewBatches">Batch
+                        List</button>
+                    <button class="pill-toggle__btn" id="pillAddBatch">+ Create New</button>
+                </div>
+            </header>
+
+            <!-- Batch List Container (default view) -->
+            <div id="batchesListContainer">
+                <div id="batchesListStatus" class="status"></div>
+                <div class="table-wrap">
+                    <table id="batchesTable" aria-label="Batches list">
+                        <thead>
+                            <tr>
+                                <th scope="col">Batch Name</th>
+                                <th scope="col">Subject</th>
+                                <th scope="col">Grade</th>
+                                <th scope="col">Schedule</th>
+                                <th scope="col">Students</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batchesTableBody">
+                            <tr>
+                                <td colspan="6" class="loading-text">Loading batches...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-right">
+                    <button class="btn btn--primary btn--sm" id="btnRefreshBatches">Refresh List</button>
+                </div>
+            </div>
+
+            <!-- Create Batch Form Container (loaded via fetch) -->
+            <div id="addBatchContainer" class="panel__divider">
+                <div class="loading-text">Loading component...</div>
+            </div>
+
+            <!-- Batch Detail Overlay -->
+            <div id="batchDetailContainer" class="batch-detail" style="display:none;">
+                <div class="batch-detail__header">
+                    <button class="btn btn--outline btn--sm" id="btnBackToBatches">← Back to Batches</button>
+                    <h3 id="batchDetailName">Batch Name</h3>
+                    <p id="batchDetailMeta" class="batch-detail__meta"></p>
+                </div>
+
+                <div class="batch-detail__body">
+                    <!-- Current Members -->
+                    <div class="batch-detail__members">
+                        <h4>Current Members <span class="badge" id="batchMemberCount">0</span></h4>
+                        <div id="batchDetailStatus" class="status" style="display:none;"></div>
+                        <div class="table-wrap">
+                            <table id="batchMembersTable">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Username</th>
+                                        <th scope="col">Grade</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batchMembersBody">
+                                    <tr>
+                                        <td colspan="4" class="loading-text">Loading members...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Student Picker -->
+                    <div class="student-picker">
+                        <h4>Add Students</h4>
+                        <input type="text" id="studentPickerSearch" class="form__control student-picker__search"
+                            placeholder="Search students by name...">
+                        <div class="student-picker__list" id="studentPickerList">
+                            <p class="loading-text">Loading students...</p>
+                        </div>
+                        <div class="student-picker__actions">
+                            <button class="btn btn--primary btn--sm" id="btnAddSelectedStudents">Add
+                                Selected</button>
+                            <span id="selectedCount" class="student-picker__count">0 selected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="batch-detail__footer">
+                    <button class="btn btn--danger btn--sm" id="btnDeleteBatch">Delete This Batch</button>
+                </div>
+            </div>
+            </div>
         </section>
 
         <!-- Schedule Panel -->
@@ -885,6 +1129,8 @@
         let currentTests = [];
         let allStudents = [];
 
+        // ====== STUDENTS: Load, Render, Search, Filter, Delete, Detail ======
+
         // Load Students List handler
         async function loadStudents() {
             const tbody = document.getElementById('studentsTableBody');
@@ -896,7 +1142,7 @@
             btnRefresh.disabled = true;
             btnRefresh.textContent = 'Refreshing...';
             status.style.display = 'none';
-            tbody.innerHTML = '<tr><td colspan="4" class="loading-text">Loading students...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="loading-text">Loading students...</td></tr>';
 
             const response = await api.get('profiles', { role: 'student' });
 
@@ -905,18 +1151,7 @@
 
             if (response.success) {
                 allStudents = response.data || [];
-                if (response.data && response.data.length > 0) {
-                    tbody.innerHTML = response.data.map(student => `
-                        <tr class="data-table__row">
-                            <td class="data-table__td--main">${student.name || '-'}</td>
-                            <td class="data-table__td">${student.username || '-'}</td>
-                            <td class="data-table__td"><em>(Secured in Auth)</em></td>
-                            <td class="data-table__td">${student.grade || '-'}</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="4" class="loading-text">No students found.</td></tr>';
-                }
+                filterStudents();
             } else {
                 tbody.innerHTML = '';
                 status.textContent = response.error || 'Failed to load students.';
@@ -925,13 +1160,272 @@
             }
         }
 
+        // Render the students table from a filtered array
+        function renderStudentsTable(students) {
+            const tbody = document.getElementById('studentsTableBody');
+            const countEl = document.getElementById('studentsCount');
+            if (!tbody) return;
+
+            // Update count
+            if (countEl) {
+                countEl.textContent = `Showing ${students.length} of ${allStudents.length}`;
+            }
+
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="loading-text">No students match your filters.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = students.map(student => `
+                <tr class="data-table__row" data-student-id="${student.id}">
+                    <td class="data-table__td--main">${student.name || '-'}</td>
+                    <td class="data-table__td">${student.username || '-'}</td>
+                    <td class="data-table__td">${student.grade || '-'}</td>
+                    <td class="data-table__td">${student.subjects || '-'}</td>
+                    <td class="data-table__td">
+                        <button class="btn btn--primary btn--sm" data-action="detail" data-id="${student.id}">Manage Student</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Filter students based on search, grade, and subject
+        function filterStudents() {
+            const searchVal = (document.getElementById('studentSearchInput')?.value || '').toLowerCase();
+            const gradeVal = document.getElementById('studentGradeFilter')?.value || '';
+            const subjectVal = document.getElementById('studentSubjectFilter')?.value || '';
+
+            let filtered = allStudents;
+
+            if (searchVal) {
+                filtered = filtered.filter(s =>
+                    (s.name || '').toLowerCase().includes(searchVal) ||
+                    (s.username || '').toLowerCase().includes(searchVal)
+                );
+            }
+
+            if (gradeVal) {
+                filtered = filtered.filter(s => s.grade === gradeVal);
+            }
+
+            if (subjectVal) {
+                filtered = filtered.filter(s =>
+                    (s.subjects || '').includes(subjectVal)
+                );
+            }
+
+            renderStudentsTable(filtered);
+        }
+
+        // Attach filter event listeners
+        const studentSearchInput = document.getElementById('studentSearchInput');
+        const studentGradeFilter = document.getElementById('studentGradeFilter');
+        const studentSubjectFilter = document.getElementById('studentSubjectFilter');
+
+        if (studentSearchInput) studentSearchInput.addEventListener('input', filterStudents);
+        if (studentGradeFilter) studentGradeFilter.addEventListener('change', filterStudents);
+        if (studentSubjectFilter) studentSubjectFilter.addEventListener('change', filterStudents);
+
         document.getElementById('btnRefreshStudents').addEventListener('click', loadStudents);
+
+        // ====== DELETE ======
+        function showConfirmModal(title, message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML = `
+                <div class="confirm-modal">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <div class="confirm-modal__actions">
+                        <button class="btn btn--outline btn--sm" id="confirmCancel">Cancel</button>
+                        <button class="btn btn--danger btn--sm" id="confirmOk">Delete</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            overlay.querySelector('#confirmCancel').addEventListener('click', () => overlay.remove());
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+            overlay.querySelector('#confirmOk').addEventListener('click', async () => {
+                overlay.querySelector('#confirmOk').disabled = true;
+                overlay.querySelector('#confirmOk').textContent = 'Deleting...';
+                await onConfirm();
+                overlay.remove();
+            });
+        }
+
+        async function deleteStudent(studentId) {
+            const student = allStudents.find(s => s.id === studentId);
+            showConfirmModal(
+                'Delete Student',
+                `Are you sure you want to delete <strong>${student?.name || 'this student'}</strong>? This cannot be undone.`,
+                async () => {
+                    const resp = await api.delete('profiles', studentId);
+                    if (resp.success) {
+                        allStudents = allStudents.filter(s => s.id !== studentId);
+                        filterStudents();
+                    } else {
+                        alert('Failed to delete: ' + (resp.error || 'Unknown error'));
+                    }
+                }
+            );
+        }
+
+        // ====== STUDENT DETAIL VIEW ======
+        async function showStudentDetail(studentId) {
+            const student = allStudents.find(s => s.id === studentId);
+            if (!student) return;
+
+            // Hide list and add containers, show detail
+            document.getElementById('studentsListContainer').style.display = 'none';
+            document.getElementById('addStudentContainer').style.display = 'none';
+            document.getElementById('studentDetailContainer').style.display = 'block';
+            document.getElementById('btnRefreshStudents').style.display = 'none';
+
+            // Set header info
+            document.getElementById('studentDetailName').textContent = student.name || 'Unknown';
+            document.getElementById('studentDetailUsername').textContent = student.username || '-';
+            document.getElementById('studentDetailGrade').textContent = student.grade || '-';
+            document.getElementById('studentDetailSubjects').textContent = student.subjects || '-';
+
+            // Reset loading states
+            document.getElementById('studentBatchesBody').innerHTML = '<tr><td colspan="4" class="loading-text">Loading batches...</td></tr>';
+            document.getElementById('studentMarksBody').innerHTML = '<tr><td colspan="5" class="loading-text">Loading marks...</td></tr>';
+            ['sdTotalClasses', 'sdPresent', 'sdAbsent', 'sdLate', 'sdAttendanceRate'].forEach(id => {
+                document.getElementById(id).textContent = '...';
+            });
+
+            // Fetch batch memberships
+            try {
+                const { data: batchLinks } = await supabaseClient
+                    .from('batch_students')
+                    .select('batch_id')
+                    .eq('student_id', studentId);
+
+                const batchBody = document.getElementById('studentBatchesBody');
+                if (batchLinks && batchLinks.length > 0) {
+                    const batchIds = batchLinks.map(bl => bl.batch_id);
+                    const { data: batches } = await supabaseClient
+                        .from('batches')
+                        .select('*')
+                        .in('id', batchIds);
+
+                    if (batches && batches.length > 0) {
+                        batchBody.innerHTML = batches.map(b => `
+                            <tr class="data-table__row">
+                                <td class="data-table__td--main">${b.name || '-'}</td>
+                                <td class="data-table__td">${b.subject || '-'}</td>
+                                <td class="data-table__td">${b.grade || '-'}</td>
+                                <td class="data-table__td">${b.schedule || '-'}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        batchBody.innerHTML = '<tr><td colspan="4" class="student-detail__empty">No batches found.</td></tr>';
+                    }
+                } else {
+                    batchBody.innerHTML = '<tr><td colspan="4" class="student-detail__empty">Not assigned to any batches.</td></tr>';
+                }
+            } catch (err) {
+                console.error('Batch fetch error:', err);
+                document.getElementById('studentBatchesBody').innerHTML = '<tr><td colspan="4" class="student-detail__empty">Error loading batches.</td></tr>';
+            }
+
+            // Fetch attendance records
+            try {
+                const { data: attendanceData } = await supabaseClient
+                    .from('attendance')
+                    .select('status')
+                    .eq('student_id', studentId);
+
+                const total = attendanceData?.length || 0;
+                const present = attendanceData?.filter(a => a.status === 'present').length || 0;
+                const absent = attendanceData?.filter(a => a.status === 'absent').length || 0;
+                const late = attendanceData?.filter(a => a.status === 'late').length || 0;
+                const rate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+
+                document.getElementById('sdTotalClasses').textContent = total;
+                document.getElementById('sdPresent').textContent = present;
+                document.getElementById('sdAbsent').textContent = absent;
+                document.getElementById('sdLate').textContent = late;
+                document.getElementById('sdAttendanceRate').textContent = total > 0 ? rate + '%' : 'N/A';
+            } catch (err) {
+                console.error('Attendance fetch error:', err);
+            }
+
+            // Fetch marks + tests
+            try {
+                const { data: marksData } = await supabaseClient
+                    .from('marks')
+                    .select('marks_obtained, test_id')
+                    .eq('student_id', studentId);
+
+                const marksBody = document.getElementById('studentMarksBody');
+
+                if (marksData && marksData.length > 0) {
+                    const testIds = [...new Set(marksData.map(m => m.test_id))];
+                    const { data: testsData } = await supabaseClient
+                        .from('tests')
+                        .select('*')
+                        .in('id', testIds);
+
+                    const testMap = {};
+                    (testsData || []).forEach(t => testMap[t.id] = t);
+
+                    marksBody.innerHTML = marksData.map(m => {
+                        const test = testMap[m.test_id] || {};
+                        return `
+                            <tr class="data-table__row">
+                                <td class="data-table__td--main">${test.title || '-'}</td>
+                                <td class="data-table__td">${test.subject || '-'}</td>
+                                <td class="data-table__td"><strong>${m.marks_obtained || '-'}</strong></td>
+                                <td class="data-table__td">${test.max_marks || '-'}</td>
+                                <td class="data-table__td">${test.date ? new Date(test.date).toLocaleDateString() : '-'}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    marksBody.innerHTML = '<tr><td colspan="5" class="student-detail__empty">No test scores recorded.</td></tr>';
+                }
+            } catch (err) {
+                console.error('Marks fetch error:', err);
+                document.getElementById('studentMarksBody').innerHTML = '<tr><td colspan="5" class="student-detail__empty">Error loading marks.</td></tr>';
+            }
+        }
+
+        function hideStudentDetail() {
+            document.getElementById('studentDetailContainer').style.display = 'none';
+            document.getElementById('studentsListContainer').style.display = 'block';
+            document.getElementById('btnRefreshStudents').style.display = 'inline-block';
+
+            // Reset pill toggle
+            const pillView = document.getElementById('pillViewStudents');
+            const pillAdd = document.getElementById('pillAddStudent');
+            if (pillView) pillView.classList.add('pill-toggle__btn--active');
+            if (pillAdd) pillAdd.classList.remove('pill-toggle__btn--active');
+        }
+
+        // Back button
+        document.getElementById('btnBackToStudents')?.addEventListener('click', hideStudentDetail);
+
+        // ====== EVENT DELEGATION for table actions ======
+        document.getElementById('studentsTableBody')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+
+            switch (action) {
+                case 'detail': showStudentDetail(id); break;
+            }
+        });
 
         // Pill Toggle Logic for Student Tab
         const pillView = document.getElementById('pillViewStudents');
         const pillAdd = document.getElementById('pillAddStudent');
         const listContainer = document.getElementById('studentsListContainer');
         const addContainer = document.getElementById('addStudentContainer');
+        const studentDetailCtr = document.getElementById('studentDetailContainer');
         const btnRefresh = document.getElementById('btnRefreshStudents');
 
         pillView.addEventListener('click', () => {
@@ -939,6 +1433,7 @@
             pillAdd.classList.remove('pill-toggle__btn--active');
             listContainer.style.display = 'block';
             addContainer.style.display = 'none';
+            studentDetailCtr.style.display = 'none';
             btnRefresh.style.display = 'inline-block';
         });
 
@@ -947,6 +1442,7 @@
             pillView.classList.remove('pill-toggle__btn--active');
             addContainer.style.display = 'block';
             listContainer.style.display = 'none';
+            studentDetailCtr.style.display = 'none';
             btnRefresh.style.display = 'none';
         });
 
@@ -1405,13 +1901,15 @@
                         // Generate dynamic schedule string
                         let scheduleStr = 'No schedule';
                         if (batch.classes && batch.classes.length > 0) {
-                            const schedParts = batch.classes.map(c => {
-                                const timeFormat = formatTime(c.start_time);
-                                if (c.type === 'regular') return `${days[c.day_of_week]} ${timeFormat}`;
-                                return `${new Date(c.class_date).toLocaleDateString('en-GB')} ${timeFormat}`;
-                            });
-                            // simple deduplication if same day/time exists
-                            scheduleStr = [...new Set(schedParts)].join(', ');
+                            const regularClasses = batch.classes.filter(c => c.type === 'regular');
+                            if (regularClasses.length > 0) {
+                                const schedParts = regularClasses.map(c => {
+                                    const timeFormat = formatTime(c.start_time);
+                                    return `${days[c.day_of_week]} ${timeFormat}`;
+                                });
+                                // simple deduplication if same day/time exists
+                                scheduleStr = [...new Set(schedParts)].join(', ');
+                            }
                         }
 
                         return `
@@ -2256,18 +2754,439 @@
         loadBatchComponent();
         loadClassComponent();
         renderCalendar();
+        loadTodaysClasses();
+
+        // ====== ATTENDANCE LOGIC ======
+        let currentAttendanceClass = null;
+        let currentAttendanceBatch = null;
+
+        async function loadTodaysClasses() {
+            const grid = document.getElementById('todaysClassesGrid');
+            grid.innerHTML = `<div class="loading-text">Loading today's classes...</div>`;
+
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            // Build date string using LOCAL time, not UTC (toISOString is UTC and breaks for UTC+5:30)
+            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            const res = await api.get('classes', {}, '*, batches(*)');
+
+            if (!res.success) {
+                grid.innerHTML = `<div class="status status--error">Failed to load classes: ${res.error}</div>`;
+                return;
+            }
+
+            const todaysClasses = res.data.filter(c => {
+                if (c.type === 'regular' && c.day_of_week === dayOfWeek) return true;
+                if (c.type === 'extra' && c.class_date === dateStr) return true;
+                return false;
+            });
+
+            if (todaysClasses.length === 0) {
+                grid.innerHTML = '<p class="text-muted" style="grid-column: 1/-1;">No classes scheduled for today.</p>';
+                return;
+            }
+
+            // Sort by start time
+            todaysClasses.sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+            grid.innerHTML = todaysClasses.map(c => `
+                <button class="landing-pill" onclick="openAttendanceGrid('${c.id}', '${c.batch_id}', '${c.title.replace(/'/g, "\\'")}', '${c.batches ? c.batches.name.replace(/'/g, "\\'") : 'Unknown Batch'}', '${c.start_time.substring(0, 5)}')">
+                    <span class="landing-pill__icon" style="background: rgba(115,147,179,0.15); font-size: 0.75rem; font-weight: 600; color: var(--primary); width: auto; height: auto; padding: 0.3rem 0.75rem; border-radius: var(--radius-full); letter-spacing: 0.05em; text-transform: uppercase;">${c.type === 'extra' ? 'Extra' : 'Regular'}</span>
+                    <span class="landing-pill__text">
+                        ${c.title}
+                        <span style="display:block; font-size: 0.85rem; font-weight: 400; color: var(--text-muted); margin-top: 0.15rem;">${c.batches ? c.batches.name : 'Unknown Batch'} &bull; ${c.start_time.substring(0, 5)}</span>
+                    </span>
+                </button>
+            `).join('');
+        }
+
+        async function openAttendanceGrid(classId, batchId, title, batchName, time) {
+            currentAttendanceClass = classId;
+            currentAttendanceBatch = batchId;
+
+            document.getElementById('attendancePreSelectionContainer').style.display = 'none';
+            document.getElementById('attendanceGridContainer').style.display = 'block';
+            document.getElementById('attendanceHeaderActions').style.display = 'inline-flex';
+
+            document.getElementById('attendanceClassName').textContent = title;
+            document.getElementById('attendanceClassMeta').textContent = `${batchName} • ${time}`;
+
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '<tr><td colspan="2" class="loading-text">Loading roster...</td></tr>';
+            document.getElementById('attendanceSaveStatus').style.display = 'none';
+
+            // Fetch batch students
+            const res = await api.get('batch_students', { batch_id: batchId }, '*, profiles:student_id(id, name)');
+
+            if (!res.success) {
+                tbody.innerHTML = `<tr><td colspan="2" class="loading-text status--error">Error: ${res.error}</td></tr>`;
+                return;
+            }
+
+            const students = res.data.map(m => m.profiles).filter(Boolean);
+
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" class="loading-text">No students enrolled in this batch.</td></tr>';
+                return;
+            }
+
+            // Fetch existing attendance for today
+            const dateStr = new Date().toISOString().split('T')[0];
+            const attRes = await api.get('attendance', { class_id: classId, date: dateStr });
+
+            const statusMap = {};
+            if (attRes.success && attRes.data) {
+                attRes.data.forEach(a => {
+                    statusMap[a.student_id] = a.status;
+                });
+            }
+
+            tbody.innerHTML = students.map(s => {
+                const status = statusMap[s.id] || 'present';
+                return `
+                <tr>
+                    <td><strong>${s.name}</strong></td>
+                    <td style="text-align: right;">
+                        <div class="attendance-toggles">
+                            <label class="attendance-toggle" title="Present">
+                                <input type="radio" name="att_${s.id}" value="present" ${status === 'present' ? 'checked' : ''} data-student="${s.id}">
+                                <span class="attendance-toggle__mark">Present</span>
+                            </label>
+                            <label class="attendance-toggle" title="Late">
+                                <input type="radio" name="att_${s.id}" value="late" ${status === 'late' ? 'checked' : ''} data-student="${s.id}">
+                                <span class="attendance-toggle__mark">Late</span>
+                            </label>
+                            <label class="attendance-toggle" title="Absent">
+                                <input type="radio" name="att_${s.id}" value="absent" ${status === 'absent' ? 'checked' : ''} data-student="${s.id}">
+                                <span class="attendance-toggle__mark">Absent</span>
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+
+            // Auto-merge transferred guests for today
+            await mergeTransferredGuests(batchId, classId, statusMap);
+        }
+
+        async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
+            const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const todayDay = days[new Date().getDay()];
+
+            const res = await api.get('batch_transfers', { to_batch_id: currentBatchId }, '*, profiles:student_id(id, name), batches:from_batch_id(name)');
+            if (!res.success || !res.data) return;
+
+            // Filter active transfers for today
+            const todaysGuests = res.data.filter(t => {
+                if (t.transfer_date > dateStr) return false;
+                if (t.end_date && t.end_date < dateStr) return false;
+                if (!t.end_date && t.transfer_date !== dateStr) return false;
+                return true;
+            });
+
+            if (todaysGuests.length === 0) return;
+
+            const tbody = document.getElementById('attendanceTableBody');
+            const tagStyle = 'display:inline-block; margin-left:0.35rem; padding:0.15rem 0.5rem; border-radius:var(--radius-full); font-size:0.7rem; font-weight:600;';
+
+            todaysGuests.forEach(t => {
+                const s = t.profiles;
+                if (!s) return;
+                if (tbody.querySelector(`input[data-student="${s.id}"]`)) return;
+
+                const batchName = t.batches ? t.batches.name : 'Unknown';
+                const status = statusMap[s.id] || 'present';
+                const row = document.createElement('tr');
+                row.dataset.transferId = t.id;
+                row.innerHTML = `
+                    <td>
+                        <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                            <strong>${s.name}</strong>
+                            <span style="${tagStyle} background:rgba(115,147,179,0.15); color:var(--primary);">Guest</span>
+                            <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${batchName}</span>
+                            <span style="${tagStyle} background:rgba(0,0,0,0.06); color:var(--text-muted);">${todayDay}</span>
+                            <button onclick="removeGuest('${t.id}', this)" style="margin-left:auto; background:none; border:none; color:var(--cadmium-red); cursor:pointer; font-size:1.1rem; padding:0 0.3rem;" title="Remove guest">✕</button>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="attendance-toggles">
+                            <label class="attendance-toggle" title="Present">
+                                <input type="radio" name="att_${s.id}" value="present" ${status === 'present' ? 'checked' : ''} data-student="${s.id}">
+                                <span class="attendance-toggle__mark">Present</span>
+                            </label>
+                            <label class="attendance-toggle" title="Late">
+                                <input type="radio" name="att_${s.id}" value="late" ${status === 'late' ? 'checked' : ''} data-student="${s.id}">
+                                <span class="attendance-toggle__mark">Late</span>
+                            </label>
+                            <label class="attendance-toggle" title="Absent">
+                                <input type="radio" name="att_${s.id}" value="absent" ${status === 'absent' ? 'checked' : ''} data-student="${s.id}">
+                                <span class="attendance-toggle__mark">Absent</span>
+                            </label>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Remove a guest transfer
+        async function removeGuest(transferId, btnEl) {
+            if (!confirm('Remove this guest from the roster?')) return;
+            const row = btnEl.closest('tr');
+            const res = await api.delete('batch_transfers', transferId);
+            if (res.success) {
+                row.remove();
+            } else {
+                alert('Failed to remove: ' + res.error);
+            }
+        }
+        window.removeGuest = removeGuest;
+
+        // ====== ADD GUEST / TRANSFER LOGIC ======
+        document.getElementById('btnAddGuest')?.addEventListener('click', async () => {
+            const form = document.getElementById('addGuestForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+
+            // Populate batches dropdown (exclude current batch)
+            const batchSelect = document.getElementById('guestBatchSelect');
+            if (batchSelect.options.length <= 1) {
+                const res = await api.get('batches', {});
+                if (res.success) {
+                    res.data.forEach(b => {
+                        if (b.id !== currentAttendanceBatch) {
+                            const opt = document.createElement('option');
+                            opt.value = b.id;
+                            opt.textContent = b.name;
+                            batchSelect.appendChild(opt);
+                        }
+                    });
+                }
+            }
+        });
+
+        document.getElementById('guestBatchSelect')?.addEventListener('change', async (e) => {
+            const batchId = e.target.value;
+            const studentSelect = document.getElementById('guestStudentSelect');
+            studentSelect.innerHTML = '<option value="">Loading...</option>';
+            studentSelect.disabled = true;
+
+            if (!batchId) {
+                studentSelect.innerHTML = '<option value="">Pick a batch first...</option>';
+                return;
+            }
+
+            const res = await api.get('batch_students', { batch_id: batchId }, '*, profiles:student_id(id, name)');
+            if (res.success && res.data) {
+                studentSelect.innerHTML = '<option value="">Select student...</option>';
+                res.data.forEach(m => {
+                    if (m.profiles) {
+                        const opt = document.createElement('option');
+                        opt.value = m.profiles.id;
+                        opt.textContent = m.profiles.name;
+                        opt.dataset.name = m.profiles.name;
+                        studentSelect.appendChild(opt);
+                    }
+                });
+                studentSelect.disabled = false;
+            } else {
+                studentSelect.innerHTML = '<option value="">No students found</option>';
+            }
+        });
+
+        document.getElementById('btnCancelGuest')?.addEventListener('click', () => {
+            document.getElementById('addGuestForm').style.display = 'none';
+        });
+
+        document.getElementById('btnConfirmGuest')?.addEventListener('click', async () => {
+            const studentId = document.getElementById('guestStudentSelect').value;
+            const fromBatchId = document.getElementById('guestBatchSelect').value;
+            const statusEl = document.getElementById('guestStatus');
+
+            if (!studentId || !fromBatchId) {
+                statusEl.textContent = 'Please select a batch and student.';
+                statusEl.className = 'status status--error';
+                statusEl.style.display = 'block';
+                return;
+            }
+
+            const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+
+            // Create transfer record
+            const res = await api.post('batch_transfers', {
+                student_id: studentId,
+                from_batch_id: fromBatchId,
+                to_batch_id: currentAttendanceBatch,
+                transfer_date: dateStr,
+                created_by: user.id
+            });
+
+            if (!res.success) {
+                statusEl.textContent = 'Failed: ' + res.error;
+                statusEl.className = 'status status--error';
+                statusEl.style.display = 'block';
+                return;
+            }
+
+            // Add student row to roster immediately
+            const studentName = document.getElementById('guestStudentSelect').selectedOptions[0].dataset.name;
+            const batchName = document.getElementById('guestBatchSelect').selectedOptions[0].textContent;
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const todayDay = days[new Date().getDay()];
+            const transferId = res.data.id;
+            const tagStyle = 'display:inline-block; margin-left:0.35rem; padding:0.15rem 0.5rem; border-radius:var(--radius-full); font-size:0.7rem; font-weight:600;';
+
+            const tbody = document.getElementById('attendanceTableBody');
+            const row = document.createElement('tr');
+            row.dataset.transferId = transferId;
+            row.innerHTML = `
+                <td>
+                    <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                        <strong>${studentName}</strong>
+                        <span style="${tagStyle} background:rgba(115,147,179,0.15); color:var(--primary);">Guest</span>
+                        <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${batchName}</span>
+                        <span style="${tagStyle} background:rgba(0,0,0,0.06); color:var(--text-muted);">${todayDay}</span>
+                        <button onclick="removeGuest('${transferId}', this)" style="margin-left:auto; background:none; border:none; color:var(--cadmium-red); cursor:pointer; font-size:1.1rem; padding:0 0.3rem;" title="Remove guest">✕</button>
+                    </div>
+                </td>
+                <td style="text-align: right;">
+                    <div class="attendance-toggles">
+                        <label class="attendance-toggle" title="Present">
+                            <input type="radio" name="att_${studentId}" value="present" checked data-student="${studentId}">
+                            <span class="attendance-toggle__mark">Present</span>
+                        </label>
+                        <label class="attendance-toggle" title="Late">
+                            <input type="radio" name="att_${studentId}" value="late" data-student="${studentId}">
+                            <span class="attendance-toggle__mark">Late</span>
+                        </label>
+                        <label class="attendance-toggle" title="Absent">
+                            <input type="radio" name="att_${studentId}" value="absent" data-student="${studentId}">
+                            <span class="attendance-toggle__mark">Absent</span>
+                        </label>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+
+            // Reset form and show success
+            document.getElementById('addGuestForm').style.display = 'none';
+            document.getElementById('guestBatchSelect').value = '';
+            document.getElementById('guestStudentSelect').innerHTML = '<option value="">Pick a batch first...</option>';
+            document.getElementById('guestStudentSelect').disabled = true;
+
+            const saveStatus = document.getElementById('attendanceSaveStatus');
+            saveStatus.textContent = `${studentName} added as guest!`;
+            saveStatus.className = 'status status--success';
+            saveStatus.style.display = 'block';
+            setTimeout(() => saveStatus.style.display = 'none', 3000);
+        });
+
+        document.getElementById('btnSwitchClassAttendance')?.addEventListener('click', () => {
+            document.getElementById('attendancePreSelectionContainer').style.display = 'block';
+            document.getElementById('attendanceGridContainer').style.display = 'none';
+            document.getElementById('attendanceHeaderActions').style.display = 'none';
+            document.getElementById('addGuestForm').style.display = 'none';
+        });
+
+        document.getElementById('btnMarkAllPresent')?.addEventListener('click', () => {
+            const radios = document.querySelectorAll('#attendanceTableBody input[value="present"]');
+            radios.forEach(r => r.checked = true);
+        });
+
+        document.getElementById('btnSaveAttendance')?.addEventListener('click', async () => {
+            if (!currentAttendanceClass || !currentAttendanceBatch) return;
+
+            const btn = document.getElementById('btnSaveAttendance');
+            const statusText = document.getElementById('attendanceSaveStatus');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            statusText.style.display = 'none';
+
+            const dateStr = new Date().toISOString().split('T')[0];
+            const studentRadios = document.querySelectorAll('#attendanceTableBody input[type="radio"]:checked');
+
+            const records = Array.from(studentRadios).map(r => ({
+                class_id: currentAttendanceClass,
+                batch_id: currentAttendanceBatch,
+                student_id: r.getAttribute('data-student'),
+                date: dateStr,
+                status: r.value,
+                marked_by: user.id
+            }));
+
+            const { data, error } = await supabaseClient
+                .from('attendance')
+                .upsert(records, { onConflict: 'class_id, student_id, date' })
+                .select();
+
+            btn.disabled = false;
+            btn.textContent = 'Save Attendance';
+
+            if (!error) {
+                statusText.textContent = 'Attendance saved successfully!';
+                statusText.className = 'status status--success';
+                statusText.style.display = 'block';
+
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    statusText.style.display = 'none';
+                }, 3000);
+            } else {
+                statusText.textContent = 'Failed to save: ' + error.message;
+                statusText.className = 'status status--error';
+                statusText.style.display = 'block';
+            }
+        });
 
         // Tab Switching Logic
-        document.querySelectorAll('.tabs__btn').forEach(button => {
-            button.addEventListener('click', () => {
-                document.querySelectorAll('.tabs__btn').forEach(btn => btn.classList.remove('tabs__btn--active'));
-                document.querySelectorAll('.tabs__panel').forEach(panel => panel.classList.remove('tabs__panel--active'));
+        const bodyEl = document.body;
+        const tabsBtns = document.querySelectorAll('.tabs__btn');
+        const panels = document.querySelectorAll('.tabs__panel');
+        const backToHomeBtn = document.getElementById('btnBackToHome');
 
-                button.classList.add('tabs__btn--active');
-                const targetId = button.getAttribute('data-tab');
-                document.getElementById(targetId).classList.add('tabs__panel--active');
+        function activatePanel(targetId) {
+            tabsBtns.forEach(btn => {
+                if (btn.getAttribute('data-tab') === targetId) {
+                    btn.classList.add('tabs__btn--active');
+                } else {
+                    btn.classList.remove('tabs__btn--active');
+                }
+            });
+            panels.forEach(panel => panel.classList.remove('tabs__panel--active'));
+
+            const targetPanel = document.getElementById(targetId);
+            if (targetPanel) {
+                targetPanel.classList.add('tabs__panel--active');
+            }
+
+            if (targetId === 'panel-home') {
+                bodyEl.classList.add('is-home-active');
+            } else {
+                bodyEl.classList.remove('is-home-active');
+            }
+        }
+
+        tabsBtns.forEach(button => {
+            button.addEventListener('click', () => {
+                activatePanel(button.getAttribute('data-tab'));
             });
         });
+
+        // Landing Pill Logic
+        document.querySelectorAll('.landing-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                activatePanel(pill.getAttribute('data-target'));
+            });
+        });
+
+        // Back to Home Logic
+        if (backToHomeBtn) {
+            backToHomeBtn.addEventListener('click', () => {
+                activatePanel('panel-home');
+            });
+        }
     </script>
 </body>
 
