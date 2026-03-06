@@ -1,0 +1,40 @@
+<header class="panel__header">
+    <h2>Manage Board Results</h2>
+    <div class="pill-toggle">
+        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewBoardResults">Results
+            List</button>
+        <button class="pill-toggle__btn" id="pillAddBoardResult">+ Add New</button>
+    </div>
+</header>
+
+<!-- Board Results List Container (default view) -->
+<div id="boardResultsListContainer">
+    <div id="boardResultsListStatus" class="status"></div>
+    <div class="table-wrap">
+        <table id="boardResultsTable" aria-label="Board results list">
+            <thead>
+                <tr>
+                    <th scope="col">Student Name</th>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Marks</th>
+                    <th scope="col">Max Marks</th>
+                    <th scope="col">Year</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="boardResultsTableBody">
+                <tr>
+                    <td colspan="6" class="loading-text">Loading board results...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-right">
+        <button class="btn btn--primary btn--sm" id="btnRefreshBoardResults">Refresh List</button>
+    </div>
+</div>
+
+<!-- Add Board Result Form Container (loaded via fetch) -->
+<div id="addBoardResultContainer" class="panel__divider">
+    <div class="loading-text">Loading component...</div>
+</div>

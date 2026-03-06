@@ -1,0 +1,137 @@
+const user = window.auth.getUser();
+
+async function loadTestsList() {
+    const tbody = document.getElementById('testsListTableBody');
+    const status = document.getElementById('testsListStatus');
+    const btnRefresh = document.getElementById('btnRefreshTestsList');
+
+    if (!tbody || !status || !btnRefresh) return;
+
+    btnRefresh.disabled = true;
+    btnRefresh.textContent = 'Refreshing...';
+    status.style.display = 'none';
+    tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Loading tests...</td></tr>';
+
+    const response = await window.api.get('tests', {}, '*, profiles:scheduled_by(name)');
+
+    btnRefresh.disabled = false;
+    btnRefresh.textContent = 'Refresh List';
+
+    if (response.success) {
+        if (response.data && response.data.length > 0) {
+            tbody.innerHTML = response.data.reverse().map(test => {
+                const teacherName = test.profiles?.name || '-';
+                return `
+                <tr class="data-table__row">
+                    <td class="data-table__td--main">${test.title || '-'}</td>
+                    <td class="data-table__td">${test.subject || '-'}</td>
+                    <td class="data-table__td">${test.grade || '-'}</td>
+                    <td class="data-table__td">${test.date || '-'}</td>
+                    <td class="data-table__td">${test.max_marks || '-'}</td>
+                    <td class="data-table__td">${teacherName}</td>
+                    <td class="data-table__td">
+                        <a href="manage_marks.html?testId=${test.id}" class="btn btn--primary btn--sm">Manage Marks</a>
+                    </td>
+                </tr>
+            `}).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" class="loading-text">No tests scheduled yet.</td></tr>';
+        }
+    } else {
+        tbody.innerHTML = '';
+        status.textContent = response.error || 'Failed to load tests.';
+        status.className = 'status status--error';
+        status.style.display = 'block';
+    }
+}
+
+async function loadTestComponent() {
+    try {
+        const response = await fetch('components/add_test.html');
+        if (response.ok) {
+            const html = await response.text();
+            const container = document.getElementById('addTestContainer');
+            if (container) {
+                container.innerHTML = html;
+                attachTestListeners();
+            }
+        }
+    } catch (err) {
+        console.error('Error loading test component:', err);
+    }
+}
+
+function attachTestListeners() {
+    const form = document.getElementById('testForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnScheduleTest');
+        const status = document.getElementById('testStatus');
+
+        btn.disabled = true;
+        btn.textContent = 'Scheduling...';
+        status.className = 'status';
+
+        const subjectCheckboxes = document.querySelectorAll('input[name="testSubjects"]:checked');
+        const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
+
+        const response = await window.api.post('tests', {
+            title: document.getElementById('testTitle').value,
+            subject: subjects,
+            grade: document.getElementById('testGrade').value,
+            date: document.getElementById('testDate').value,
+            max_marks: document.getElementById('testMaxMarks').value,
+            scheduled_by: user.id
+        });
+
+        btn.disabled = false;
+        btn.textContent = 'Schedule Test';
+
+        if (response.success) {
+            status.textContent = 'Test scheduled successfully!';
+            status.className = 'status status--success';
+            e.target.reset();
+            loadTestsList();
+        } else {
+            status.textContent = response.error || 'Failed to schedule.';
+            status.className = 'status status--error';
+        }
+    });
+}
+
+export function init() {
+    loadTestsList();
+    loadTestComponent();
+
+    const btnRefresh = document.getElementById('btnRefreshTestsList');
+    if (btnRefresh) btnRefresh.addEventListener('click', loadTestsList);
+
+    const pillView = document.getElementById('pillViewTests');
+    const pillAdd = document.getElementById('pillAddTest');
+    const testsListContainer = document.getElementById('testsListContainer');
+    const addTestContainer = document.getElementById('addTestContainer');
+
+    if (pillView && pillAdd) {
+        pillView.addEventListener('click', () => {
+            pillView.classList.add('pill-toggle__btn--active');
+            pillAdd.classList.remove('pill-toggle__btn--active');
+            if (testsListContainer) testsListContainer.style.display = 'block';
+            if (addTestContainer) addTestContainer.style.display = 'none';
+            if (btnRefresh) btnRefresh.style.display = 'inline-block';
+        });
+
+        pillAdd.addEventListener('click', () => {
+            pillAdd.classList.add('pill-toggle__btn--active');
+            pillView.classList.remove('pill-toggle__btn--active');
+            if (addTestContainer) addTestContainer.style.display = 'block';
+            if (testsListContainer) testsListContainer.style.display = 'none';
+            if (btnRefresh) btnRefresh.style.display = 'none';
+        });
+    }
+}
+
+export function refresh() {
+    loadTestsList();
+}

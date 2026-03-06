@@ -207,3 +207,4 @@ function createElement(tag, className, textContent = '') {
 window.api = api;
 window.auth = auth;
 window.createElement = createElement;
+window.supabaseClient = supabaseClient;

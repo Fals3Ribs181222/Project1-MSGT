@@ -1,0 +1,40 @@
+<header class="panel__header">
+    <h2>Manage Materials</h2>
+    <div class="pill-toggle">
+        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewMaterials">Materials
+            List</button>
+        <button class="pill-toggle__btn" id="pillAddUpload">+ Upload New</button>
+    </div>
+</header>
+
+<!-- Materials List Container (default view) -->
+<div id="materialsListContainer">
+    <div id="materialsListStatus" class="status"></div>
+    <div class="table-wrap">
+        <table id="materialsTable" aria-label="Materials list">
+            <thead>
+                <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Uploaded By</th>
+                    <th scope="col">Link</th>
+                </tr>
+            </thead>
+            <tbody id="materialsTableBody">
+                <tr>
+                    <td colspan="6" class="loading-text">Loading materials...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-right">
+        <button class="btn btn--primary btn--sm" id="btnRefreshMaterials">Refresh List</button>
+    </div>
+</div>
+
+<!-- Upload Form Container (loaded via fetch) -->
+<div id="addUploadContainer" class="panel__divider">
+    <div class="loading-text">Loading component...</div>
+</div>

@@ -1,0 +1,37 @@
+<header class="panel__header">
+    <h2>Manage Announcements</h2>
+    <div class="pill-toggle">
+        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewAnnouncements">Announcements List</button>
+        <button class="pill-toggle__btn" id="pillAddAnnouncement">+ Post New</button>
+    </div>
+</header>
+
+<!-- Announcements List Container (default view) -->
+<div id="announcementsListContainer">
+    <div id="announcementsListStatus" class="status"></div>
+    <div class="table-wrap">
+        <table id="announcementsTable" aria-label="Announcements list">
+            <thead>
+                <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Posted By</th>
+                </tr>
+            </thead>
+            <tbody id="announcementsTableBody">
+                <tr>
+                    <td colspan="4" class="loading-text">Loading announcements...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-right">
+        <button class="btn btn--primary btn--sm" id="btnRefreshAnnouncements">Refresh List</button>
+    </div>
+</div>
+
+<!-- Post Announcement Form Container (loaded via fetch) -->
+<div id="addAnnouncementContainer" class="panel__divider">
+    <div class="loading-text">Loading component...</div>
+</div>

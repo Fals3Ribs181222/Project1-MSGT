@@ -1,0 +1,40 @@
+<header class="panel__header">
+    <h2>Manage Tests</h2>
+    <div class="pill-toggle">
+        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewTests">Tests List</button>
+        <button class="pill-toggle__btn" id="pillAddTest">+ Schedule New</button>
+    </div>
+</header>
+
+<!-- Tests List Container (default view) -->
+<div id="testsListContainer">
+    <div id="testsListStatus" class="status"></div>
+    <div class="table-wrap">
+        <table id="testsListTable" aria-label="Tests list">
+            <thead>
+                <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Max Marks</th>
+                    <th scope="col">Scheduled By</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="testsListTableBody">
+                <tr>
+                    <td colspan="7" class="loading-text">Loading tests...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-right">
+        <button class="btn btn--primary btn--sm" id="btnRefreshTestsList">Refresh List</button>
+    </div>
+</div>
+
+<!-- Schedule Test Form Container (loaded via fetch) -->
+<div id="addTestContainer" class="panel__divider">
+    <div class="loading-text">Loading component...</div>
+</div>

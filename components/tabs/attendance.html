@@ -1,0 +1,73 @@
+<header class="panel__header">
+    <h2>Manage Attendance</h2>
+    <div class="pill-toggle" id="attendanceHeaderActions" style="display:none;">
+        <button class="pill-toggle__btn" id="btnSwitchClassAttendance">← Switch Class</button>
+    </div>
+</header>
+
+<!-- Pre-Selection Container -->
+<div id="attendancePreSelectionContainer">
+    <p class="text-muted" style="margin-bottom: 1.5rem;">Select a class scheduled for today to mark
+        attendance.</p>
+    <div id="todaysClassesGrid" class="classes-grid"
+        style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+        <div class="loading-text">Loading today's classes...</div>
+    </div>
+</div>
+
+<!-- Grid-Based Attendance Container -->
+<div id="attendanceGridContainer" style="display:none;">
+    <div class="attendance-topbar" style="margin-bottom: 1.5rem;">
+        <h3 id="attendanceClassName" style="font-size: 1.25rem;">Class Name</h3>
+        <p id="attendanceClassMeta" class="text-muted">Batch • Time</p>
+    </div>
+
+    <div class="table-wrap">
+        <table id="attendanceTable" class="attendance-table" aria-label="Attendance list">
+            <thead>
+                <tr>
+                    <th scope="col">Student Name</th>
+                    <th scope="col" style="text-align: right;">Status</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTableBody">
+                <tr>
+                    <td colspan="2" class="loading-text">Loading roster...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="form__actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; align-items: center;">
+        <button class="btn btn--outline" id="btnAddGuest" style="font-size: 0.9rem;">+ Add
+            Student</button>
+        <button class="btn btn--outline" id="btnMarkAllPresent">Mark All Present</button>
+        <button class="btn btn--primary" id="btnSaveAttendance">Save Attendance</button>
+    </div>
+
+    <!-- Add Guest / Transfer Form -->
+    <div id="addGuestForm"
+        style="display:none; margin-top: 1.5rem; padding: 1.25rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); backdrop-filter: blur(16px);">
+        <h4 style="margin: 0 0 1rem 0; color: var(--primary);">Cross-Batch Transfer</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form__group">
+                <label class="form__label" for="guestBatchSelect">From Batch</label>
+                <select class="form__control" id="guestBatchSelect">
+                    <option value="">Select a batch...</option>
+                </select>
+            </div>
+            <div class="form__group">
+                <label class="form__label" for="guestStudentSelect">Student</label>
+                <select class="form__control" id="guestStudentSelect" disabled>
+                    <option value="">Pick a batch first...</option>
+                </select>
+            </div>
+        </div>
+        <div class="form__actions" style="margin-top: 1rem; justify-content: flex-end; gap: 0.75rem;">
+            <button class="btn btn--outline" id="btnCancelGuest">Cancel</button>
+            <button class="btn btn--primary" id="btnConfirmGuest">Add to Roster</button>
+        </div>
+        <div id="guestStatus" class="status" style="display:none; margin-top: 0.75rem;"></div>
+    </div>
+
+    <div id="attendanceSaveStatus" class="status" style="display:none; margin-top: 1rem;"></div>
+</div>
