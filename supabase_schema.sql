@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   role TEXT CHECK (role IN ('teacher', 'student')) DEFAULT 'student',
   grade TEXT,
   subjects TEXT,
+  phone TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -113,14 +114,15 @@ USING (public.is_teacher());
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, name, username, role, grade, subjects)
+  INSERT INTO public.profiles (id, name, username, role, grade, subjects, phone)
   VALUES (
     new.id,
     COALESCE(new.raw_user_meta_data->>'name', ''),
     COALESCE(new.raw_user_meta_data->>'username', new.email),
     COALESCE(new.raw_user_meta_data->>'role', 'student'),
     new.raw_user_meta_data->>'grade',
-    new.raw_user_meta_data->>'subjects'
+    new.raw_user_meta_data->>'subjects',
+    new.raw_user_meta_data->>'phone'
   );
   RETURN new;
 END;

@@ -303,6 +303,7 @@ function attachAddStudentListeners() {
         const grade = document.getElementById('studentGrade').value;
         const username = document.getElementById('studentUsername').value.trim().toLowerCase();
         const password = document.getElementById('studentPassword').value;
+        const phone = document.getElementById('studentPhone').value.trim();
 
         const subjectCheckboxes = document.querySelectorAll('input[name="studentSubjects"]:checked');
         const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
@@ -331,6 +332,7 @@ function attachAddStudentListeners() {
                 username: username,
                 grade: grade,
                 subjects: subjects,
+                phone: phone,
                 role: 'student'
             };
 
@@ -353,7 +355,7 @@ function attachAddStudentListeners() {
             if (!error && data?.user?.id) {
                 await window.supabaseClient
                     .from('profiles')
-                    .update({ name, username, grade, subjects, role: 'student' })
+                    .update({ name, username, grade, subjects, phone, role: 'student' })
                     .eq('id', data.user.id);
             }
 

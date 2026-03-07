@@ -44,6 +44,12 @@
             minlength="6">
     </div>
 
+    <div class="form__group">
+        <label class="form__label" for="studentPhone">Phone Number (WhatsApp)</label>
+        <input type="tel" id="studentPhone" class="form__control" placeholder="e.g. 9876543210" pattern="[0-9]{10}">
+        <small class="form__help">10-digit number without +91</small>
+    </div>
+
     <button type="submit" class="btn btn--primary btn--full" id="btnAddStudent">
         <span id="btnAddStudentText">Register Student</span>
         <span class="spinner" id="btnAddStudentSpinner" style="display:none;" aria-hidden="true"></span>
