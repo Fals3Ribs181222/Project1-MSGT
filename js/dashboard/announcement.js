@@ -40,7 +40,7 @@ async function loadAnnouncements() {
 
 async function loadAnnouncementComponent() {
     try {
-        const response = await fetch('components/add_announcement.html');
+        const response = await fetch('components/add_announcement');
         if (response.ok) {
             const html = await response.text();
             const container = document.getElementById('addAnnouncementContainer');

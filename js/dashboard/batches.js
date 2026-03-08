@@ -78,7 +78,7 @@ function formatTime(timeStr) {
 
 async function loadBatchComponent() {
     try {
-        const response = await fetch('components/add_batch.html');
+        const response = await fetch('components/add_batch');
         if (response.ok) {
             const html = await response.text();
             const container = document.getElementById('addBatchContainer');

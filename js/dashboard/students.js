@@ -273,7 +273,7 @@ function hideStudentDetail() {
 // Load Add Student Component HTML
 async function loadAddStudentComponent() {
     try {
-        const response = await fetch('components/add_student.html');
+        const response = await fetch('components/add_student');
         if (response.ok) {
             const html = await response.text();
             const container = document.getElementById('addStudentContainer');

@@ -124,7 +124,7 @@ async function renderCalendar() {
 
 async function loadClassComponent() {
     try {
-        const response = await fetch('components/add_class.html');
+        const response = await fetch('components/add_class');
         if (response.ok) {
             const html = await response.text();
             const container = document.getElementById('addClassContainer');

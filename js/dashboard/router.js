@@ -10,7 +10,7 @@ export async function loadTab(targetId) {
 
     // If it doesn't exist, we need to fetch it
     if (!targetPanel) {
-        // Map targetId to filename (e.g., panel-students -> students.html)
+        // Map targetId to filename (e.g., panel-students -> students)
         const featureName = targetId.replace('panel-', '');
 
         if (featureName === 'home') return;
@@ -23,7 +23,7 @@ export async function loadTab(targetId) {
             targetPanel.innerHTML = `<div class="loading-text" style="padding: 2rem; text-align: center;">Loading ${featureName}...</div>`;
             panelsContainer.appendChild(targetPanel);
 
-            const response = await fetch(`components/tabs/${featureName}.html`);
+            const response = await fetch(`components/tabs/${featureName}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const html = await response.text();

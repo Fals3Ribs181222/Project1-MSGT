@@ -44,7 +44,7 @@ async function loadBoardResults() {
 
 async function loadBoardResultComponent() {
     try {
-        const response = await fetch('components/add_board_result.html');
+        const response = await fetch('components/add_board_result');
         if (response.ok) {
             const html = await response.text();
             const container = document.getElementById('addBoardResultContainer');

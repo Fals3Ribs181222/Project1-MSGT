@@ -30,7 +30,7 @@ async function loadTestsList() {
                     <td class="data-table__td">${test.max_marks || '-'}</td>
                     <td class="data-table__td">${teacherName}</td>
                     <td class="data-table__td">
-                        <a href="manage_marks.html?testId=${test.id}" class="btn btn--primary btn--sm">Manage Marks</a>
+                        <a href="manage_marks?testId=${test.id}" class="btn btn--primary btn--sm">Manage Marks</a>
                     </td>
                 </tr>
             `}).join('');
@@ -47,7 +47,7 @@ async function loadTestsList() {
 
 async function loadTestComponent() {
     try {
-        const response = await fetch('components/add_test.html');
+        const response = await fetch('components/add_test');
         if (response.ok) {
             const html = await response.text();
             const container = document.getElementById('addTestContainer');

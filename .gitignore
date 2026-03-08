@@ -1,3 +1,5 @@
 # Supabase CLI binary
 supabase.exe
 supabase/.temp/
+.vercel
+.env*.local

@@ -44,7 +44,7 @@ async function loadMaterials() {
 // Load Upload Component HTML
 async function loadUploadComponent() {
     try {
-        const response = await fetch('components/add_upload.html');
+        const response = await fetch('components/add_upload');
         if (response.ok) {
             const html = await response.text();
             const container = document.getElementById('addUploadContainer');

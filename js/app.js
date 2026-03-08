@@ -121,7 +121,7 @@ const auth = {
     async logout() {
         await supabaseClient.auth.signOut();
         localStorage.removeItem('mitesh_tutions_user');
-        window.location.href = 'login.html';
+        window.location.href = 'login';
     },
 
     getUser() {
@@ -132,16 +132,16 @@ const auth = {
     requireRole(role) {
         const user = this.getUser();
         if (!user || user.role !== role) {
-            window.location.href = 'login.html';
+            window.location.href = 'login';
         }
         return user;
     },
 
     redirect(role) {
         if (role === 'teacher') {
-            window.location.href = 'teacher_dashboard.html';
+            window.location.href = 'teacher_dashboard';
         } else if (role === 'student') {
-            window.location.href = 'student_dashboard.html';
+            window.location.href = 'student_dashboard';
         }
     },
 
@@ -152,14 +152,14 @@ const auth = {
 
         if (user) {
             // Remove login links
-            const loginLinks = navLinks.querySelectorAll('li:has(a[href^="login.html"])');
+            const loginLinks = navLinks.querySelectorAll('li:has(a[href^="login"])');
             loginLinks.forEach(link => link.remove());
 
             // Add dashboard link
             const dashLi = document.createElement('li');
             const dashLink = document.createElement('a');
             dashLink.className = 'navbar__link';
-            dashLink.href = user.role === 'teacher' ? 'teacher_dashboard.html' : 'student_dashboard.html';
+            dashLink.href = user.role === 'teacher' ? 'teacher_dashboard' : 'student_dashboard';
             dashLink.textContent = 'Dashboard';
             dashLi.appendChild(dashLink);
             navLinks.appendChild(dashLi);
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     auth.updateNavigation();
 
     // Set active link in nav
-    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    const currentPath = window.location.pathname.split('/').pop() || 'index';
     document.querySelectorAll('.navbar__link').forEach(link => {
         if (link.getAttribute('href') === currentPath) {
             link.classList.add('navbar__link--active');

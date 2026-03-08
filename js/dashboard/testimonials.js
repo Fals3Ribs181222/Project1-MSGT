@@ -45,7 +45,7 @@ async function loadTestimonials() {
 
 async function loadTestimonialComponent() {
     try {
-        const response = await fetch('components/add_testimonial.html');
+        const response = await fetch('components/add_testimonial');
         if (response.ok) {
             const html = await response.text();
             const container = document.getElementById('addTestimonialContainer');
