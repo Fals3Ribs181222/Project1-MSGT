@@ -35,7 +35,10 @@ The JavaScript logic has been split to correspond 1-to-1 with the HTML component
 - `board_results.js`
 - `testimonials.js`
 
-These ES6 modules are responsible for all data fetching, form handling, and DOM manipulation strictly within their own domain. They rely on the global `window.api` and `window.supabaseClient` objects initialized in `app.js`.
+These ES6 modules are responsible for all data fetching, form handling, and DOM manipulation strictly within their own domain. They rely on the following global resources provided by `app.js` and `utils.js`:
+- **`window.api`**: An extended wrapper for Supabase operations (supporting `.in()`, `.order()`, and `deleteWhere`).
+- **UI Helpers**: `tableLoading()`, `showStatus()`, and `loadComponent()` for standardized loading states and component fetching.
+- **Shared Utilities**: `formatTime()` and `showConfirmModal()` for common UI tasks.
 
 ## Benefits
 - **Maintainability:** Developers can easily locate and modify the code for a specific feature without navigating thousands of lines of unrelated code.

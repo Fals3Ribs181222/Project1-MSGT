@@ -8,7 +8,8 @@ The teacher dashboard serves as the administrative control center.
 ### Navigation and Structure
 -   It uses a tabbed navigation system to organize various management modules.
 -   A main landing area displays a welcome message. As teachers navigate into specific management tabs, a "← Back to Home" button allows them to return to the main overview.
--   **Modular Architecture & Dynamic Routing:** The dashboard uses `js/dashboard/router.js` to dynamically load HTML components from `components/tabs/` and their corresponding ES6 JavaScript modules from `js/dashboard/`. This lazy-loading approach keeps the main HTML file clean and improves maintainability.
+-   **Modular Architecture & Dynamic Routing:** The dashboard uses `js/dashboard/router.js` to dynamically load HTML components from `components/tabs/` and their corresponding ES6 JavaScript modules from `js/dashboard/`.
+-   **Standardized UI Implementation:** All modules utilize unified global helpers (`window.tableLoading`, `window.showStatus`, `window.loadComponent`) to ensure a consistent user experience during data operations and component transitions.
 
 ### Key Functional Panels
 -   **Dashboard Home:** Overview of system status.

@@ -18,8 +18,9 @@ The application uses a serverless architecture where the frontend interacts dire
 - `teacher_dashboard.html`: The primary interface for teachers to manage the entire system.
 - `student_dashboard.html`: The interface for students to view their schedules, materials, marks, and attendance.
 - `supabase_schema.sql`: Contains the complete database structure, tables, functions, triggers, and security policies.
-- `js/app.js`: Contains core initialization logic for Supabase.
-- `components/`: Contains modular HTML segments (like forms or specific dashboard panels) that are likely loaded dynamically to construct the UI, promoting code reuse.
+- `js/app.js`: Contains core initialization logic for Supabase, database configuration, unified API wrappers, and global UI helpers.
+- `js/utils.js`: Contains shared utility functions like `formatTime` and `showConfirmModal` used across multiple modules.
+- `components/`: Contains modular HTML segments and tab views loaded dynamically to construct the UI.
 
 ## Core Entities
 The system revolves around several core entities defined in the database:
