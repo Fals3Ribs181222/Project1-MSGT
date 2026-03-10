@@ -1,3 +1,9 @@
 {
-    "cleanUrls": true
+    "cleanUrls": true,
+    "rewrites": [
+        {
+            "source": "/teacher_dashboard/**",
+            "destination": "/teacher_dashboard.html"
+        }
+    ]
 }
