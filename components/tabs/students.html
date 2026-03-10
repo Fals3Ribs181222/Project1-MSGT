@@ -58,14 +58,14 @@
 <!-- Student Detail View -->
 <div id="studentDetailContainer" class="student-detail" style="display:none;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
-        <button class="btn btn--outline btn--sm" id="btnBackToStudents">← Back to Students</button>
+        <button class="btn btn--outline btn--sm" id="btnBackToStudents">Back to Students</button>
         <button class="btn btn--danger btn--sm" id="btnDeleteStudentDetail">Delete Student</button>
     </div>
 
-    <!-- Profile Information -->
     <div class="panel__header">
         <h2>Profile Information</h2>
     </div>
+
     <div class="profile-card"
         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; background: var(--surface-bg); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-light); margin-bottom: 2rem;">
         <div>
@@ -78,7 +78,8 @@
         </div>
         <div>
             <p class="stat-card__label" style="margin-bottom: 0.25rem;">Password</p>
-            <p class="stat-card__value" id="studentDetailPassword" style="font-size: 1.25rem;">••••••••</p>
+            <p class="stat-card__value" id="studentDetailPassword" style="font-size: 1.25rem;">••••••••
+            </p>
         </div>
         <div>
             <p class="stat-card__label" style="margin-bottom: 0.25rem;">Grade</p>
@@ -97,15 +98,18 @@
             <div class="student-detail__stat-label">Total Classes</div>
         </div>
         <div class="student-detail__stat">
-            <div class="student-detail__stat-value student-detail__stat-value--green" id="sdPresent">-</div>
+            <div class="student-detail__stat-value student-detail__stat-value--green" id="sdPresent">-
+            </div>
             <div class="student-detail__stat-label">Present</div>
         </div>
         <div class="student-detail__stat">
-            <div class="student-detail__stat-value student-detail__stat-value--red" id="sdAbsent">-</div>
+            <div class="student-detail__stat-value student-detail__stat-value--red" id="sdAbsent">-
+            </div>
             <div class="student-detail__stat-label">Absent</div>
         </div>
         <div class="student-detail__stat">
-            <div class="student-detail__stat-value student-detail__stat-value--amber" id="sdLate">-</div>
+            <div class="student-detail__stat-value student-detail__stat-value--amber" id="sdLate">-
+            </div>
             <div class="student-detail__stat-label">Late</div>
         </div>
         <div class="student-detail__stat">
@@ -138,7 +142,7 @@
 
     <!-- Test Scores -->
     <div class="panel__header">
-        <h2>Test Scores</h2>
+        <h2>Attendance Summary</h2>
     </div>
     <div class="table-wrap">
         <table id="studentMarksTable">
@@ -158,52 +162,4 @@
             </tbody>
         </table>
     </div>
-
-    <!-- ── AI Progress Report ──────────────────────────────────────── -->
-    <div class="panel__header" style="margin-top: 2rem;">
-        <h2>AI Progress Report</h2>
-    </div>
-
-    <div
-        style="background: var(--surface-bg); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.5rem;">
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.6;">
-            Generate a parent-friendly progress summary using the student's attendance and test data above.
-            The report is written by AI and can be copied and sent to parents directly.
-        </p>
-
-        <button class="btn btn--primary" id="btnGenerateReport" disabled
-            style="display: flex; align-items: center; gap: 0.5rem;">
-            ✨ Generate Report
-        </button>
-
-        <!-- Report Output — hidden until a report is generated -->
-        <div id="reportOutputSection" style="display: none; margin-top: 1.5rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                <p style="font-weight: 600; color: var(--text-primary); margin: 0;">Generated Report</p>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn--outline btn--sm" id="btnCopyReport" style="display: none;">
-                        Copy
-                    </button>
-                    <button class="btn btn--primary btn--sm" id="btnSendWhatsappReport"
-                        style="display: none; background-color: #25D366; border-color: #25D366; color: white;">
-                        <i class="ri-whatsapp-line"></i> WhatsApp
-                    </button>
-                </div>
-            </div>
-            <div id="reportOutputText" style="
-                    background: var(--bg-primary, #fff);
-                    border: 1px solid var(--border-light);
-                    border-radius: var(--radius-md);
-                    padding: 1.25rem 1.5rem;
-                    font-size: 0.95rem;
-                    line-height: 1.8;
-                    color: var(--text-primary);
-                    white-space: pre-wrap;
-                    min-height: 80px;
-                ">
-            </div>
-        </div>
-    </div>
-    <!-- ── End AI Progress Report ──────────────────────────────────── -->
-
 </div>

@@ -1,15 +1,7 @@
-// js/dashboard/students.js
-
 let allStudents = [];
 const user = window.auth.getUser();
 
-let studentReportData = null;
-
-const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://tksruuqtzxflgglnljef.supabase.co';
-
-
-// ── STUDENTS LIST ─────────────────────────────────────────────────────────────
-
+// Load Students List handler
 export async function loadStudents() {
     const tbody = document.getElementById('studentsTableBody');
     const status = document.getElementById('studentsListStatus');
@@ -20,7 +12,7 @@ export async function loadStudents() {
     btnRefresh.disabled = true;
     btnRefresh.textContent = 'Refreshing...';
     status.style.display = 'none';
-    window.tableLoading('studentsTableBody', 5, 'Loading students...');
+    tbody.innerHTML = '<tr><td colspan="5" class="loading-text">Loading students...</td></tr>';
 
     const response = await window.api.get('profiles', { role: 'student' });
 
@@ -32,19 +24,25 @@ export async function loadStudents() {
         filterStudents();
     } else {
         tbody.innerHTML = '';
-        window.showStatus('studentsListStatus', response.error || 'Failed to load students.', 'error');
+        status.textContent = response.error || 'Failed to load students.';
+        status.className = 'status status--error';
+        status.style.display = 'block';
     }
 }
 
+// Render the students table from a filtered array
 function renderStudentsTable(students) {
     const tbody = document.getElementById('studentsTableBody');
     const countEl = document.getElementById('studentsCount');
     if (!tbody) return;
 
-    if (countEl) countEl.textContent = `Showing ${students.length} of ${allStudents.length}`;
+    // Update count
+    if (countEl) {
+        countEl.textContent = `Showing ${students.length} of ${allStudents.length}`;
+    }
 
     if (students.length === 0) {
-        window.tableLoading('studentsTableBody', 5, 'No students match your filters.');
+        tbody.innerHTML = '<tr><td colspan="5" class="loading-text">No students match your filters.</td></tr>';
         return;
     }
 
@@ -61,52 +59,38 @@ function renderStudentsTable(students) {
     `).join('');
 }
 
+// Filter students based on search, grade, and subject
 function filterStudents() {
     const searchVal = (document.getElementById('studentSearchInput')?.value || '').toLowerCase();
     const gradeVal = document.getElementById('studentGradeFilter')?.value || '';
     const subjectVal = document.getElementById('studentSubjectFilter')?.value || '';
 
     let filtered = allStudents;
-    if (searchVal) filtered = filtered.filter(s =>
-        (s.name || '').toLowerCase().includes(searchVal) ||
-        (s.username || '').toLowerCase().includes(searchVal)
-    );
-    if (gradeVal) filtered = filtered.filter(s => s.grade === gradeVal);
-    if (subjectVal) filtered = filtered.filter(s => (s.subjects || '').includes(subjectVal));
+
+    if (searchVal) {
+        filtered = filtered.filter(s =>
+            (s.name || '').toLowerCase().includes(searchVal) ||
+            (s.username || '').toLowerCase().includes(searchVal)
+        );
+    }
+
+    if (gradeVal) {
+        filtered = filtered.filter(s => s.grade === gradeVal);
+    }
+
+    if (subjectVal) {
+        filtered = filtered.filter(s =>
+            (s.subjects || '').includes(subjectVal)
+        );
+    }
 
     renderStudentsTable(filtered);
 }
 
-// ── DELETE ────────────────────────────────────────────────────────────────────
-
-function showConfirmModal(title, message, onConfirm) {
-    const overlay = document.createElement('div');
-    overlay.className = 'confirm-overlay';
-    overlay.innerHTML = `
-        <div class="confirm-modal">
-            <h3>${title}</h3>
-            <p>${message}</p>
-            <div class="confirm-modal__actions">
-                <button class="btn btn--outline btn--sm" id="confirmCancel">Cancel</button>
-                <button class="btn btn--danger btn--sm" id="confirmOk">Delete</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-
-    overlay.querySelector('#confirmCancel').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    overlay.querySelector('#confirmOk').addEventListener('click', async () => {
-        overlay.querySelector('#confirmOk').disabled = true;
-        overlay.querySelector('#confirmOk').textContent = 'Deleting...';
-        await onConfirm();
-        overlay.remove();
-    });
-}
 
 export async function deleteStudent(studentId) {
     const student = allStudents.find(s => s.id === studentId);
-    showConfirmModal(
+    window.showConfirmModal(
         'Delete Student',
         `Are you sure you want to delete <strong>${student?.name || 'this student'}</strong>? This cannot be undone.`,
         async () => {
@@ -121,47 +105,35 @@ export async function deleteStudent(studentId) {
     );
 }
 
-// ── STUDENT DETAIL VIEW ───────────────────────────────────────────────────────
-
+// ====== STUDENT DETAIL VIEW ======
 async function showStudentDetail(studentId) {
     const student = allStudents.find(s => s.id === studentId);
     if (!student) return;
 
-    window.currentStudent = student; // Store for WhatsApp delivery
-
-    studentReportData = {
-        student: {
-            name: student.name || 'Unknown',
-            grade: student.grade || '',
-            subjects: student.subjects || '',
-        },
-        attendance: { total: 0, present: 0, absent: 0, late: 0, rate: 0 },
-        batches: [],
-        marks: [],
-    };
-    setReportButtonState('idle');
-    clearReportOutput();
-
+    // Hide list and add containers, show detail
     document.getElementById('studentsListContainer').style.display = 'none';
     document.getElementById('addStudentContainer').style.display = 'none';
     document.getElementById('studentDetailContainer').style.display = 'block';
     const refreshBtn = document.getElementById('btnRefreshStudents');
     if (refreshBtn) refreshBtn.style.display = 'none';
 
+    // Set header info
     document.getElementById('studentDetailName').textContent = student.name || 'Unknown';
     document.getElementById('studentDetailUsername').textContent = student.username || '-';
     document.getElementById('studentDetailGrade').textContent = student.grade || '-';
     document.getElementById('studentDetailSubjects').textContent = student.subjects || '-';
 
-    window.tableLoading('studentBatchesBody', 4, 'Loading batches...');
-    window.tableLoading('studentMarksBody', 5, 'Loading marks...');
+    // Reset loading states
+    document.getElementById('studentBatchesBody').innerHTML = '<tr><td colspan="4" class="loading-text">Loading batches...</td></tr>';
+    document.getElementById('studentMarksBody').innerHTML = '<tr><td colspan="5" class="loading-text">Loading marks...</td></tr>';
     ['sdTotalClasses', 'sdPresent', 'sdAbsent', 'sdLate', 'sdAttendanceRate'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = '...';
     });
 
+    // We defer to window.supabaseClient for these direct calls
     if (!window.supabaseClient) {
-        console.warn('window.supabaseClient is not defined!');
+        console.warn("window.supabaseClient is not defined!");
         return;
     }
 
@@ -173,7 +145,6 @@ async function showStudentDetail(studentId) {
             .eq('student_id', studentId);
 
         const batchBody = document.getElementById('studentBatchesBody');
-
         if (batchLinks && batchLinks.length > 0) {
             const batchIds = batchLinks.map(bl => bl.batch_id);
             const { data: batches } = await window.supabaseClient
@@ -182,13 +153,6 @@ async function showStudentDetail(studentId) {
                 .in('id', batchIds);
 
             if (batches && batches.length > 0) {
-                studentReportData.batches = batches.map(b => ({
-                    name: b.name || '',
-                    subject: b.subject || '',
-                    grade: b.grade || '',
-                    schedule: b.schedule || '',
-                }));
-
                 batchBody.innerHTML = batches.map(b => `
                     <tr class="data-table__row">
                         <td class="data-table__td--main">${b.name || '-'}</td>
@@ -201,8 +165,7 @@ async function showStudentDetail(studentId) {
                 batchBody.innerHTML = '<tr><td colspan="4" class="student-detail__empty">No batches found.</td></tr>';
             }
         } else {
-            document.getElementById('studentBatchesBody').innerHTML =
-                '<tr><td colspan="4" class="student-detail__empty">Not assigned to any batches.</td></tr>';
+            batchBody.innerHTML = '<tr><td colspan="4" class="student-detail__empty">Not assigned to any batches.</td></tr>';
         }
     } catch (err) {
         console.error('Batch fetch error:', err);
@@ -220,8 +183,6 @@ async function showStudentDetail(studentId) {
         const absent = attendanceData?.filter(a => a.status === 'absent').length || 0;
         const late = attendanceData?.filter(a => a.status === 'late').length || 0;
         const rate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
-
-        studentReportData.attendance = { total, present, absent, late, rate };
 
         document.getElementById('sdTotalClasses').textContent = total;
         document.getElementById('sdPresent').textContent = present;
@@ -251,17 +212,6 @@ async function showStudentDetail(studentId) {
             const testMap = {};
             (testsData || []).forEach(t => testMap[t.id] = t);
 
-            studentReportData.marks = marksData.map(m => {
-                const test = testMap[m.test_id] || {};
-                return {
-                    title: test.title || 'Untitled',
-                    subject: test.subject || '',
-                    marks_obtained: Number(m.marks_obtained) || 0,
-                    max_marks: Number(test.max_marks) || 0,
-                    date: test.date || '',
-                };
-            });
-
             marksBody.innerHTML = marksData.map(m => {
                 const test = testMap[m.test_id] || {};
                 return `
@@ -280,9 +230,6 @@ async function showStudentDetail(studentId) {
     } catch (err) {
         console.error('Marks fetch error:', err);
     }
-
-    // All data loaded — enable the button
-    setReportButtonState('ready');
 }
 
 function hideStudentDetail() {
@@ -291,170 +238,14 @@ function hideStudentDetail() {
     const refreshBtn = document.getElementById('btnRefreshStudents');
     if (refreshBtn) refreshBtn.style.display = 'inline-block';
 
+    // Reset pill toggle
     const pillView = document.getElementById('pillViewStudents');
     const pillAdd = document.getElementById('pillAddStudent');
     if (pillView) pillView.classList.add('pill-toggle__btn--active');
     if (pillAdd) pillAdd.classList.remove('pill-toggle__btn--active');
-
-    studentReportData = null;
-    clearReportOutput();
 }
 
-// ── AI REPORT GENERATION ──────────────────────────────────────────────────────
-
-function setReportButtonState(state) {
-    const btn = document.getElementById('btnGenerateReport');
-    if (!btn) return;
-    if (state === 'idle') {
-        btn.disabled = true;
-        btn.textContent = '✨ Generate Report';
-    } else if (state === 'ready') {
-        btn.disabled = false;
-        btn.textContent = '✨ Generate Report';
-    } else if (state === 'loading') {
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-    }
-}
-
-function clearReportOutput() {
-    const section = document.getElementById('reportOutputSection');
-    const text = document.getElementById('reportOutputText');
-    if (section) section.style.display = 'none';
-    if (text) text.textContent = '';
-}
-
-async function generateReport() {
-    if (!studentReportData) return;
-
-    setReportButtonState('loading');
-
-    const section = document.getElementById('reportOutputSection');
-    const text = document.getElementById('reportOutputText');
-    const copyBtn = document.getElementById('btnCopyReport');
-
-    if (section) section.style.display = 'block';
-    if (text) text.textContent = 'Generating report...';
-    if (copyBtn) copyBtn.style.display = 'none';
-
-    section?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    try {
-        const token = window.CONFIG.SUPABASE_ANON_KEY;
-        const GENERATE_REPORT_URL = `${window.CONFIG.SUPABASE_URL}/functions/v1/generate-report`;
-
-        const response = await fetch(GENERATE_REPORT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(studentReportData),
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || result.error) {
-            throw new Error(result.error || 'Failed to generate report.');
-        }
-
-        if (text) text.textContent = result.report;
-        if (copyBtn) copyBtn.style.display = 'inline-block';
-
-        const whatsAppBtn = document.getElementById('btnSendWhatsappReport');
-        if (whatsAppBtn) whatsAppBtn.style.display = 'inline-flex';
-
-    } catch (err) {
-        console.error('Report generation error:', err);
-        console.dir(err); // Log the full object to see if it's a network error or Anthropic error
-        if (text) {
-            text.textContent = '⚠ ' + (err.message || 'Something went wrong. Please try again.');
-        }
-    } finally {
-        setReportButtonState('ready');
-    }
-}
-
-async function sendWhatsAppReport() {
-    const textEl = document.getElementById('reportOutputText');
-    const reportText = textEl?.textContent || '';
-    const phone = window.currentStudent?.phone;
-
-    if (!reportText) return;
-
-    if (!phone) {
-        alert("This student doesn't have a phone number registered. Please update their profile.");
-        return;
-    }
-
-    const btn = document.getElementById('btnSendWhatsappReport');
-    if (!btn) return;
-
-    const originalHtml = btn.innerHTML;
-    btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
-    btn.disabled = true;
-
-    try {
-        const SEND_WA_URL = `${window.CONFIG.SUPABASE_URL}/functions/v1/send-whatsapp-report`;
-        const token = window.CONFIG.SUPABASE_ANON_KEY;
-
-        const response = await fetch(SEND_WA_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ phone, report: reportText })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || result.error) {
-            throw new Error(result.error || 'Failed to send WhatsApp message.');
-        }
-
-        btn.innerHTML = '<i class="ri-check-line"></i> Sent!';
-        btn.style.backgroundColor = '#1DA954';
-
-        setTimeout(() => {
-            btn.innerHTML = originalHtml;
-            btn.style.backgroundColor = '#25D366';
-            btn.disabled = false;
-        }, 3000);
-
-    } catch (err) {
-        console.error('WhatsApp dispatch error:', err);
-        alert('Failed to send WhatsApp message: ' + err.message);
-        btn.innerHTML = originalHtml;
-        btn.disabled = false;
-    }
-}
-
-function copyReportToClipboard() {
-    const text = document.getElementById('reportOutputText')?.textContent || '';
-    if (!text) return;
-
-    navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById('btnCopyReport');
-        if (btn) {
-            const original = btn.textContent;
-            btn.textContent = 'Copied!';
-            setTimeout(() => { btn.textContent = original; }, 2000);
-        }
-    }).catch(() => {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        ta.remove();
-    });
-}
-
-// ── ADD STUDENT FORM ──────────────────────────────────────────────────────────
-
+// Load Add Student Component HTML
 async function loadAddStudentComponent() {
     try {
         const response = await fetch('components/add_student');
@@ -499,24 +290,35 @@ function attachAddStudentListeners() {
             return;
         }
 
+        // Show loading state
         btnText.style.display = 'none';
         btnSpinner.style.display = 'inline-block';
         btn.disabled = true;
         status.style.display = 'none';
 
         try {
+            // Save teacher's current session before creating the student
             const { data: sessionData } = await window.supabaseClient.auth.getSession();
             const teacherSession = sessionData?.session;
 
             const email = `${username}@msgt.internal`;
-            const metadata = { name, username, grade, subjects, phone, role: 'student' };
+            const metadata = {
+                name: name,
+                username: username,
+                grade: grade,
+                subjects: subjects,
+                phone: phone,
+                role: 'student'
+            };
 
+            // Create the student account
             const { data, error } = await window.supabaseClient.auth.signUp({
-                email,
-                password,
+                email: email,
+                password: password,
                 options: { data: metadata }
             });
 
+            // Restore teacher session immediately
             if (teacherSession) {
                 await window.supabaseClient.auth.setSession({
                     access_token: teacherSession.access_token,
@@ -524,6 +326,7 @@ function attachAddStudentListeners() {
                 });
             }
 
+            // Ensure profile has the correct data
             if (!error && data?.user?.id) {
                 await window.supabaseClient
                     .from('profiles')
@@ -537,12 +340,14 @@ function attachAddStudentListeners() {
                 status.style.display = 'block';
             } else {
                 status.innerHTML = `<strong>✓ Student registered!</strong><br>
-                    Name: ${name}<br>Username: ${username}<br>Grade: ${grade}<br>
+                    Name: ${name}<br>
+                    Username: ${username}<br>
+                    Grade: ${grade}<br>
                     The student can now log in.`;
                 status.className = 'status status--info';
                 status.style.display = 'block';
                 form.reset();
-                loadStudents();
+                loadStudents(); // Refresh the students list
             }
         } catch (err) {
             status.textContent = `Unexpected error: ${err.message}`;
@@ -556,22 +361,25 @@ function attachAddStudentListeners() {
     });
 }
 
-// ── INIT / REFRESH ────────────────────────────────────────────────────────────
-
+// Exported Initialization function called by router
 export function init() {
+    // 1. Initial Data Load
     loadStudents();
-    loadAddStudentComponent();
+    loadAddStudentComponent(); // pre-load the form HTML
 
+    // 2. Attach DOM Event Listeners
     const btnRefresh = document.getElementById('btnRefreshStudents');
     if (btnRefresh) btnRefresh.addEventListener('click', loadStudents);
 
     const studentSearchInput = document.getElementById('studentSearchInput');
     const studentGradeFilter = document.getElementById('studentGradeFilter');
     const studentSubjectFilter = document.getElementById('studentSubjectFilter');
+
     if (studentSearchInput) studentSearchInput.addEventListener('input', filterStudents);
     if (studentGradeFilter) studentGradeFilter.addEventListener('change', filterStudents);
     if (studentSubjectFilter) studentSubjectFilter.addEventListener('change', filterStudents);
 
+    // Pill Toggle Logic
     const pillView = document.getElementById('pillViewStudents');
     const pillAdd = document.getElementById('pillAddStudent');
     const listContainer = document.getElementById('studentsListContainer');
@@ -587,6 +395,7 @@ export function init() {
             if (studentDetailCtr) studentDetailCtr.style.display = 'none';
             if (btnRefresh) btnRefresh.style.display = 'inline-block';
         });
+
         pillAdd.addEventListener('click', () => {
             pillAdd.classList.add('pill-toggle__btn--active');
             pillView.classList.remove('pill-toggle__btn--active');
@@ -597,33 +406,11 @@ export function init() {
         });
     }
 
+    // Back to Students button inside Detail view
     const btnBack = document.getElementById('btnBackToStudents');
     if (btnBack) btnBack.addEventListener('click', hideStudentDetail);
 
-    // Report Generator button
-    document.getElementById('btnGenerateReport')?.addEventListener('click', generateReport);
-
-    // Copy Report button
-    document.getElementById('btnCopyReport')?.addEventListener('click', copyReportToClipboard);
-
-    // Send WhatsApp Report button
-    document.getElementById('btnSendWhatsappReport')?.addEventListener('click', sendWhatsAppReport);
-
-    // Initial check for report button state
-    // setReportButtonState('checking'); // This line was malformed in the instruction, assuming it's not needed or should be placed elsewhere.
-
-    const btnDeleteDetail = document.getElementById('btnDeleteStudentDetail');
-    if (btnDeleteDetail) {
-        btnDeleteDetail.addEventListener('click', () => {
-            const nameEl = document.getElementById('studentDetailName');
-            const name = nameEl?.textContent;
-            if (studentReportData) {
-                const match = allStudents.find(s => s.name === name);
-                if (match) deleteStudent(match.id);
-            }
-        });
-    }
-
+    // Event Delegation for Table action buttons (Detail View)
     const tbody = document.getElementById('studentsTableBody');
     if (tbody) {
         tbody.addEventListener('click', (e) => {
@@ -635,9 +422,11 @@ export function init() {
         });
     }
 
+    // Expose delete to global scope temporarily if inline handlers were used (not ideal but safe fallback)
     window.deleteStudent = deleteStudent;
 }
 
+// Exported Refresh function called when tab is revisited
 export function refresh() {
     loadStudents();
 }
