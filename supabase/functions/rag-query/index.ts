@@ -33,7 +33,7 @@ async function embedQuery(text: string): Promise<number[]> {
     return data.data[0].embedding;
 }
 
-// ── Prompts ───────────────────────────────────────────────────
+// ── Doubt Solver Prompt ───────────────────────────────────────
 function buildDoubtPrompt(question: string, context: string): string {
     return `You are a helpful tutor assistant for an Indian commerce/accounts tuition centre.
 
@@ -49,23 +49,258 @@ Student's question: ${question}
 Answer clearly and concisely. Use the same method and terminology as in the study material. Do not use markdown.`;
 }
 
-function buildTestPrompt(topic: string, context: string): string {
-    return `You are creating a test paper for Indian commerce/accounts students.
+// ── ISC Test Paper Prompt ─────────────────────────────────────
+// marksTarget: total marks for the test (e.g. 20, 25, 40, 80)
+// sections: which sections to include e.g. "A", "AB", "ABC"
+// cogFocus: "balanced" | "recall" | "application"
+function buildTestPrompt(
+    topic: string,
+    context: string,
+    marksTarget: number,
+    sections: string,
+    cogFocus: string,
+    subject: string,
+    grade: string,
+    secAMarks: number,
+    secBMarks: number,
+    secCMarks: number,
+): string {
 
-Use ONLY the following excerpts from the teacher's notes to generate questions.
+    // ── Build section instructions using per-section marks ──────
+    const includeA = sections.includes("A") && secAMarks > 0;
+    const includeB = sections.includes("B") && secBMarks > 0;
+    const includeC = sections.includes("C") && secCMarks > 0;
+    let sectionInstructions = "";
 
---- STUDY MATERIAL EXCERPTS ---
+    if (includeC) {
+        const aMarks = secAMarks;
+        const bMarks = secBMarks;
+        const cMarks = secCMarks;
+        const bCount = Math.round(bMarks / 4);
+        const cCount = Math.round(cMarks / 8);
+        const sectionAPart = includeA ? `SECTION A — ${aMarks} MARKS (${aMarks} questions × 1 mark each, all compulsory, no internal choice)
+Use a MIX of: MCQ (4 options), Assertion-Reason, True/False, Analogy (X:Y::Z:___), Fill in the blank, Identify from diagram/org chart, State one term.
+
+` : "";
+        const sectionBPart = includeB ? `SECTION B — ${bMarks} MARKS (${bCount} questions × 4 marks each, internal choice in 2 questions)
+Use a MIX of:
+- "Distinguish between [X] and [Y]." (tabular, 4 points of difference)
+- "[Case scenario] — (a) Identify [1] (b) Explain three features [3]"
+- "Explain any four points on [importance/features of concept]"
+- "Name and explain [type/source/principle] used in [scenario]"
+Every Section B question MUST use a named Indian company or person in the scenario.
+
+` : "";
+        sectionInstructions = `${sectionAPart}${sectionBPart}SECTION C — ${cMarks} MARKS (${cCount} questions × 8 marks each, internal choice in 1 question)
+Use a MIX of:
+- Case passage with 4-5 sub-questions (1+1+1+1+4 or 2+2+4 split)
+- Two-part: concept/case [5 marks] + factual recall [3 marks]
+- Long explanation: enumerate any four points on importance/features`;
+
+    } else if (includeB) {
+        const aMarks = secAMarks;
+        const bMarks = secBMarks;
+        const bCount = Math.round(bMarks / 4);
+        const sectionAPart = includeA ? `SECTION A — ${aMarks} MARKS (${aMarks} questions × 1 mark each)
+Use a MIX of: MCQ, Assertion-Reason, True/False, Analogy, Fill in the blank, State one term.
+
+` : "";
+        sectionInstructions = `${sectionAPart}SECTION B — ${bMarks} MARKS (${bCount} questions × 4 marks each)
+Use a MIX of these ISC question types:
+- "Distinguish between [X] and [Y]." (tabular format, 4 points of difference)
+- "[Case scenario] — (a) Identify which [principle/element/level] is illustrated. [1] (b) Explain any three features/points. [3]"
+- "Explain any four [factors/points/importance] of [concept]."
+- "[Real company scenario] — Name and explain the [strategy/method/source] used."
+Every Section B question MUST use a real-world scenario involving a named Indian company or person (Amul, TCS, Samsung, Swiggy, Reliance, Muthoot, a fictional person like Rajan/Meera/Siddhi).`;
+
+    } else {
+        // Section A only
+        const aMarks = secAMarks || marksTarget;
+        sectionInstructions = `SECTION A — ${aMarks} MARKS
+Generate ${aMarks} one-mark questions. Use a MIX of these ISC question types:
+- MCQ (4 options, write ONE answer)
+- Assertion-Reason (4 standard options: both true R explains A / both true R doesn't explain / A true R false / A false R true)
+- True/False
+- Analogy completion (X : Y :: Z : ___)
+- Fill in the blank
+- State one feature / Name the term`;
+    }
+
+    // ── Cognitive level guidance ────────────────────────────────
+    const cogGuidance: Record<string, string> = {
+        balanced: "Mix cognitive levels: ~20% Recall (define/state/name), ~30% Understanding (explain/describe/distinguish), ~25% Application (which principle? suggest suitable option for case), ~15% Analysis (identify concept from scenario), ~10% Evaluate/Create.",
+        recall: "Focus on Recall and Understanding levels (~50% Recall: define/state/name/True-False, ~30% Understanding: explain/distinguish/describe, ~20% Application).",
+        application: `ZERO DIRECT QUESTIONS. Every single question — including Section A 1-mark questions — must begin with a scenario, case paragraph, or real-world situation. The student must extract, identify, or apply concepts from the paragraph. Never name the concept in the question stem.
+
+STRICT RULES FOR APPLICATION MODE:
+
+Section A (1-mark): ONLY scenario-based MCQs or identify-from-case questions.
+- BANNED: "Define X", "State one feature of X", "True or False: X is...", "Fill in the blank: X is called ___"
+- REQUIRED: Give a 2-3 sentence scenario. Ask "Which concept / principle / element is illustrated here?" or "What should [person] do in this situation?" with 4 options.
+
+Section B (4-mark distinction questions): BANNED format — "Distinguish between X and Y on the following bases: (i)... (ii)..."
+- REQUIRED format: Write a paragraph (4-6 sentences) that describes two concepts side by side in a real business situation WITHOUT naming them. Then ask: "(a) Identify the two concepts being described in the above paragraph. [1] (b) Distinguish between them on any three bases. [3]"
+- The student must figure out WHAT to distinguish, and then distinguish it — subheadings are NOT given.
+
+Section B (identify+explain): Give a scenario. Ask (a) identify the principle/element/level [1]. Then ask (b) explain three features/points [3] — features must be drawn from the scenario context, not recited from memory.
+
+Section C: Case passages ONLY. No "enumerate any four points on importance of X" standalone questions. Every question must stem from a passage.`,
+    };
+
+    // ── Recall mode: override section instructions ──────────────
+    if (cogFocus === "recall") {
+        const includeA = sections.includes("A") && secAMarks > 0;
+        const includeB = sections.includes("B") && secBMarks > 0;
+        const includeC = sections.includes("C") && secCMarks > 0;
+
+        const recA = includeA ? `SECTION A — ${secAMarks} MARKS (${secAMarks} questions × 1 mark each)
+ONLY use these direct recall question types — NO scenarios, NO case paragraphs:
+- "Define [term]." or "What is meant by [term]?"
+- "State one feature / advantage / function of [concept]."
+- "True or False: [direct factual statement about a concept]."
+- "Fill in the blank: [concept] is also known as ___."
+- "Analogy: X : Y :: Z : ___" (testing direct knowledge of terms and their relationships)
+- "Name the type of [shares/plan/source] that [brief factual description]."
+Every question must be answerable with a single word, phrase, or one sentence. No options needed unless it is an MCQ testing direct recall.
+
+` : "";
+
+        const recB = includeB ? `SECTION B — ${secBMarks} MARKS (${Math.round(secBMarks / 4)} questions × 4 marks each)
+ONLY use these direct recall/understanding formats — NO case scenarios, NO company names, NO paragraphs:
+- "Distinguish between [X] and [Y] on any four bases." (tabular format — give the bases explicitly e.g. Basis of Meaning / Basis of Risk / Basis of Control)
+- "Explain any four features / advantages / disadvantages of [concept]."
+- "State any four points on the importance / significance of [concept]."
+- "What is [concept]? State any three characteristics of [concept]."
+- "Explain the steps / procedure of [process] in brief."
+Questions must be purely textbook/definitional. Students answer from memory, not by reading a situation.
+BANNED in recall Section B: Any scenario, any named company, any "identify from the above case" phrasing.
+
+` : "";
+
+        const recC = includeC ? `SECTION C — ${secCMarks} MARKS (${Math.round(secCMarks / 8)} questions × 8 marks each)
+Use these direct long-answer formats — minimal or NO case context:
+- Two-part direct: "[Concept]. Explain any five features / types / points. [5]" + "State any three [merits/demerits/differences] of [related concept]. [3]"
+- Enumerate: "Explain the importance of [concept] by giving any four points. [4]" + "Distinguish between [X] and [Y] on any four bases. [4]"
+- Definition + explanation: "What is [concept]? Explain any four [components/functions/steps] of [concept]. [8]"
+BANNED in recall Section C: Full case passages requiring inference or identification. Students should answer purely from textbook knowledge.` : "";
+
+        sectionInstructions = `${recA}${recB}${recC}`.trim();
+    }
+
+    // ── Application mode: override section instructions ─────────
+    if (cogFocus === "application") {
+        const includeA = sections.includes("A") && secAMarks > 0;
+        const includeB = sections.includes("B") && secBMarks > 0;
+        const includeC = sections.includes("C") && secCMarks > 0;
+
+        const appA = includeA ? `SECTION A — ${secAMarks} MARKS (${secAMarks} questions × 1 mark each)
+Every question MUST be a scenario-based MCQ or identify-from-case. Format:
+"[2-3 sentence real-world scenario describing a situation without naming the concept]. Which [principle / element / type of plan / level of management / source of finance] is being illustrated here?"
+(a) Option 1  (b) Option 2  (c) Option 3  (d) Option 4
+NO True/False, NO fill-in-the-blank, NO "State one term", NO direct definition questions.
+
+` : "";
+
+        const appB = includeB ? `SECTION B — ${secBMarks} MARKS (${Math.round(secBMarks / 4)} questions × 4 marks each)
+Every question MUST follow one of these two formats:
+
+FORMAT 1 — Paragraph-based distinction:
+Write a 4-6 sentence paragraph describing two concepts operating side by side in a real business situation. Do NOT name either concept in the paragraph or question. Then ask:
+"(a) Identify the two concepts described in the above paragraph. [1]
+ (b) Distinguish between them on any three bases in tabular format. [3]"
+
+FORMAT 2 — Scenario identify+explain:
+Give a 3-4 sentence real company scenario (Amul, TCS, Samsung, Swiggy etc.). Ask:
+"(a) Identify the [principle / element / type / level] illustrated in the above case. [1]
+ (b) Explain any three [features / advantages / functions] of the identified [concept] with reference to the case. [3]"
+The student must connect each feature back to the scenario — not just recite textbook points.
+
+BANNED in Section B application mode: Any question that directly names what to distinguish, directly names the concept to explain, or asks students to "explain any four points on [topic]" without a case.
+
+` : "";
+
+        const appC = includeC ? `SECTION C — ${secCMarks} MARKS (${Math.round(secCMarks / 8)} questions × 8 marks each)
+Every question MUST be a case passage. Format:
+Write a substantial paragraph (6-10 sentences) about a real or realistic Indian company/person situation. Then ask 3-5 sub-questions of increasing difficulty, ALL answerable only by reading and analysing the passage:
+- (a) Identify [concept/principle/element] from the passage [1-2 marks]
+- (b) Explain how [specific sentence from passage] illustrates [concept] [2 marks]
+- (c) Based on the above case, explain any [three/four] [features/steps/points] of [identified concept] [3-4 marks]
+No standalone "enumerate importance of X" questions. Every mark must be tied to the passage.` : "";
+
+        sectionInstructions = `${appA}${appB}${appC}`.trim();
+    }
+
+    // ── Meaning-only guardrails ─────────────────────────────────
+    const meaningOnlyWarning = `
+CRITICAL SYLLABUS RESTRICTIONS (2026 ISC Commerce — DO NOT VIOLATE):
+The following topics are "meaning only" in scope. NEVER ask for features, advantages, disadvantages, or detailed explanation of these — only definition/identification/meaning questions are valid:
+- UPI, E-Wallet / Digital Wallet
+- QIP (Qualified Institutional Placement)
+- Bonus Shares, Rights Issue, ESOP, Sweat Equity Shares — only meaning, NOT features or merits
+- Leadership Styles (Democratic, Autocratic, Laissez-faire, Bureaucratic) — only meaning/identification
+- Pricing Strategies (cost-plus, competitive, price-skimming, penetration, value-based) — only meaning/identification
+- Elements of Physical Distribution — only meaning
+- CPA 2023 — only with reference to misleading advertisements
+Digital Banking — features CAN be asked (3 features were tested in official SQP)`;
+
+    // ── Answer key format ───────────────────────────────────────
+    const answerKeyFormat = `
+ANSWER KEY FORMAT (after all questions):
+Write "ANSWER KEY" as a heading.
+For each question, provide:
+- The correct answer / expected response
+- For distinction questions: a 3-column table (Basis | X | Y) with 4 rows
+- For case identification questions: Name of principle/concept + 1-line explanation of why
+- For explain/enumerate questions: Bulleted list of point headings + 1 sentence each
+- For MCQ/True-False/Fill-blank/Analogy: just the answer
+- Include acceptable variants where relevant (e.g., "High geared / Highly geared / Trading on thin equity — all acceptable")
+Do NOT write exhaustive answers. Match the concise style of CISCE marking schemes.`;
+
+    // ── Real-world examples to use ──────────────────────────────
+    const realWorldExamples = `
+PREFERRED REAL-WORLD EXAMPLES FOR SCENARIOS:
+- TCS return-to-office mandate → Policy / Planning
+- Amul pricing → Price mix, pricing strategies
+- Samsung new phone launch → Price skimming
+- Sundar Pichai / Google → Democratic leadership
+- Warren Buffett → Laissez-faire leadership
+- Steve Jobs / Apple → Autocratic leadership
+- Swiggy / Zomato → ESOP, short-term finance, staffing
+- Muthoot → Debentures / NCD issuance
+- Bharat Biotech / Covaxin → Publicity (promotion mix)
+- Diwali seasonal offers → Sales promotion
+- Consumer court cases → CPA 2019, consumer rights
+Use these OR invent similar realistic scenarios with named fictional people (Rajan, Meera, Siddhi, Asha, Vivek).`;
+
+    return `You are an expert ISC Commerce question paper setter for Class ${grade} students following the 2026 syllabus.
+Subject: ${subject} | Grade: ${grade}${topic ? ` | Topic/Unit: ${topic}` : " | Scope: Cover ALL topics from the provided study material excerpts comprehensively"}
+Total marks: ${marksTarget}
+
+${sectionInstructions}
+
+COGNITIVE LEVEL DISTRIBUTION:
+${cogGuidance[cogFocus] ?? cogGuidance["balanced"]}
+
+${meaningOnlyWarning}
+
+${realWorldExamples}
+
+STUDY MATERIAL CONTEXT (use this as the source of content — questions must be answerable from this):
+--- EXCERPTS ---
 ${context}
 --- END ---
 
-Generate a test paper on: ${topic}
+FORMATTING RULES:
+- Do NOT use markdown (no **, no ##, no bullet points in questions)
+- Number questions clearly: Q1, Q2 etc. with sub-parts (i), (ii) or (a), (b)
+- Show marks in square brackets [1], [2], [4], [8] at the end of each question/part
+- For internal choices write "OR" centred between the two options
+- Write in the formal ISC examination style — same tone as the board paper
+- After all questions, write the complete Answer Key
 
-Format:
-- Section A: 5 short questions (2 marks each)
-- Section B: 3 long/numerical questions (5 marks each)
-- Answer Key at the end
+${answerKeyFormat}
 
-Use the exact terminology and methods from the notes above. Do not use markdown formatting.`;
+Now generate the complete test paper.`;
 }
 
 // ── Main handler ─────────────────────────────────────────────
@@ -75,8 +310,19 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const { query, subject, grade, mode } = await req.json();
-        // mode = 'doubt' | 'test'
+        const {
+            query,
+            subject,
+            grade,
+            mode,
+            marks_target,
+            sections,
+            cog_focus,
+            file_id,
+            sec_a_marks,
+            sec_b_marks,
+            sec_c_marks,
+        } = await req.json();
 
         if (!query || !subject || !grade || !mode) {
             return new Response(
@@ -88,19 +334,26 @@ Deno.serve(async (req) => {
         // 1. Embed the query
         const embedding = await embedQuery(query);
 
-        // 2. Vector search for relevant chunks
-        const { data: chunks, error: searchError } = await supabase.rpc("match_chunks", {
+        // 2. Vector search — fetch more chunks for test mode (needs broader context)
+        // When no specific topic, pull even more chunks for comprehensive coverage
+        const isFullMaterial = mode === "test" && query.includes("comprehensive review");
+        const chunkCount = isFullMaterial ? 15 : (mode === "test" ? 8 : 5);
+        const rpcParams: Record<string, any> = {
             query_embedding: embedding,
             match_subject: subject,
             match_grade: grade,
-            match_count: 5,
-        });
+            match_count: chunkCount,
+        };
+        if (file_id) rpcParams.match_file_id = file_id;
+        const { data: chunks, error: searchError } = await supabase.rpc("match_chunks", rpcParams);
 
         if (searchError) throw new Error(`Search error: ${searchError.message}`);
 
         if (!chunks || chunks.length === 0) {
             return new Response(
-                JSON.stringify({ answer: "No relevant material found for this subject and grade. Please ask your teacher to upload study materials first." }),
+                JSON.stringify({
+                    answer: "No relevant material found for this subject and grade. Please upload study materials first.",
+                }),
                 { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
@@ -111,9 +364,23 @@ Deno.serve(async (req) => {
             .join("\n\n");
 
         // 4. Build prompt based on mode
-        const prompt = mode === "doubt"
-            ? buildDoubtPrompt(query, context)
-            : buildTestPrompt(query, context);
+        let prompt: string;
+        let maxTokens: number;
+
+        if (mode === "doubt") {
+            prompt = buildDoubtPrompt(query, context);
+            maxTokens = 1024;
+        } else {
+            // test mode — apply config with defaults
+            const marksTarget = marks_target ?? 25;
+            const sectionConfig = sections ?? "AB";
+            const cogConfig = cog_focus ?? "balanced";
+            const aMarks = sec_a_marks ?? 0;
+            const bMarks = sec_b_marks ?? 0;
+            const cMarks = sec_c_marks ?? 0;
+            prompt = buildTestPrompt(query, context, marksTarget, sectionConfig, cogConfig, subject, grade, aMarks, bMarks, cMarks);
+            maxTokens = isFullMaterial ? 6000 : 4000; // Full-material papers need more tokens
+        }
 
         // 5. Call Claude
         const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
@@ -124,8 +391,8 @@ Deno.serve(async (req) => {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "claude-haiku-4-5-20251001",
-                max_tokens: 1024,
+                model: "claude-sonnet-4-5-20250929",
+                max_tokens: maxTokens,
                 messages: [{ role: "user", content: prompt }],
             }),
         });

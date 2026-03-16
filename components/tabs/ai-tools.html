@@ -62,11 +62,21 @@
 <div id="testGeneratorPanel" style="display:none;">
     <div style="margin-bottom: 1.5rem;">
         <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
-            Generate a test paper from uploaded study materials for a specific topic.
+            Generate an ISC-style test paper from uploaded study materials.
+            Questions follow board exam patterns with a full answer key.
         </p>
     </div>
 
+    <!-- Row 1: Class + Subject -->
     <div class="form__row" style="margin-bottom: 1rem;">
+        <div class="form__row-item">
+            <label class="form__label">Class</label>
+            <select id="testGrade" class="form__control">
+                <option value="">Select class</option>
+                <option value="11th">11th</option>
+                <option value="12th">12th</option>
+            </select>
+        </div>
         <div class="form__row-item">
             <label class="form__label">Subject</label>
             <select id="testSubject" class="form__control">
@@ -75,20 +85,80 @@
                 <option value="Commerce">Commerce</option>
             </select>
         </div>
-        <div class="form__row-item">
-            <label class="form__label">Grade</label>
-            <select id="testGrade" class="form__control">
-                <option value="">Select grade</option>
-                <option value="11th">11th</option>
-                <option value="12th">12th</option>
-            </select>
+    </div>
+
+    <!-- Row 2: Material Selector -->
+    <div class="form__group" style="margin-bottom: 1rem;">
+        <label class="form__label">Study Material</label>
+        <select id="testMaterial" class="form__control">
+            <option value="">All materials for selected class &amp; subject</option>
+        </select>
+        <p style="margin-top:0.35rem;font-size:0.8rem;color:var(--text-muted);">
+            Selecting a file restricts the AI to that file's content only.
+        </p>
+    </div>
+
+    <!-- Topic (optional) -->
+    <div class="form__group" style="margin-bottom: 1rem;">
+        <label class="form__label">Topic / Unit <span style="color:var(--text-muted);font-size:0.8rem;">(optional)</span></label>
+        <input type="text" id="testTopic" class="form__control"
+            placeholder="e.g. Principles of Management — leave blank to cover entire material">
+    </div>
+
+    <!-- Sections & Marks Picker (mirrors time-picker pattern) -->
+    <div class="form__group" style="margin-bottom: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <label class="form__label" style="margin:0;">Sections &amp; Marks</label>
+            <span id="testTotalMarksDisplay" style="font-size:0.9rem; color:var(--primary); font-weight:600;">Total: 0 marks</span>
+        </div>
+
+        <!-- 3-column display buttons -->
+        <div class="form__row" style="margin-bottom: 1rem;">
+            <div class="form__row-item time-picker-wrapper">
+                <label class="form__label" style="font-size:0.78rem;">Section A <span style="color:var(--text-muted);font-weight:400;">(1-mark)</span></label>
+                <div class="time-picker-display" id="secADisplay">
+                    <span id="secADisplayValue">Not Selected</span>
+                </div>
+            </div>
+            <div class="form__row-item time-picker-wrapper">
+                <label class="form__label" style="font-size:0.78rem;">Section B <span style="color:var(--text-muted);font-weight:400;">(4-mark)</span></label>
+                <div class="time-picker-display" id="secBDisplay">
+                    <span id="secBDisplayValue">Not Selected</span>
+                </div>
+            </div>
+            <div class="form__row-item time-picker-wrapper">
+                <label class="form__label" style="font-size:0.78rem;">Section C <span style="color:var(--text-muted);font-weight:400;">(8-mark)</span></label>
+                <div class="time-picker-display" id="secCDisplay">
+                    <span id="secCDisplayValue">Not Selected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marks pill panel (hidden, shown when a section is clicked) -->
+        <div class="time-picker-panel" id="sectionMarksPanel" style="display: none; width: calc(33.333% - 0.67rem); margin-bottom: 1rem;">
+            <div class="time-col" id="sectionMarksOptions">
+                <!-- JS populated -->
+            </div>
         </div>
     </div>
 
-    <div class="form__group">
-        <label class="form__label">Topic</label>
-        <input type="text" id="testTopic" class="form__control"
-            placeholder="e.g. Partnership Accounts — Admission of a Partner">
+    <!-- Row 3: Cognitive Focus -->
+    <div class="form__group" style="margin-bottom: 1.5rem;">
+        <label class="form__label">Cognitive Focus</label>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.4rem;">
+            <label class="cog-option" style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
+                <input type="radio" name="cogFocus" value="balanced" checked>
+                <span>Balanced <span style="color: var(--text-muted); font-size: 0.8rem;">(mixed levels)</span></span>
+            </label>
+            <label class="cog-option" style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
+                <input type="radio" name="cogFocus" value="recall">
+                <span>Recall-heavy <span style="color: var(--text-muted); font-size: 0.8rem;">(define / state / name)</span></span>
+            </label>
+            <label class="cog-option" style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
+                <input type="radio" name="cogFocus" value="application">
+                <span>Application-heavy <span style="color: var(--text-muted); font-size: 0.8rem;">(case-based / identify)</span></span>
+            </label>
+        </div>
     </div>
 
     <button class="btn btn--primary" id="btnGenerateTest">✨ Generate Test Paper</button>
@@ -97,7 +167,10 @@
     <div id="testOutputBox" style="display:none; margin-top: 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h4 style="color: var(--primary); margin: 0;">Generated Test Paper</h4>
-            <button class="btn btn--outline btn--sm" id="btnCopyTest">Copy</button>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn--outline btn--sm" id="btnCopyTest">Copy</button>
+                <button class="btn btn--outline btn--sm" id="btnDownloadTest">Download .txt</button>
+            </div>
         </div>
         <div id="testOutput" style="
             background: var(--glass-bg);
