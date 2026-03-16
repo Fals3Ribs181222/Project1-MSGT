@@ -79,34 +79,9 @@ function filterStudents() {
 
 // ── DELETE ────────────────────────────────────────────────────────────────────
 
-function showConfirmModal(title, message, onConfirm) {
-    const overlay = document.createElement('div');
-    overlay.className = 'confirm-overlay';
-    overlay.innerHTML = `
-        <div class="confirm-modal">
-            <h3>${title}</h3>
-            <p>${message}</p>
-            <div class="confirm-modal__actions">
-                <button class="btn btn--outline btn--sm" id="confirmCancel">Cancel</button>
-                <button class="btn btn--danger btn--sm" id="confirmOk">Delete</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-
-    overlay.querySelector('#confirmCancel').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    overlay.querySelector('#confirmOk').addEventListener('click', async () => {
-        overlay.querySelector('#confirmOk').disabled = true;
-        overlay.querySelector('#confirmOk').textContent = 'Deleting...';
-        await onConfirm();
-        overlay.remove();
-    });
-}
-
 export async function deleteStudent(studentId) {
     const student = allStudents.find(s => s.id === studentId);
-    showConfirmModal(
+    window.showConfirmModal(
         'Delete Student',
         `Are you sure you want to delete <strong>${student?.name || 'this student'}</strong>? This cannot be undone.`,
         async () => {
@@ -153,6 +128,40 @@ async function showStudentDetail(studentId) {
     document.getElementById('studentDetailGrade').textContent = student.grade || '-';
     document.getElementById('studentDetailSubjects').textContent = student.subjects || '-';
 
+    // Student phone
+    const sdStudentPhone = document.getElementById('sdStudentPhone');
+    const sdStudentWaLink = document.getElementById('sdStudentWaLink');
+    if (student.phone) {
+        sdStudentPhone.textContent = student.phone;
+        sdStudentWaLink.href = `https://wa.me/91${student.phone}`;
+        sdStudentWaLink.style.display = 'inline-block';
+    } else {
+        sdStudentPhone.textContent = 'Not set';
+        sdStudentWaLink.style.display = 'none';
+    }
+
+    // Parent phone
+    const sdParentPhone = document.getElementById('sdParentPhone');
+    const sdParentWaLink = document.getElementById('sdParentWaLink');
+    if (student.parent_phone) {
+        sdParentPhone.textContent = student.parent_phone;
+        sdParentWaLink.href = `https://wa.me/91${student.parent_phone}`;
+        sdParentWaLink.style.display = 'inline-block';
+    } else {
+        sdParentPhone.textContent = 'Not set';
+        sdParentWaLink.style.display = 'none';
+    }
+    setupParentPhoneEdit(student.id, student.parent_phone || '');
+
+    // Teacher notes + WA history
+    loadTeacherNotes(student.id, student.teacher_notes || '');
+    loadWhatsappLog(student.id);
+
+    // Reset new sections
+    document.getElementById('sdTrendChart').innerHTML = '<div class="loading-text">Loading...</div>';
+    document.getElementById('sdAttendanceCalendar').innerHTML = '<div class="loading-text">Loading...</div>';
+
+
     window.tableLoading('studentBatchesBody', 4, 'Loading batches...');
     window.tableLoading('studentMarksBody', 5, 'Loading marks...');
     ['sdTotalClasses', 'sdPresent', 'sdAbsent', 'sdLate', 'sdAttendanceRate'].forEach(id => {
@@ -165,121 +174,173 @@ async function showStudentDetail(studentId) {
         return;
     }
 
-    // Fetch batch memberships
-    try {
-        const { data: batchLinks } = await window.supabaseClient
-            .from('batch_students')
-            .select('batch_id')
-            .eq('student_id', studentId);
+    await Promise.all([
+        // Fetch batch memberships
+        (async () => {
+            try {
+                const { data: batchLinks } = await window.supabaseClient
+                    .from('batch_students')
+                    .select('batch_id')
+                    .eq('student_id', studentId);
 
-        const batchBody = document.getElementById('studentBatchesBody');
+                const batchBody = document.getElementById('studentBatchesBody');
 
-        if (batchLinks && batchLinks.length > 0) {
-            const batchIds = batchLinks.map(bl => bl.batch_id);
-            const { data: batches } = await window.supabaseClient
-                .from('batches')
-                .select('*')
-                .in('id', batchIds);
+                if (batchLinks && batchLinks.length > 0) {
+                    const batchIds = batchLinks.map(bl => bl.batch_id);
+                    const { data: batches } = await window.supabaseClient
+                        .from('batches')
+                        .select('*, classes(type, day_of_week, start_time)')
+                        .in('id', batchIds);
 
-            if (batches && batches.length > 0) {
-                studentReportData.batches = batches.map(b => ({
-                    name: b.name || '',
-                    subject: b.subject || '',
-                    grade: b.grade || '',
-                    schedule: b.schedule || '',
-                }));
+                    if (batches && batches.length > 0) {
+                        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-                batchBody.innerHTML = batches.map(b => `
-                    <tr class="data-table__row">
-                        <td class="data-table__td--main">${b.name || '-'}</td>
-                        <td class="data-table__td">${b.subject || '-'}</td>
-                        <td class="data-table__td">${b.grade || '-'}</td>
-                        <td class="data-table__td">${b.schedule || '-'}</td>
-                    </tr>
-                `).join('');
-            } else {
-                batchBody.innerHTML = '<tr><td colspan="4" class="student-detail__empty">No batches found.</td></tr>';
+                        studentReportData.batches = batches.map(b => {
+                            let scheduleStr = '';
+                            if (b.classes && b.classes.length > 0) {
+                                const regular = b.classes.filter(c => c.type === 'regular');
+                                if (regular.length > 0) {
+                                    const parts = regular.map(c => {
+                                        const t = window.formatTime ? window.formatTime(c.start_time) : c.start_time;
+                                        return `${days[c.day_of_week]} ${t}`;
+                                    });
+                                    scheduleStr = [...new Set(parts)].join(', ');
+                                }
+                            }
+                            return {
+                                name: b.name || '',
+                                subject: b.subject || '',
+                                grade: b.grade || '',
+                                schedule: scheduleStr,
+                            };
+                        });
+
+                        batchBody.innerHTML = batches.map((b, idx) => `
+                            <tr class="data-table__row">
+                                <td class="data-table__td--main">${b.name || '-'}</td>
+                                <td class="data-table__td">${b.subject || '-'}</td>
+                                <td class="data-table__td">${b.grade || '-'}</td>
+                                <td class="data-table__td">${studentReportData.batches[idx].schedule || '-'}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        batchBody.innerHTML = '<tr><td colspan="4" class="student-detail__empty">No batches found.</td></tr>';
+                    }
+                } else {
+                    batchBody.innerHTML = '<tr><td colspan="4" class="student-detail__empty">Not assigned to any batches.</td></tr>';
+                }
+            } catch (err) {
+                console.error('Batch fetch error:', err);
             }
-        } else {
-            document.getElementById('studentBatchesBody').innerHTML =
-                '<tr><td colspan="4" class="student-detail__empty">Not assigned to any batches.</td></tr>';
-        }
-    } catch (err) {
-        console.error('Batch fetch error:', err);
-    }
+        })(),
 
-    // Fetch attendance records
-    try {
-        const { data: attendanceData } = await window.supabaseClient
-            .from('attendance')
-            .select('status')
-            .eq('student_id', studentId);
+        // Fetch attendance records
+        (async () => {
+            try {
+                const { data: attendanceData } = await window.supabaseClient
+                    .from('attendance')
+                    .select('status, date')
+                    .eq('student_id', studentId);
 
-        const total = attendanceData?.length || 0;
-        const present = attendanceData?.filter(a => a.status === 'present').length || 0;
-        const absent = attendanceData?.filter(a => a.status === 'absent').length || 0;
-        const late = attendanceData?.filter(a => a.status === 'late').length || 0;
-        const rate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+                const total = attendanceData?.length || 0;
+                const present = attendanceData?.filter(a => a.status === 'present').length || 0;
+                const absent = attendanceData?.filter(a => a.status === 'absent').length || 0;
+                const late = attendanceData?.filter(a => a.status === 'late').length || 0;
+                const rate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
 
-        studentReportData.attendance = { total, present, absent, late, rate };
+                studentReportData.attendance = { total, present, absent, late, rate };
 
-        document.getElementById('sdTotalClasses').textContent = total;
-        document.getElementById('sdPresent').textContent = present;
-        document.getElementById('sdAbsent').textContent = absent;
-        document.getElementById('sdLate').textContent = late;
-        document.getElementById('sdAttendanceRate').textContent = total > 0 ? rate + '%' : 'N/A';
-    } catch (err) {
-        console.error('Attendance fetch error:', err);
-    }
+                document.getElementById('sdTotalClasses').textContent = total;
+                document.getElementById('sdPresent').textContent = present;
+                document.getElementById('sdAbsent').textContent = absent;
+                document.getElementById('sdLate').textContent = late;
+                document.getElementById('sdAttendanceRate').textContent = total > 0 ? rate + '%' : 'N/A';
+                renderAttendanceCalendar(attendanceData || []);
+            } catch (err) {
+                console.error('Attendance fetch error:', err);
+            }
+        })(),
 
-    // Fetch marks + tests
-    try {
-        const { data: marksData } = await window.supabaseClient
-            .from('marks')
-            .select('marks_obtained, test_id')
-            .eq('student_id', studentId);
+        // Fetch marks + tests
+        (async () => {
+            try {
+                const { data: marksData } = await window.supabaseClient
+                    .from('marks')
+                    .select('marks_obtained, test_id')
+                    .eq('student_id', studentId);
 
-        const marksBody = document.getElementById('studentMarksBody');
+                const marksBody = document.getElementById('studentMarksBody');
 
-        if (marksData && marksData.length > 0) {
-            const testIds = [...new Set(marksData.map(m => m.test_id))];
-            const { data: testsData } = await window.supabaseClient
-                .from('tests')
-                .select('*')
-                .in('id', testIds);
+                if (marksData && marksData.length > 0) {
+                    const testIds = [...new Set(marksData.map(m => m.test_id))];
+                    const { data: testsData } = await window.supabaseClient
+                        .from('tests')
+                        .select('*')
+                        .in('id', testIds);
 
-            const testMap = {};
-            (testsData || []).forEach(t => testMap[t.id] = t);
+                    const testMap = {};
+                    (testsData || []).forEach(t => testMap[t.id] = t);
 
-            studentReportData.marks = marksData.map(m => {
-                const test = testMap[m.test_id] || {};
-                return {
-                    title: test.title || 'Untitled',
-                    subject: test.subject || '',
-                    marks_obtained: Number(m.marks_obtained) || 0,
-                    max_marks: Number(test.max_marks) || 0,
-                    date: test.date || '',
-                };
-            });
+                    // Sort by test date (newest first)
+                    marksData.sort((a, b) => {
+                        const dateA = testMap[a.test_id]?.date || '';
+                        const dateB = testMap[b.test_id]?.date || '';
+                        return dateA.localeCompare(dateB);
+                    });
 
-            marksBody.innerHTML = marksData.map(m => {
-                const test = testMap[m.test_id] || {};
-                return `
+                    studentReportData.marks = marksData.map(m => {
+                        const test = testMap[m.test_id] || {};
+                        return {
+                            title: test.title || 'Untitled',
+                            subject: test.subject || '',
+                            marks_obtained: Number(m.marks_obtained) || 0,
+                            max_marks: Number(test.max_marks) || 0,
+                            date: test.date || '',
+                        };
+                    });
+
+                    // Initial render (without rank — rank loads async below)
+                    marksBody.innerHTML = marksData.map(m => {
+                        const test = testMap[m.test_id] || {};
+                        const pct = test.max_marks > 0
+                            ? Math.round((Number(m.marks_obtained) / test.max_marks) * 100)
+                            : 0;
+                        const pctColor = pct >= 75
+                            ? 'color:#1D9E75;font-weight:600;'
+                            : pct >= 50
+                                ? 'color:#BA7517;font-weight:600;'
+                                : 'color:#E24B4A;font-weight:600;';
+                        return `
                     <tr class="data-table__row">
                         <td class="data-table__td--main">${test.title || '-'}</td>
                         <td class="data-table__td">${test.subject || '-'}</td>
                         <td class="data-table__td"><strong>${m.marks_obtained || '-'}</strong></td>
                         <td class="data-table__td">${test.max_marks || '-'}</td>
-                        <td class="data-table__td">${test.date ? new Date(test.date).toLocaleDateString() : '-'}</td>
+                        <td class="data-table__td" style="${pctColor}">${pct}%</td>
+                        <td class="data-table__td" style="color:var(--text-muted);font-size:0.8rem;">...</td>
+                        <td class="data-table__td">${test.date ? new Date(test.date).toLocaleDateString('en-IN') : '-'}</td>
                     </tr>
                 `;
-            }).join('');
-        } else {
-            marksBody.innerHTML = '<tr><td colspan="5" class="student-detail__empty">No test scores recorded.</td></tr>';
-        }
-    } catch (err) {
-        console.error('Marks fetch error:', err);
-    }
+                    }).join('');
+
+                    // Render trend chart
+                    renderTrendChart(studentReportData.marks);
+
+                    // Fetch ranks async (separate query, doesn't block UI)
+                    fetchAndRenderRanks(studentId, marksData, testMap);
+
+                } else {
+                    marksBody.innerHTML = '<tr><td colspan="7" class="student-detail__empty">No test scores recorded.</td></tr>';
+                    renderTrendChart([]);
+                }
+            } catch (err) {
+                console.error('Marks fetch error:', err);
+            }
+
+            // All data loaded — enable the report button
+            setReportButtonState('ready');
+        })(),
+    ]);
 
     // All data loaded — enable the button
     setReportButtonState('ready');
@@ -305,15 +366,12 @@ function hideStudentDetail() {
 function setReportButtonState(state) {
     const btn = document.getElementById('btnGenerateReport');
     if (!btn) return;
-    if (state === 'idle') {
-        btn.disabled = true;
-        btn.textContent = '✨ Generate Report';
-    } else if (state === 'ready') {
-        btn.disabled = false;
-        btn.textContent = '✨ Generate Report';
-    } else if (state === 'loading') {
+    if (state === 'loading') {
         btn.disabled = true;
         btn.textContent = 'Generating...';
+    } else {
+        btn.disabled = (state === 'idle');
+        btn.textContent = '✨ Generate Report';
     }
 }
 
@@ -378,13 +436,20 @@ async function generateReport() {
 async function sendWhatsAppReport() {
     const textEl = document.getElementById('reportOutputText');
     const reportText = textEl?.textContent || '';
-    const phone = window.currentStudent?.phone;
+    const student = window.currentStudent;
 
-    if (!reportText) return;
+    if (!reportText || !student) return;
 
-    if (!phone) {
-        alert("This student doesn't have a phone number registered. Please update their profile.");
-        return;
+    // Resolve recipients — prefer parent, fallback to student
+    const recipients = window.whatsapp.resolveRecipients(student, 'parent');
+    if (recipients.length === 0) {
+        // Fallback to student phone if no parent phone
+        const fallback = window.whatsapp.resolveRecipients(student, 'student');
+        if (fallback.length === 0) {
+            alert("This student doesn't have a phone number registered. Please update their profile.");
+            return;
+        }
+        recipients.push(...fallback);
     }
 
     const btn = document.getElementById('btnSendWhatsappReport');
@@ -395,26 +460,17 @@ async function sendWhatsAppReport() {
     btn.disabled = true;
 
     try {
-        const SEND_WA_URL = `${window.CONFIG.SUPABASE_URL}/functions/v1/send-whatsapp-report`;
-        const token = window.CONFIG.SUPABASE_ANON_KEY;
-
-        const response = await fetch(SEND_WA_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ phone, report: reportText })
+        const result = await window.whatsapp.send({
+            type: 'report',
+            recipients,
+            payload: { report: reportText },
         });
-
-        const result = await response.json();
-
-        if (!response.ok || result.error) {
-            throw new Error(result.error || 'Failed to send WhatsApp message.');
-        }
 
         btn.innerHTML = '<i class="ri-check-line"></i> Sent!';
         btn.style.backgroundColor = '#1DA954';
+
+        // Refresh the log panel
+        if (student.id) loadWhatsappLog(student.id);
 
         setTimeout(() => {
             btn.innerHTML = originalHtml;
@@ -615,12 +671,7 @@ export function init() {
     const btnDeleteDetail = document.getElementById('btnDeleteStudentDetail');
     if (btnDeleteDetail) {
         btnDeleteDetail.addEventListener('click', () => {
-            const nameEl = document.getElementById('studentDetailName');
-            const name = nameEl?.textContent;
-            if (studentReportData) {
-                const match = allStudents.find(s => s.name === name);
-                if (match) deleteStudent(match.id);
-            }
+            if (window.currentStudent?.id) deleteStudent(window.currentStudent.id);
         });
     }
 
@@ -637,6 +688,343 @@ export function init() {
 
     window.deleteStudent = deleteStudent;
 }
+function renderAttendanceCalendar(attendanceData) {
+    const container = document.getElementById('sdAttendanceCalendar');
+    if (!container) return;
+
+    if (!attendanceData || attendanceData.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">No attendance records yet.</p>';
+        return;
+    }
+
+    // Keep only records that have a date
+    const datedRecords = attendanceData.filter(a => a.date);
+    if (datedRecords.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">No dated records found.</p>';
+        return;
+    }
+
+    // Build date → status map
+    const statusMap = {};
+    datedRecords.forEach(a => { statusMap[a.date] = a.status; });
+
+    // Only show the class days (days that actually have records), sorted
+    const classDays = Object.keys(statusMap).sort();
+
+    const colorMap = {
+        present: '#1D9E75',
+        late: '#BA7517',
+        absent: '#E24B4A',
+    };
+
+    const dots = classDays.map(d => {
+        const status = statusMap[d];
+        const color = colorMap[status] || '#ccc';
+        const label = new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        return `<div title="${label} · ${status}"
+            style="width:14px;height:14px;border-radius:3px;background:${color};cursor:default;flex-shrink:0;"></div>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:0.25rem 0;">
+            ${dots}
+        </div>
+        <div style="display:flex;gap:1.25rem;margin-top:0.75rem;font-size:0.78rem;color:var(--text-muted);">
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#1D9E75;margin-right:3px;vertical-align:middle;"></span>Present</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#BA7517;margin-right:3px;vertical-align:middle;"></span>Late</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#E24B4A;margin-right:3px;vertical-align:middle;"></span>Absent</span>
+        </div>
+    `;
+}
+
+// ── Performance Trend Chart (pure CSS/HTML — no dependencies) ─
+
+function renderTrendChart(marks) {
+    const container = document.getElementById('sdTrendChart');
+    if (!container) return;
+
+    if (!marks || marks.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">No test data to plot yet.</p>';
+        return;
+    }
+
+    const sorted = [...marks].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const BAR_MAX_H = 80; // px
+
+    const bars = sorted.map(m => {
+        const pct = m.max_marks > 0 ? Math.round((m.marks_obtained / m.max_marks) * 100) : 0;
+        const height = Math.max(4, Math.round((pct / 100) * BAR_MAX_H));
+        const color = pct >= 75 ? '#1D9E75' : pct >= 50 ? '#BA7517' : '#E24B4A';
+        const label = (m.title || '').length > 10 ? m.title.substring(0, 10) + '…' : (m.title || '-');
+        return `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:44px;max-width:80px;">
+                <span style="font-size:0.75rem;font-weight:600;color:${color};">${pct}%</span>
+                <div style="width:100%;height:${BAR_MAX_H}px;display:flex;align-items:flex-end;">
+                    <div style="width:100%;height:${height}px;background:${color};border-radius:4px 4px 0 0;"></div>
+                </div>
+                <span style="font-size:0.68rem;color:var(--text-muted);text-align:center;line-height:1.3;word-break:break-word;">${label}</span>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <div style="display:flex;align-items:flex-end;gap:6px;padding:0.5rem 0 0;overflow-x:auto;">
+            ${bars}
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem;">Each bar = one test · left to right by date</p>
+    `;
+}
+
+// ── Rank in Batch ─────────────────────────────────────────────
+
+async function fetchAndRenderRanks(studentId, marksData, testMap) {
+    if (!marksData || marksData.length === 0) return;
+
+    const testIds = marksData.map(m => m.test_id);
+
+    try {
+        // Fetch all students' marks for the same tests
+        const { data: allMarks } = await window.supabaseClient
+            .from('marks')
+            .select('student_id, test_id, marks_obtained')
+            .in('test_id', testIds);
+
+        if (!allMarks) return;
+
+        // Build per-test sorted score lists
+        const rankMap = {};
+        testIds.forEach(tid => {
+            rankMap[tid] = allMarks
+                .filter(m => m.test_id === tid)
+                .map(m => Number(m.marks_obtained) || 0)
+                .sort((a, b) => b - a);
+        });
+
+        // Sort by test date (newest first) to match initial render
+        marksData.sort((a, b) => {
+            const dateA = testMap[a.test_id]?.date || '';
+            const dateB = testMap[b.test_id]?.date || '';
+            return dateA.localeCompare(dateB);
+        });
+
+        // Re-render the full marks table with rank column populated
+        const tbody = document.getElementById('studentMarksBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = marksData.map(m => {
+            const test = testMap[m.test_id] || {};
+            const myScore = Number(m.marks_obtained) || 0;
+            const pct = test.max_marks > 0 ? Math.round((myScore / test.max_marks) * 100) : 0;
+            const pctColor = pct >= 75
+                ? 'color:#1D9E75;font-weight:600;'
+                : pct >= 50
+                    ? 'color:#BA7517;font-weight:600;'
+                    : 'color:#E24B4A;font-weight:600;';
+
+            const scores = rankMap[m.test_id] || [];
+            const rank = scores.indexOf(myScore) + 1;
+            const total = scores.length;
+            const suffix = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
+            const rankLabel = total > 0 ? `${rank}${suffix} / ${total}` : '-';
+            const rankColor = rank === 1
+                ? 'color:#1D9E75;font-weight:600;'
+                : rank <= 3
+                    ? 'color:#BA7517;font-weight:600;'
+                    : 'color:var(--text-muted);';
+
+            return `
+                <tr class="data-table__row">
+                    <td class="data-table__td--main">${test.title || '-'}</td>
+                    <td class="data-table__td">${test.subject || '-'}</td>
+                    <td class="data-table__td"><strong>${m.marks_obtained || '-'}</strong></td>
+                    <td class="data-table__td">${test.max_marks || '-'}</td>
+                    <td class="data-table__td" style="${pctColor}">${pct}%</td>
+                    <td class="data-table__td" style="${rankColor}font-size:0.85rem;">${rankLabel}</td>
+                    <td class="data-table__td">${test.date ? new Date(test.date).toLocaleDateString('en-IN') : '-'}</td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error('Rank fetch error:', err);
+    }
+}
+
+// ── Teacher Notes ─────────────────────────────────────────────
+
+function loadTeacherNotes(studentId, existingNotes) {
+    const textarea = document.getElementById('sdNotesInput');
+    const statusEl = document.getElementById('sdNotesSaveStatus');
+    const saveBtn = document.getElementById('btnSaveNotes');
+
+    if (textarea) textarea.value = existingNotes || '';
+    if (statusEl) statusEl.textContent = '';
+
+    if (saveBtn) {
+        // Remove any old listener by cloning
+        const newSaveBtn = saveBtn.cloneNode(true);
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+
+        newSaveBtn.addEventListener('click', async () => {
+            const notes = document.getElementById('sdNotesInput')?.value || '';
+            newSaveBtn.disabled = true;
+            newSaveBtn.textContent = 'Saving...';
+            try {
+                const { error } = await window.supabaseClient
+                    .from('profiles')
+                    .update({ teacher_notes: notes })
+                    .eq('id', studentId);
+                if (error) throw error;
+
+                if (statusEl) {
+                    statusEl.textContent = '✓ Saved';
+                    statusEl.style.color = '#1D9E75';
+                }
+                // Keep local cache in sync
+                const cached = allStudents.find(s => s.id === studentId);
+                if (cached) cached.teacher_notes = notes;
+
+            } catch (err) {
+                if (statusEl) {
+                    statusEl.textContent = 'Error saving';
+                    statusEl.style.color = '#E24B4A';
+                }
+                console.error('Notes save error:', err);
+            } finally {
+                newSaveBtn.disabled = false;
+                newSaveBtn.textContent = 'Save Notes';
+                setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+            }
+        });
+    }
+}
+
+// ── WhatsApp History ──────────────────────────────────────────
+
+async function loadWhatsappLog(studentId) {
+    const container = document.getElementById('sdWhatsappLog');
+    if (!container) return;
+
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('whatsapp_log')
+            .select('*')
+            .eq('student_id', studentId)
+            .order('sent_at', { ascending: false })
+            .limit(15);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">No messages sent to this student yet.</p>';
+            return;
+        }
+
+        container.innerHTML = data.map(log => {
+            const date = new Date(log.sent_at).toLocaleString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit',
+            });
+            const typeLabel = log.message_type === 'report'
+                ? '📊 Progress Report'
+                : log.message_type === 'attendance'
+                    ? '✅ Attendance'
+                    : '💬 Message';
+            return `
+                <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.65rem 0;border-bottom:1px solid var(--border-light);">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:0.9rem;font-weight:600;color:var(--text-main);">${typeLabel}</div>
+                        ${log.preview
+                    ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:2px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${log.preview}…</div>`
+                    : ''}
+                    </div>
+                    <div style="font-size:0.78rem;color:var(--text-muted);white-space:nowrap;padding-top:2px;">${date}</div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Could not load history.</p>';
+        console.error('WA log fetch error:', err);
+    }
+}
+
+// ── Parent Phone Edit ─────────────────────────────────────────
+
+function setupParentPhoneEdit(studentId, currentParentPhone) {
+    const editBtn = document.getElementById('btnEditParentPhone');
+    const editForm = document.getElementById('sdParentPhoneEdit');
+    const input = document.getElementById('sdParentPhoneInput');
+    const saveBtn = document.getElementById('btnSaveParentPhone');
+    const cancelBtn = document.getElementById('btnCancelParentPhone');
+    const display = document.getElementById('sdParentPhone');
+    const waLink = document.getElementById('sdParentWaLink');
+
+    if (!editBtn || !editForm || !saveBtn) return;
+
+    // Pre-fill
+    input.value = currentParentPhone || '';
+
+    // Clone to remove stale listeners from previous student
+    [editBtn, saveBtn, cancelBtn].forEach(btn => {
+        const clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+    });
+
+    const freshEdit = document.getElementById('btnEditParentPhone');
+    const freshSave = document.getElementById('btnSaveParentPhone');
+    const freshCancel = document.getElementById('btnCancelParentPhone');
+    const freshInput = document.getElementById('sdParentPhoneInput');
+
+    freshEdit.addEventListener('click', () => {
+        editForm.style.display = 'block';
+        freshEdit.style.display = 'none';
+        freshInput.focus();
+    });
+
+    freshCancel.addEventListener('click', () => {
+        editForm.style.display = 'none';
+        freshEdit.style.display = 'inline-block';
+    });
+
+    freshSave.addEventListener('click', async () => {
+        const phone = (freshInput.value || '').trim().replace(/\D/g, '');
+        if (phone && phone.length !== 10) {
+            alert('Please enter a valid 10-digit number (without country code)');
+            return;
+        }
+        freshSave.disabled = true;
+        freshSave.textContent = 'Saving...';
+        try {
+            const { error } = await window.supabaseClient
+                .from('profiles')
+                .update({ parent_phone: phone || null })
+                .eq('id', studentId);
+            if (error) throw error;
+
+            display.textContent = phone || 'Not set';
+            if (phone) {
+                waLink.href = `https://wa.me/91${phone}`;
+                waLink.style.display = 'inline-block';
+            } else {
+                waLink.style.display = 'none';
+            }
+            editForm.style.display = 'none';
+            freshEdit.style.display = 'inline-block';
+
+            // Sync local cache
+            const cached = allStudents.find(s => s.id === studentId);
+            if (cached) cached.parent_phone = phone;
+
+        } catch (err) {
+            alert('Failed to save: ' + (err.message || 'Unknown error'));
+        } finally {
+            freshSave.disabled = false;
+            freshSave.textContent = 'Save';
+        }
+    });
+}
+
 
 export function refresh() {
     loadStudents();

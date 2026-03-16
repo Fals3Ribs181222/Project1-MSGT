@@ -1,16 +1,9 @@
-<header class="panel__header">
-    <h2>Manage Students</h2>
-    <div class="pill-toggle">
-        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewStudents">Student List</button>
-        <button class="pill-toggle__btn" id="pillAddStudent">+ Add New</button>
-    </div>
-</header>
-
-<!-- View Container -->
+<!-- ══════════════════════════════════════════════════════════
+     STUDENT LIST CONTAINER
+══════════════════════════════════════════════════════════ -->
 <div id="studentsListContainer">
     <div id="studentsListStatus" class="status"></div>
 
-    <!-- Search & Filter Toolbar -->
     <div class="students-toolbar">
         <input type="text" class="students-toolbar__search" id="studentSearchInput"
             placeholder="🔍 Search by name or username...">
@@ -50,47 +43,84 @@
     </div>
 </div>
 
-<!-- Add Container -->
+<!-- ══════════════════════════════════════════════════════════
+     ADD STUDENT CONTAINER (loads dynamically)
+══════════════════════════════════════════════════════════ -->
 <div id="addStudentContainer" class="panel__divider">
     <div class="loading-text">Loading component...</div>
 </div>
 
-<!-- Student Detail View -->
+<!-- ══════════════════════════════════════════════════════════
+     STUDENT DETAIL CONTAINER
+══════════════════════════════════════════════════════════ -->
 <div id="studentDetailContainer" class="student-detail" style="display:none;">
+
+    <!-- Header actions -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
         <button class="btn btn--outline btn--sm" id="btnBackToStudents">← Back to Students</button>
         <button class="btn btn--danger btn--sm" id="btnDeleteStudentDetail">Delete Student</button>
     </div>
 
-    <!-- Profile Information -->
+    <!-- ── Profile Information ───────────────────────────────── -->
     <div class="panel__header">
         <h2>Profile Information</h2>
     </div>
-    <div class="profile-card"
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; background: var(--surface-bg); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-light); margin-bottom: 2rem;">
+    <div class="profile-card" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.5rem;background:var(--surface-bg);padding:1.5rem;border-radius:var(--radius-lg);border:1px solid var(--border-light);margin-bottom:2rem;">
         <div>
-            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Name</p>
-            <p class="stat-card__value" id="studentDetailName" style="font-size: 1.25rem;">-</p>
+            <p class="stat-card__label" style="margin-bottom:0.25rem;">Name</p>
+            <p class="stat-card__value" id="studentDetailName" style="font-size:1.25rem;">-</p>
         </div>
         <div>
-            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Username / ID</p>
-            <p class="stat-card__value" id="studentDetailUsername" style="font-size: 1.25rem;">-</p>
+            <p class="stat-card__label" style="margin-bottom:0.25rem;">Username / ID</p>
+            <p class="stat-card__value" id="studentDetailUsername" style="font-size:1.25rem;">-</p>
         </div>
         <div>
-            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Password</p>
-            <p class="stat-card__value" id="studentDetailPassword" style="font-size: 1.25rem;">••••••••</p>
+            <p class="stat-card__label" style="margin-bottom:0.25rem;">Grade</p>
+            <p class="stat-card__value" id="studentDetailGrade" style="font-size:1.25rem;">-</p>
         </div>
         <div>
-            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Grade</p>
-            <p class="stat-card__value" id="studentDetailGrade" style="font-size: 1.25rem;">-</p>
+            <p class="stat-card__label" style="margin-bottom:0.25rem;">Subjects</p>
+            <p class="stat-card__value" id="studentDetailSubjects" style="font-size:1.25rem;">-</p>
         </div>
+
+        <!-- Student Phone -->
         <div>
-            <p class="stat-card__label" style="margin-bottom: 0.25rem;">Subjects</p>
-            <p class="stat-card__value" id="studentDetailSubjects" style="font-size: 1.25rem;">-</p>
+            <p class="stat-card__label" style="margin-bottom:0.25rem;">Student Phone</p>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.25rem;">
+                <p class="stat-card__value" id="sdStudentPhone" style="font-size:1rem;margin:0;">-</p>
+                <a id="sdStudentWaLink" href="#" target="_blank" rel="noopener"
+                    style="display:none;background:#25D366;color:#fff;padding:3px 10px;border-radius:6px;font-size:0.78rem;text-decoration:none;font-weight:600;line-height:1.6;">
+                    WhatsApp
+                </a>
+            </div>
+        </div>
+
+        <!-- Parent Phone -->
+        <div>
+            <p class="stat-card__label" style="margin-bottom:0.25rem;">Parent Phone</p>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.25rem;">
+                <p class="stat-card__value" id="sdParentPhone" style="font-size:1rem;margin:0;">Not set</p>
+                <a id="sdParentWaLink" href="#" target="_blank" rel="noopener"
+                    style="display:none;background:#25D366;color:#fff;padding:3px 10px;border-radius:6px;font-size:0.78rem;text-decoration:none;font-weight:600;line-height:1.6;">
+                    WhatsApp
+                </a>
+                <button id="btnEditParentPhone" class="btn btn--outline btn--sm"
+                    style="padding:3px 10px;font-size:0.78rem;">Edit</button>
+            </div>
+            <!-- Inline edit form — hidden by default -->
+            <div id="sdParentPhoneEdit" style="display:none;margin-top:0.6rem;">
+                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                    <input type="tel" id="sdParentPhoneInput" placeholder="10-digit number"
+                        maxlength="10"
+                        style="max-width:160px;padding:5px 10px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-surface);color:var(--text-main);">
+                    <button id="btnSaveParentPhone" class="btn btn--primary btn--sm">Save</button>
+                    <button id="btnCancelParentPhone" class="btn btn--outline btn--sm">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Attendance Stats -->
+    <!-- ── Attendance Stats ──────────────────────────────────── -->
     <div class="student-detail__stats" id="studentDetailStats">
         <div class="student-detail__stat">
             <div class="student-detail__stat-value" id="sdTotalClasses">-</div>
@@ -114,33 +144,47 @@
         </div>
     </div>
 
-    <!-- Batch Memberships -->
-    <div class="panel__header">
-        <h2>Batch Memberships</h2>
-    </div>
-    <div class="table-wrap">
-        <table id="studentBatchesTable">
-            <thead>
-                <tr>
-                    <th scope="col">Batch Name</th>
-                    <th scope="col">Subject</th>
-                    <th scope="col">Grade</th>
-                    <th scope="col">Schedule</th>
-                </tr>
-            </thead>
-            <tbody id="studentBatchesBody">
-                <tr>
-                    <td colspan="4" class="loading-text">Loading...</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- ── Attendance Calendar + Batches (two-column) ───────── -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem;">
+
+        <!-- Attendance Calendar -->
+        <div>
+            <div class="panel__header"><h2>Attendance Calendar</h2></div>
+            <div id="sdAttendanceCalendar" style="min-height:60px;">
+                <div class="loading-text">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Batch Memberships -->
+        <div>
+            <div class="panel__header"><h2>Batch Memberships</h2></div>
+            <div class="table-wrap">
+                <table id="studentBatchesTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Batch</th>
+                            <th scope="col">Subject</th>
+                            <th scope="col">Grade</th>
+                            <th scope="col">Schedule</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentBatchesBody">
+                        <tr><td colspan="4" class="loading-text">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <!-- Test Scores -->
-    <div class="panel__header">
-        <h2>Test Scores</h2>
+    <!-- ── Performance Trend ────────────────────────────────── -->
+    <div class="panel__header"><h2>Performance Trend</h2></div>
+    <div id="sdTrendChart" style="margin-bottom:2rem;min-height:60px;">
+        <div class="loading-text">Loading...</div>
     </div>
-    <div class="table-wrap">
+
+    <!-- ── Test Scores ───────────────────────────────────────── -->
+    <div class="panel__header"><h2>Test Scores</h2></div>
+    <div class="table-wrap" style="margin-bottom:2rem;">
         <table id="studentMarksTable">
             <thead>
                 <tr>
@@ -148,62 +192,73 @@
                     <th scope="col">Subject</th>
                     <th scope="col">Marks</th>
                     <th scope="col">Max</th>
+                    <th scope="col">%</th>
+                    <th scope="col">Rank</th>
                     <th scope="col">Date</th>
                 </tr>
             </thead>
             <tbody id="studentMarksBody">
-                <tr>
-                    <td colspan="5" class="loading-text">Loading...</td>
-                </tr>
+                <tr><td colspan="7" class="loading-text">Loading...</td></tr>
             </tbody>
         </table>
     </div>
 
-    <!-- ── AI Progress Report ──────────────────────────────────────── -->
-    <div class="panel__header" style="margin-top: 2rem;">
-        <h2>AI Progress Report</h2>
+    <!-- ── Teacher Notes ────────────────────────────────────── -->
+    <div class="panel__header"><h2>Teacher Notes</h2></div>
+    <div style="margin-bottom:2rem;">
+        <textarea id="sdNotesInput"
+            placeholder="Private notes about this student — not visible to the student..."
+            style="width:100%;min-height:100px;padding:0.75rem;border:1px solid var(--border-color);border-radius:var(--radius-md);font-family:var(--font-main);font-size:0.9rem;resize:vertical;background:var(--surface-bg);color:var(--text-main);box-sizing:border-box;"></textarea>
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">
+            <button class="btn btn--primary btn--sm" id="btnSaveNotes">Save Notes</button>
+            <span id="sdNotesSaveStatus" style="font-size:0.85rem;color:var(--text-muted);"></span>
+        </div>
     </div>
 
-    <div
-        style="background: var(--surface-bg); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.5rem;">
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.6;">
+    <!-- ── WhatsApp History ──────────────────────────────────── -->
+    <div class="panel__header"><h2>WhatsApp History</h2></div>
+    <div id="sdWhatsappLog" style="margin-bottom:2rem;min-height:40px;">
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <!-- ── AI Progress Report ───────────────────────────────── -->
+    <div class="panel__header" style="margin-top:2rem;">
+        <h2>AI Progress Report</h2>
+    </div>
+    <div style="background:var(--surface-bg);border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:1.5rem;">
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.25rem;line-height:1.6;">
             Generate a parent-friendly progress summary using the student's attendance and test data above.
             The report is written by AI and can be copied and sent to parents directly.
         </p>
-
         <button class="btn btn--primary" id="btnGenerateReport" disabled
-            style="display: flex; align-items: center; gap: 0.5rem;">
+            style="display:flex;align-items:center;gap:0.5rem;">
             ✨ Generate Report
         </button>
-
-        <!-- Report Output — hidden until a report is generated -->
-        <div id="reportOutputSection" style="display: none; margin-top: 1.5rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                <p style="font-weight: 600; color: var(--text-primary); margin: 0;">Generated Report</p>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn--outline btn--sm" id="btnCopyReport" style="display: none;">
+        <div id="reportOutputSection" style="display:none;margin-top:1.5rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+                <p style="font-weight:600;color:var(--text-primary);margin:0;">Generated Report</p>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="btn btn--outline btn--sm" id="btnCopyReport" style="display:none;">
                         Copy
                     </button>
                     <button class="btn btn--primary btn--sm" id="btnSendWhatsappReport"
-                        style="display: none; background-color: #25D366; border-color: #25D366; color: white;">
+                        style="display:none;background-color:#25D366;border-color:#25D366;color:white;">
                         <i class="ri-whatsapp-line"></i> WhatsApp
                     </button>
                 </div>
             </div>
             <div id="reportOutputText" style="
-                    background: var(--bg-primary, #fff);
-                    border: 1px solid var(--border-light);
-                    border-radius: var(--radius-md);
-                    padding: 1.25rem 1.5rem;
-                    font-size: 0.95rem;
-                    line-height: 1.8;
-                    color: var(--text-primary);
-                    white-space: pre-wrap;
-                    min-height: 80px;
-                ">
-            </div>
+                background:var(--bg-primary,#fff);
+                border:1px solid var(--border-light);
+                border-radius:var(--radius-md);
+                padding:1.25rem 1.5rem;
+                font-size:0.95rem;
+                line-height:1.8;
+                color:var(--text-primary);
+                white-space:pre-wrap;
+                min-height:80px;
+            "></div>
         </div>
     </div>
-    <!-- ── End AI Progress Report ──────────────────────────────────── -->
 
 </div>

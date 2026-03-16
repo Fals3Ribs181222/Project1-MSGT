@@ -412,6 +412,18 @@ export function init() {
                 statusText.className = 'status status--success';
                 statusText.style.display = 'block';
 
+                // Show Notify button if there are absent/late students
+                const absentLateCount = records.filter(r => r.status === 'absent' || r.status === 'late').length;
+                const btnNotify = document.getElementById('btnNotifyAbsentLate');
+                if (btnNotify && absentLateCount > 0) {
+                    btnNotify.style.display = 'inline-flex';
+                    btnNotify.innerHTML = `<i class="ri-whatsapp-line"></i> Notify Absent/Late (${absentLateCount})`;
+                    // Store records for the notify handler
+                    btnNotify._absentLateRecords = records.filter(r => r.status === 'absent' || r.status === 'late');
+                } else if (btnNotify) {
+                    btnNotify.style.display = 'none';
+                }
+
                 setTimeout(() => {
                     statusText.style.display = 'none';
                 }, 3000);
@@ -419,6 +431,86 @@ export function init() {
                 statusText.textContent = 'Failed to save: ' + error.message;
                 statusText.className = 'status status--error';
                 statusText.style.display = 'block';
+            }
+        });
+    }
+
+    // ── Notify Absent/Late via WhatsApp ──────────────────────────
+    const btnNotifyAbsentLate = document.getElementById('btnNotifyAbsentLate');
+    if (btnNotifyAbsentLate) {
+        btnNotifyAbsentLate.addEventListener('click', async () => {
+            const records = btnNotifyAbsentLate._absentLateRecords;
+            if (!records || records.length === 0) return;
+
+            const notifyStatus = document.getElementById('notifyAbsentStatus');
+            btnNotifyAbsentLate.disabled = true;
+            btnNotifyAbsentLate.textContent = 'Sending...';
+            if (notifyStatus) notifyStatus.style.display = 'none';
+
+            // Get class info for the message
+            const className = document.getElementById('attendanceClassName')?.textContent || '';
+            const classMeta = document.getElementById('attendanceClassMeta')?.textContent || '';
+            const subject = classMeta.split('•')[0]?.trim() || className;
+            const dateStr = new Date().toISOString().split('T')[0];
+
+            // Fetch profiles for student phone + parent_phone
+            const studentIds = records.map(r => r.student_id);
+            const { data: profiles } = await window.supabaseClient
+                .from('profiles')
+                .select('id, name, phone, parent_phone')
+                .in('id', studentIds);
+
+            if (!profiles || profiles.length === 0) {
+                if (notifyStatus) {
+                    notifyStatus.textContent = 'No student profiles found.';
+                    notifyStatus.className = 'status status--error';
+                    notifyStatus.style.display = 'block';
+                }
+                btnNotifyAbsentLate.disabled = false;
+                btnNotifyAbsentLate.innerHTML = '<i class="ri-whatsapp-line"></i> Notify Absent/Late';
+                return;
+            }
+
+            let totalSent = 0;
+            let totalFailed = 0;
+
+            for (const record of records) {
+                const profile = profiles.find(p => p.id === record.student_id);
+                if (!profile) continue;
+
+                const recipients = window.whatsapp.resolveRecipients(profile, 'both');
+                if (recipients.length === 0) {
+                    totalFailed++;
+                    continue;
+                }
+
+                try {
+                    const result = await window.whatsapp.send({
+                        type: 'attendance',
+                        recipients,
+                        payload: {
+                            status: record.status,
+                            student_name: profile.name,
+                            subject: subject,
+                            date: dateStr,
+                        },
+                        sentBy: user.id,
+                    });
+                    totalSent += result.sent || 0;
+                    totalFailed += result.failed || 0;
+                } catch (err) {
+                    totalFailed++;
+                }
+            }
+
+            btnNotifyAbsentLate.disabled = false;
+            btnNotifyAbsentLate.style.display = 'none';
+
+            if (notifyStatus) {
+                notifyStatus.textContent = `WhatsApp: ${totalSent} sent, ${totalFailed} failed`;
+                notifyStatus.className = totalFailed > 0 ? 'status status--error' : 'status status--success';
+                notifyStatus.style.display = 'block';
+                setTimeout(() => notifyStatus.style.display = 'none', 5000);
             }
         });
     }

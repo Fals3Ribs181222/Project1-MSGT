@@ -77,13 +77,22 @@
                         <span class="landing-pill__text">Board Results</span>
                     </button>
                     <button class="landing-pill" data-target="panel-testimonials">
-                        <span class="landing-pill__icon">💬</span>
+                        <span class="landing-pill__icon">⭐</span>
                         <span class="landing-pill__text">Testimonials</span>
                     </button>
+                    <button class="landing-pill" data-target="panel-messages">
+                        <span class="landing-pill__icon">💬</span>
+                        <span class="landing-pill__text">Messages</span>
+                    </button>
+                    <button class="landing-pill" data-target="panel-ai-tools">
+                        <span class="landing-pill__icon">🧠</span>
+                        <span class="landing-pill__text">AI Tools</span>
+                    </button>
+
                 </div>
             </section>
-
             <!-- Dynamic Tabs loaded by router.js -->
+
     </main>
 
     <!-- Class Detail Modal Overlay -->
@@ -132,6 +141,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/whatsapp.js"></script>
     <script type="module">
         import { loadTab } from "./js/dashboard/router.js";
         window.loadTab = loadTab;

@@ -47,28 +47,95 @@ function attachAnnouncementListeners() {
         e.preventDefault();
         const btn = document.getElementById('btnNotice');
         const status = document.getElementById('noticeStatus');
+        const waStatus = document.getElementById('noticeWhatsAppStatus');
 
         btn.disabled = true;
         btn.textContent = 'Posting...';
         status.className = 'status';
+        if (waStatus) waStatus.style.display = 'none';
+
+        const title = document.getElementById('noticeTitle').value;
+        const message = document.getElementById('noticeMessage').value;
+        const grade = document.getElementById('noticeGrade').value;
+        const sendWhatsApp = document.getElementById('noticeWhatsApp')?.checked;
 
         const response = await window.api.post('announcements', {
-            title: document.getElementById('noticeTitle').value,
-            message: document.getElementById('noticeMessage').value,
-            grade: document.getElementById('noticeGrade').value,
+            title,
+            message,
+            grade,
             posted_by: user.id
         });
 
-        btn.disabled = false;
-        btn.textContent = 'Post Announcement';
-
         if (response.success) {
             window.showStatus('noticeStatus', 'Announcement posted successfully!', 'success');
+
+            // Send via WhatsApp if checked
+            if (sendWhatsApp && window.whatsapp) {
+                try {
+                    if (waStatus) {
+                        waStatus.textContent = 'Sending WhatsApp messages...';
+                        waStatus.className = 'status status--info';
+                        waStatus.style.display = 'block';
+                    }
+
+                    // Fetch student profiles for the grade
+                    let query = window.supabaseClient
+                        .from('profiles')
+                        .select('id, name, phone, parent_phone')
+                        .eq('role', 'student');
+
+                    if (grade) {
+                        query = query.eq('grade', grade);
+                    }
+
+                    const { data: students } = await query;
+
+                    if (students && students.length > 0) {
+                        // Resolve parent recipients
+                        const recipients = [];
+                        students.forEach(s => {
+                            const r = window.whatsapp.resolveRecipients(s, 'both');
+                            recipients.push(...r);
+                        });
+
+                        if (recipients.length > 0) {
+                            const result = await window.whatsapp.send({
+                                type: 'announcement',
+                                recipients,
+                                payload: { title, message },
+                                sentBy: user.id,
+                            });
+
+                            if (waStatus) {
+                                waStatus.textContent = `WhatsApp: ${result.sent} sent, ${result.failed} failed`;
+                                waStatus.className = result.failed > 0 ? 'status status--error' : 'status status--success';
+                                waStatus.style.display = 'block';
+                            }
+                        } else {
+                            if (waStatus) {
+                                waStatus.textContent = 'No parent phone numbers found.';
+                                waStatus.className = 'status status--error';
+                                waStatus.style.display = 'block';
+                            }
+                        }
+                    }
+                } catch (waErr) {
+                    if (waStatus) {
+                        waStatus.textContent = 'WhatsApp failed: ' + waErr.message;
+                        waStatus.className = 'status status--error';
+                        waStatus.style.display = 'block';
+                    }
+                }
+            }
+
             e.target.reset();
             loadAnnouncements();
         } else {
             window.showStatus('noticeStatus', response.error || 'Failed to post.', 'error');
         }
+
+        btn.disabled = false;
+        btn.textContent = 'Post Announcement';
     });
 }
 

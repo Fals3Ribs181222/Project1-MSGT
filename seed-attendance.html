@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed Attendance</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 700px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            background: #f5f5f5;
+            color: #2d3748;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        p.sub {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: #1D9E75;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .log {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-size: 0.875rem;
+            line-height: 2;
+            min-height: 100px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .ok {
+            color: #2d7a2d;
+        }
+
+        .err {
+            color: #c0392b;
+        }
+
+        .info {
+            color: #1D9E75;
+            font-weight: 600;
+        }
+
+        #progress {
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: #444;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>📋 Seed Attendance</h1>
+    <p class="sub">
+        Generates attendance records (present / absent / late) for every student from
+        <strong>1 Jan 2026</strong> to <strong>today</strong>, for each class they belong to.<br>
+        <strong>You must be logged in as the teacher before running this.</strong>
+    </p>
+
+    <button id="btnRun" onclick="runSeed()">Generate Attendance</button>
+    <div id="progress"></div>
+    <div class="log" id="log">Waiting to start...</div>
+
+    <script>
+        // ── Config ────────────────────────────────────────────────────────────────────
+        const SUPABASE_URL = 'https://tksruuqtzxflgglnljef.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrc3J1dXF0enhmbGdnbG5samVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzY0OTIsImV4cCI6MjA4Nzk1MjQ5Mn0.eu6LwoP-9O5sG9nHhBza0UgYHCOm7Ni5flk_1Lgl4FU';
+
+        const { createClient } = supabase;
+        const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ── Helpers ───────────────────────────────────────────────────────────────────
+        function log(msg, type = '') {
+            const div = document.getElementById('log');
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = msg;
+            div.appendChild(line);
+            div.scrollTop = div.scrollHeight;
+        }
+
+        function setProgress(current, total) {
+            document.getElementById('progress').textContent =
+                current < total
+                    ? `Processing class ${current} of ${total}...`
+                    : `✅ Done — attendance seeded for ${total} classes.`;
+        }
+
+        // Generate all weekday dates between start and end (inclusive)
+        function getWeekdaysBetween(startStr, endStr) {
+            const dates = [];
+            const current = new Date(startStr + 'T00:00:00');
+            const end = new Date(endStr + 'T00:00:00');
+
+            while (current <= end) {
+                const day = current.getDay(); // 0=Sun, 6=Sat
+                if (day !== 0 && day !== 6) {
+                    const yyyy = current.getFullYear();
+                    const mm = String(current.getMonth() + 1).padStart(2, '0');
+                    const dd = String(current.getDate()).padStart(2, '0');
+                    dates.push(`${yyyy}-${mm}-${dd}`);
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        }
+
+        // Pick a weighted-random status: ~70% present, ~15% late, ~15% absent
+        function randomStatus() {
+            const r = Math.random();
+            if (r < 0.70) return 'present';
+            if (r < 0.85) return 'late';
+            return 'absent';
+        }
+
+        // ── Main Seed Function ────────────────────────────────────────────────────────
+        async function runSeed() {
+            const btn = document.getElementById('btnRun');
+            btn.disabled = true;
+            document.getElementById('log').innerHTML = '';
+
+            // 1. Check the teacher is logged in
+            const { data: sessionData } = await client.auth.getSession();
+            const teacherSession = sessionData?.session;
+
+            if (!teacherSession) {
+                log('⚠️  Not logged in. Please log into the teacher dashboard first, then reopen this file.', 'err');
+                btn.disabled = false;
+                return;
+            }
+
+            const teacherId = teacherSession.user.id;
+            log(`Logged in as teacher. Starting attendance seed...`, 'info');
+
+            // 2. Fetch all classes (regular only — they repeat weekly)
+            log('Fetching classes...', 'info');
+            const { data: classes, error: classError } = await client
+                .from('classes')
+                .select('id, title, batch_id, day_of_week, type')
+                .eq('type', 'regular');
+
+            if (classError || !classes || classes.length === 0) {
+                log('✗ No regular classes found. Create some classes first.', 'err');
+                btn.disabled = false;
+                return;
+            }
+            log(`Found ${classes.length} regular classes.`, 'info');
+
+            // 3. Fetch all students
+            log('Fetching students...', 'info');
+            const { data: students, error: studentError } = await client
+                .from('profiles')
+                .select('id, name')
+                .eq('role', 'student');
+
+            if (studentError || !students || students.length === 0) {
+                log('✗ No students found. Run seed-students.html first.', 'err');
+                btn.disabled = false;
+                return;
+            }
+            log(`Found ${students.length} students.`, 'info');
+
+            // 4. Fetch batch-student memberships so we only mark students in their own classes
+            log('Fetching batch memberships...', 'info');
+            const { data: memberships, error: memError } = await client
+                .from('batch_students')
+                .select('batch_id, student_id');
+
+            if (memError) {
+                log(`⚠ Warning: Could not fetch batch memberships: ${memError.message}`, 'err');
+            }
+
+            // Build a map: batch_id → [student_id, ...]
+            const batchStudentMap = {};
+            (memberships || []).forEach(m => {
+                if (!batchStudentMap[m.batch_id]) batchStudentMap[m.batch_id] = [];
+                batchStudentMap[m.batch_id].push(m.student_id);
+            });
+
+            // 5. Clear existing attendance to allow clean re-runs
+            log('Clearing existing attendance records...', 'info');
+            const classIds = classes.map(c => c.id);
+            const { error: delError } = await client
+                .from('attendance')
+                .delete()
+                .in('class_id', classIds);
+            if (delError) {
+                log(`⚠ Warning: Failed to clear old attendance: ${delError.message}`, 'err');
+            }
+
+            // 6. Date range: Jan 1 2026 → today
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const startDate = '2026-01-01';
+            const allWeekdays = getWeekdaysBetween(startDate, todayStr);
+
+            log(`Date range: ${startDate} → ${todayStr} (${allWeekdays.length} weekdays)`, 'info');
+            log('─────────────────────────────────────', 'info');
+
+            let totalInserted = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < classes.length; i++) {
+                const cls = classes[i];
+                setProgress(i + 1, classes.length);
+
+                // Get students for this batch
+                const studentIds = batchStudentMap[cls.batch_id];
+                if (!studentIds || studentIds.length === 0) {
+                    log(`⚠ ${cls.title} — no students in batch, skipping.`, 'err');
+                    continue;
+                }
+
+                // Filter weekdays to only those matching this class's day_of_week
+                const classDates = allWeekdays.filter(dateStr => {
+                    const d = new Date(dateStr + 'T00:00:00');
+                    return d.getDay() === cls.day_of_week;
+                });
+
+                if (classDates.length === 0) {
+                    log(`⚠ ${cls.title} — no matching dates found, skipping.`, 'err');
+                    continue;
+                }
+
+                // Build all attendance rows for this class
+                const rows = [];
+                for (const date of classDates) {
+                    for (const sid of studentIds) {
+                        rows.push({
+                            class_id: cls.id,
+                            batch_id: cls.batch_id,
+                            student_id: sid,
+                            date: date,
+                            status: randomStatus(),
+                            marked_by: teacherId
+                        });
+                    }
+                }
+
+                // Insert in chunks of 500 to avoid payload limits
+                const CHUNK = 500;
+                let classInserted = 0;
+                for (let j = 0; j < rows.length; j += CHUNK) {
+                    const chunk = rows.slice(j, j + CHUNK);
+                    const { error } = await client
+                        .from('attendance')
+                        .upsert(chunk, { onConflict: 'class_id, student_id, date' });
+
+                    if (error) {
+                        log(`✗ ${cls.title} chunk ${Math.floor(j / CHUNK) + 1} failed: ${error.message}`, 'err');
+                        failCount++;
+                    } else {
+                        classInserted += chunk.length;
+                    }
+                }
+
+                totalInserted += classInserted;
+                log(`✓ ${cls.title} — ${classInserted} records across ${classDates.length} days × ${studentIds.length} students`, 'ok');
+
+                // Small delay between classes
+                await new Promise(r => setTimeout(r, 300));
+            }
+
+            setProgress(classes.length, classes.length);
+            log('─────────────────────────────────────', 'info');
+            log(`Total records inserted: ${totalInserted}. Failed chunks: ${failCount}`, 'info');
+            log('Distribution: ~70% present, ~15% late, ~15% absent', 'info');
+
+            btn.disabled = false;
+            btn.textContent = 'Run Again';
+        }
+    </script>
+
+</body>
+
+</html>

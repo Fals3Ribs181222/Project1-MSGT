@@ -25,11 +25,28 @@ function formatTime(timeStr) {
  * @param {function} onConfirm - Callback if the user confirms
  */
 function showConfirmModal(title, message, onConfirm) {
-    if (confirm(`${title}\n\n${message}`)) {
-        if (typeof onConfirm === 'function') {
-            onConfirm();
-        }
-    }
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+        <div class="confirm-modal">
+            <h3>${title}</h3>
+            <p>${message}</p>
+            <div class="confirm-modal__actions">
+                <button class="btn btn--outline btn--sm" id="confirmCancel">Cancel</button>
+                <button class="btn btn--danger btn--sm" id="confirmOk">Delete</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#confirmCancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#confirmOk').addEventListener('click', async () => {
+        overlay.querySelector('#confirmOk').disabled = true;
+        overlay.querySelector('#confirmOk').textContent = 'Deleting...';
+        await onConfirm();
+        overlay.remove();
+    });
 }
 
 // Expose utilities globally

@@ -1,0 +1,114 @@
+<!-- AI Tools Tab -->
+<div class="pill-toggle" style="margin-bottom: 2rem;">
+    <button class="pill-toggle__btn pill-toggle__btn--active" id="pillDoubtSolver">🤔 Doubt Solver</button>
+    <button class="pill-toggle__btn" id="pillTestGenerator">📝 Test Generator</button>
+</div>
+
+<!-- ── Doubt Solver ─────────────────────────────────────────── -->
+<div id="doubtSolverPanel">
+    <div style="margin-bottom: 1.5rem;">
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+            Ask a subject question — the AI answers using uploaded study materials only.
+        </p>
+    </div>
+
+    <div class="form__row" style="margin-bottom: 1rem;">
+        <div class="form__row-item">
+            <label class="form__label">Subject</label>
+            <select id="doubtSubject" class="form__control">
+                <option value="">Select subject</option>
+                <option value="Accounts">Accounts</option>
+                <option value="Commerce">Commerce</option>
+            </select>
+        </div>
+        <div class="form__row-item">
+            <label class="form__label">Grade</label>
+            <select id="doubtGrade" class="form__control">
+                <option value="">Select grade</option>
+                <option value="11th">11th</option>
+                <option value="12th">12th</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form__group">
+        <label class="form__label">Your Question</label>
+        <textarea id="doubtQuestion" class="form__control" rows="3"
+            placeholder="e.g. What is the difference between trading account and profit & loss account?"></textarea>
+    </div>
+
+    <button class="btn btn--primary" id="btnAskDoubt">✨ Ask AI</button>
+    <div id="doubtStatus" class="status"></div>
+
+    <div id="doubtAnswerBox" style="display:none; margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="color: var(--primary); margin: 0;">AI Answer</h4>
+            <button class="btn btn--outline btn--sm" id="btnCopyDoubt">Copy</button>
+        </div>
+        <div id="doubtAnswer" style="
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        "></div>
+    </div>
+</div>
+
+<!-- ── Test Generator ───────────────────────────────────────── -->
+<div id="testGeneratorPanel" style="display:none;">
+    <div style="margin-bottom: 1.5rem;">
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+            Generate a test paper from uploaded study materials for a specific topic.
+        </p>
+    </div>
+
+    <div class="form__row" style="margin-bottom: 1rem;">
+        <div class="form__row-item">
+            <label class="form__label">Subject</label>
+            <select id="testSubject" class="form__control">
+                <option value="">Select subject</option>
+                <option value="Accounts">Accounts</option>
+                <option value="Commerce">Commerce</option>
+            </select>
+        </div>
+        <div class="form__row-item">
+            <label class="form__label">Grade</label>
+            <select id="testGrade" class="form__control">
+                <option value="">Select grade</option>
+                <option value="11th">11th</option>
+                <option value="12th">12th</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form__group">
+        <label class="form__label">Topic</label>
+        <input type="text" id="testTopic" class="form__control"
+            placeholder="e.g. Partnership Accounts — Admission of a Partner">
+    </div>
+
+    <button class="btn btn--primary" id="btnGenerateTest">✨ Generate Test Paper</button>
+    <div id="testStatus" class="status"></div>
+
+    <div id="testOutputBox" style="display:none; margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="color: var(--primary); margin: 0;">Generated Test Paper</h4>
+            <button class="btn btn--outline btn--sm" id="btnCopyTest">Copy</button>
+        </div>
+        <div id="testOutput" style="
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            font-family: var(--font-mono, monospace);
+        "></div>
+    </div>
+</div>

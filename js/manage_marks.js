@@ -169,11 +169,20 @@ document.getElementById('marksForm').addEventListener('submit', async (e) => {
             status.className = 'status status--success';
             status.style.display = 'block';
 
+            // Show Send Scores button
+            const btnSend = document.getElementById('btnSendScores');
+            if (btnSend) {
+                btnSend.style.display = 'inline-flex';
+                btnSend._savedMarks = marksPayload;
+            }
+
             // Refresh marks to get new IDs
             const refreshRes = await api.get('marks', { test_id: testId });
             if (refreshRes.success) {
                 existingMarks = refreshRes.data;
                 renderPage();
+                // Re-show send button after re-render
+                if (btnSend) btnSend.style.display = 'inline-flex';
             }
         } else {
             throw new Error(response.error || 'Failed to save marks.');
@@ -185,6 +194,103 @@ document.getElementById('marksForm').addEventListener('submit', async (e) => {
     } finally {
         btn.disabled = false;
         btn.textContent = 'Save All Marks';
+    }
+});
+
+// ── Send Scores via WhatsApp ─────────────────────────────────
+document.getElementById('btnSendScores')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btnSendScores');
+    const statusEl = document.getElementById('sendScoresStatus');
+    if (!btn || !currentTest) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    if (statusEl) statusEl.style.display = 'none';
+
+    try {
+        // Get all inputs with marks
+        const inputs = document.querySelectorAll('.student-mark-input');
+        const marksData = Array.from(inputs)
+            .filter(i => i.value.trim() !== '')
+            .map(i => ({
+                studentId: i.dataset.studentId,
+                marks: i.value.trim(),
+            }));
+
+        if (marksData.length === 0) {
+            if (statusEl) {
+                statusEl.textContent = 'No marks to send.';
+                statusEl.className = 'status status--error';
+                statusEl.style.display = 'block';
+            }
+            return;
+        }
+
+        // Fetch profiles with phone numbers
+        const studentIds = marksData.map(m => m.studentId);
+        const { data: profiles } = await window.supabaseClient
+            .from('profiles')
+            .select('id, name, phone, parent_phone')
+            .in('id', studentIds);
+
+        if (!profiles || profiles.length === 0) {
+            if (statusEl) {
+                statusEl.textContent = 'No student profiles found.';
+                statusEl.className = 'status status--error';
+                statusEl.style.display = 'block';
+            }
+            return;
+        }
+
+        let totalSent = 0;
+        let totalFailed = 0;
+
+        for (const mark of marksData) {
+            const profile = profiles.find(p => p.id === mark.studentId);
+            if (!profile) continue;
+
+            const recipients = window.whatsapp.resolveRecipients(profile, 'both');
+            if (recipients.length === 0) {
+                totalFailed++;
+                continue;
+            }
+
+            try {
+                const result = await window.whatsapp.send({
+                    type: 'score',
+                    recipients,
+                    payload: {
+                        student_name: profile.name,
+                        test_title: currentTest.title,
+                        score: `${mark.marks}/${currentTest.max_marks}`,
+                        subject: currentTest.subject,
+                    },
+                    sentBy: user.id,
+                });
+                totalSent += result.sent || 0;
+                totalFailed += result.failed || 0;
+            } catch (err) {
+                totalFailed++;
+            }
+        }
+
+        btn.style.display = 'none';
+
+        if (statusEl) {
+            statusEl.textContent = `WhatsApp: ${totalSent} sent, ${totalFailed} failed`;
+            statusEl.className = totalFailed > 0 ? 'status status--error' : 'status status--success';
+            statusEl.style.display = 'block';
+            setTimeout(() => statusEl.style.display = 'none', 5000);
+        }
+    } catch (err) {
+        if (statusEl) {
+            statusEl.textContent = 'Failed: ' + err.message;
+            statusEl.className = 'status status--error';
+            statusEl.style.display = 'block';
+        }
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-whatsapp-line"></i> Send Scores via WhatsApp';
     }
 });
 

@@ -1,12 +1,42 @@
 # Communication and Materials
 
-The system provides tools for disseminating information and sharing study resources.
+The system provides tools for disseminating information, messaging parents/students, and sharing study resources.
 
 ## Communication (Announcements)
 The announcements feature serves as an internal noticeboard for the tuition center.
 
 1.  **Posting:** Teachers can create and post announcements. These can be general notices or targeted to specific grades. Announcements are stored in the `announcements` table, recording the title, message, target grade, and the teacher who posted it.
 2.  **Viewing:** Announcements are publicly viewable by everyone in the system. Students see relevant announcements on their dashboards.
+3.  **WhatsApp Distribution:** When posting, teachers can check "Also send via WhatsApp to parents" to broadcast the announcement to both student and parent phone numbers for the selected grade.
+
+## WhatsApp Messaging
+The system includes a unified WhatsApp messaging framework powered by Twilio and a single Supabase Edge Function (`send-whatsapp`). Teachers can send messages from multiple touchpoints:
+
+| Feature | Location | Recipients |
+|---|---|---|
+| **Absent/Late Alert** | Attendance page (after saving) | Student + Parent |
+| **Test Scores** | Manage Marks page (after saving) | Student + Parent |
+| **Batch Announcement** | Announcements page (checkbox) | Student + Parent |
+| **AI Progress Report** | Student detail → Report tab | Parent (fallback: Student) |
+| **Custom Message** | Messages tab (💬) | Student, Parent, or Both |
+
+All messages are teacher-initiated (no automatic sends) and logged to the `whatsapp_log` table.
+
+### Messages Tab
+The dashboard includes a dedicated **Messages** tab with:
+- **Compose:** Pick a student, choose recipient (student/parent/both), type a message, send.
+- **History:** Table of all sent messages with type filter.
+
+### Key Files
+
+| File | Purpose |
+|---|---|
+| `supabase/functions/send-whatsapp/index.ts` | Unified Edge Function — handles all message types via Twilio |
+| `js/whatsapp.js` | Shared frontend helper (`window.whatsapp.send()`, `resolveRecipients()`, `getLog()`) |
+| `components/tabs/messages.html` | Messages tab UI |
+| `js/dashboard/messages.js` | Messages tab logic |
+
+See [11-WhatsApp-Notifications.md](./11-WhatsApp-Notifications.md) for full technical details.
 
 ## Study Materials (Files)
 The files feature allows for the secure sharing of educational documents.

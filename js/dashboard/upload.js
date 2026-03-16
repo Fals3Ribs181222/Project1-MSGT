@@ -17,24 +17,21 @@ async function loadMaterials() {
     btnRefresh.disabled = false;
     btnRefresh.textContent = 'Refresh List';
 
-    if (response.success) {
-        if (response.data && response.data.length > 0) {
-            tbody.innerHTML = response.data.map(file => `
-                <tr class="data-table__row">
-                    <td class="data-table__td--main">${file.title || '-'}</td>
-                    <td class="data-table__td">${file.subject || '-'}</td>
-                    <td class="data-table__td">${file.grade || 'All'}</td>
-                    <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
-                    <td class="data-table__td">${file.uploaded_by || '-'}</td>
-                    <td class="data-table__td"><a href="${file.file_url || '#'}" target="_blank" class="navbar__link">View</a></td>
-                </tr>
-            `).join('');
-            window.tableLoading('materialsTableBody', 6, 'No materials uploaded yet.');
-        }
+    if (response.data && response.data.length > 0) {
+        tbody.innerHTML = response.data.map(file => `
+        <tr class="data-table__row">
+            <td class="data-table__td--main">${file.title || '-'}</td>
+            <td class="data-table__td">${file.subject || '-'}</td>
+            <td class="data-table__td">${file.grade || 'All'}</td>
+            <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
+            <td class="data-table__td">${file.uploaded_by || '-'}</td>
+            <td class="data-table__td"><a href="${file.file_url || '#'}" target="_blank" class="navbar__link">View</a></td>
+        </tr>
+    `).join('');
     } else {
-        document.getElementById('materialsTableBody').innerHTML = '';
-        window.showStatus('materialsListStatus', response.error || 'Failed to load materials.', 'error');
+        window.tableLoading('materialsTableBody', 6, 'No materials uploaded yet.');
     }
+
 }
 
 async function loadUploadComponent() {
@@ -89,7 +86,39 @@ function attachUploadListeners() {
             const response = await window.api.post('files', payload);
 
             if (response.success) {
-                window.showStatus('uploadStatus', 'File uploaded successfully!', 'success');
+                window.showStatus('uploadStatus', 'File uploaded & indexing for AI...', 'success');
+
+                // Trigger RAG indexing in the background
+                const fileId = response.data?.id;
+                if (fileId) {
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    fetch(`${CONFIG.SUPABASE_URL}/functions/v1/index-material`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({
+                            file_id: fileId,
+                            file_url: publicUrl,
+                            subject: payload.subject,
+                            grade: payload.grade,
+                            teacher_id: user.id
+                        })
+                    }).then(res => res.json()).then(result => {
+                        if (result.success) {
+                            console.log(`✅ Indexed ${result.chunks_indexed} chunks for "${payload.title}"`);
+                            window.showStatus('uploadStatus', `✅ Uploaded & indexed ${result.chunks_indexed} chunks for AI!`, 'success');
+                        } else {
+                            console.warn('⚠️ Indexing failed:', result.error);
+                            window.showStatus('uploadStatus', 'File uploaded, but AI indexing failed.', 'error');
+                        }
+                    }).catch(err => {
+                        console.warn('⚠️ Indexing error:', err);
+                        window.showStatus('uploadStatus', 'File uploaded, but AI indexing failed.', 'error');
+                    });
+                }
+
                 e.target.reset();
                 loadMaterials();
             } else {

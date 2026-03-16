@@ -1,0 +1,90 @@
+<header class="panel__header">
+    <h2>Messages</h2>
+    <div class="pill-toggle">
+        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillCompose">Compose</button>
+        <button class="pill-toggle__btn" id="pillHistory">History</button>
+    </div>
+</header>
+
+<!-- ── Compose View ────────────────────────────────────────── -->
+<div id="messagesComposeContainer">
+    <p class="text-muted" style="margin-bottom: 1.5rem;">
+        Send a custom WhatsApp message to a student or their parent.
+    </p>
+
+    <div class="form-grid" style="display:grid; gap:1rem; max-width:550px;">
+        <!-- Student Picker -->
+        <div>
+            <label class="form__label" for="msgStudentSelect">Student</label>
+            <select class="form__input" id="msgStudentSelect">
+                <option value="">Loading students...</option>
+            </select>
+        </div>
+
+        <!-- Recipient -->
+        <div>
+            <label class="form__label" for="msgRecipient">Send To</label>
+            <select class="form__input" id="msgRecipient">
+                <option value="parent">Parent</option>
+                <option value="student">Student</option>
+                <option value="both">Both</option>
+            </select>
+        </div>
+
+        <!-- Phone info display -->
+        <div id="msgPhoneInfo" style="font-size:0.85rem; color:var(--text-muted); display:none;">
+            <span id="msgPhoneDetails"></span>
+        </div>
+
+        <!-- Message -->
+        <div>
+            <label class="form__label" for="msgText">Message</label>
+            <textarea class="form__input" id="msgText" rows="5" maxlength="1000"
+                placeholder="Type your message here..."></textarea>
+            <div style="text-align:right; font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">
+                <span id="msgCharCount">0</span> / 1000
+            </div>
+        </div>
+
+        <!-- Send -->
+        <div style="display:flex; gap:0.75rem; align-items:center;">
+            <button class="btn btn--primary" id="btnSendCustomMsg">
+                <i class="ri-whatsapp-line"></i> Send WhatsApp
+            </button>
+            <div id="msgSendStatus" class="status" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ── History View ────────────────────────────────────────── -->
+<div id="messagesHistoryContainer" style="display:none;">
+    <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap;">
+        <select class="form__input" id="msgHistoryFilter" style="max-width:200px;">
+            <option value="">All Types</option>
+            <option value="custom">Custom</option>
+            <option value="report">Report</option>
+            <option value="attendance">Attendance</option>
+            <option value="score">Test Score</option>
+            <option value="announcement">Announcement</option>
+        </select>
+        <button class="btn btn--outline btn--sm" id="btnRefreshHistory">Refresh</button>
+    </div>
+
+    <div class="table-wrap">
+        <table aria-label="Message history">
+            <thead>
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Recipient</th>
+                    <th scope="col">Preview</th>
+                    <th scope="col">Sent</th>
+                </tr>
+            </thead>
+            <tbody id="msgHistoryBody">
+                <tr>
+                    <td colspan="4" class="loading-text">Loading history...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
