@@ -1,0 +1,58 @@
+<header class="panel__header">
+    <h2>Leaderboard</h2>
+    <button class="btn btn--outline btn--sm" id="btnRefreshLeaderboard">Refresh</button>
+</header>
+
+<div id="leaderboardStatus" class="status"></div>
+
+<div id="leaderboardColumns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+
+    <!-- Grade 11 -->
+    <div>
+        <div style="margin-bottom: 0.75rem;">
+            <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Grade 11</h3>
+            <p id="classAvg11" style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--gray-500);"></p>
+        </div>
+        <div class="table-wrap">
+            <table aria-label="Grade 11 rankings">
+                <thead>
+                    <tr>
+                        <th scope="col">Rank</th>
+                        <th scope="col">Student</th>
+                        <th scope="col" title="Bayesian score">Score</th>
+                        <th scope="col">Avg %</th>
+                        <th scope="col">Tests</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody11">
+                    <tr><td colspan="5" class="loading-text">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Grade 12 -->
+    <div>
+        <div style="margin-bottom: 0.75rem;">
+            <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Grade 12</h3>
+            <p id="classAvg12" style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--gray-500);"></p>
+        </div>
+        <div class="table-wrap">
+            <table aria-label="Grade 12 rankings">
+                <thead>
+                    <tr>
+                        <th scope="col">Rank</th>
+                        <th scope="col">Student</th>
+                        <th scope="col" title="Bayesian score">Score</th>
+                        <th scope="col">Avg %</th>
+                        <th scope="col">Tests</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody12">
+                    <tr><td colspan="5" class="loading-text">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

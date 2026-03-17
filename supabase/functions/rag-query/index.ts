@@ -10,6 +10,14 @@ const corsHeaders = {
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── Hash a question for cache lookup ────────────────────────
+async function hashQuestion(q: string): Promise<string> {
+    const normalized = q.toLowerCase().replace(/\s+/g, " ").trim();
+    const data = new TextEncoder().encode(normalized);
+    const buf = await crypto.subtle.digest("SHA-256", data);
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 // ── Embed a single query using Voyage AI ─────────────────────
 async function embedQuery(text: string): Promise<number[]> {
     const res = await fetch("https://api.voyageai.com/v1/embeddings", {
@@ -34,7 +42,23 @@ async function embedQuery(text: string): Promise<number[]> {
 }
 
 // ── Doubt Solver Prompt ───────────────────────────────────────
-function buildDoubtPrompt(question: string, context: string): string {
+function buildDoubtPrompt(
+    question: string,
+    context: string,
+    history?: Array<{ question: string; answer: string }>,
+): string {
+    let historyBlock = "";
+    if (history && history.length > 0) {
+        const entries = history.slice(-3).map(h =>
+            `Student asked: ${h.question}\nYou answered: ${h.answer}`
+        ).join("\n\n");
+        historyBlock = `--- PREVIOUS CONVERSATION ---
+${entries}
+--- END PREVIOUS CONVERSATION ---
+
+`;
+    }
+
     return `You are a helpful tutor assistant for an Indian commerce/accounts tuition centre.
 
 Use ONLY the following excerpts from the teacher's study materials to answer the student's question.
@@ -44,9 +68,11 @@ If the answer isn't covered in the excerpts, say: "This topic may not be in the 
 ${context}
 --- END ---
 
-Student's question: ${question}
+${historyBlock}Student's question: ${question}
 
-Answer clearly and concisely. Use the same method and terminology as in the study material. Do not use markdown.`;
+Answer clearly and concisely. Use the same method and terminology as in the study material. You may use markdown formatting (bold, lists, tables) to improve readability.
+
+After your answer, write "---SUGGESTIONS---" on a new line followed by 2-3 brief follow-up questions the student might ask next, each on its own line. These should be directly related to the topic just discussed.`;
 }
 
 // ── ISC Test Paper Prompt ─────────────────────────────────────
@@ -322,6 +348,7 @@ Deno.serve(async (req) => {
             sec_a_marks,
             sec_b_marks,
             sec_c_marks,
+            conversation_history,
         } = await req.json();
 
         if (!query || !subject || !grade || !mode) {
@@ -331,13 +358,190 @@ Deno.serve(async (req) => {
             );
         }
 
+        // ── DOUBT MODE ──────────────────────────────────────────
+        if (mode === "doubt") {
+            const history = Array.isArray(conversation_history) ? conversation_history : [];
+
+            // 1. Cache check (skip if conversation has history — context-dependent)
+            if (history.length === 0) {
+                const qHash = await hashQuestion(query);
+                const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+                const { data: cached } = await supabase
+                    .from("doubt_cache")
+                    .select("answer, sources, suggestions")
+                    .eq("question_hash", qHash)
+                    .eq("subject", subject)
+                    .eq("grade", grade)
+                    .gte("created_at", sevenDaysAgo)
+                    .maybeSingle();
+
+                if (cached) {
+                    return new Response(
+                        JSON.stringify({
+                            answer: cached.answer,
+                            sources: cached.sources,
+                            suggestions: cached.suggestions,
+                            cached: true,
+                        }),
+                        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                    );
+                }
+            }
+
+            // 2. Embed the query
+            const embedding = await embedQuery(query);
+
+            // 3. Vector search with similarity threshold
+            const rpcParams: Record<string, any> = {
+                query_embedding: embedding,
+                match_subject: subject,
+                match_grade: grade,
+                match_count: 5,
+                match_threshold: 0.3,
+            };
+            if (file_id) rpcParams.match_file_id = file_id;
+            const { data: chunks, error: searchError } = await supabase.rpc("match_chunks", rpcParams);
+
+            if (searchError) throw new Error(`Search error: ${searchError.message}`);
+
+            if (!chunks || chunks.length === 0) {
+                return new Response(
+                    JSON.stringify({
+                        answer: "No relevant material found for this subject and grade. Please upload study materials first.",
+                        sources: [],
+                        suggestions: [],
+                    }),
+                    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+            }
+
+            // 4. Resolve source file titles
+            const fileIds = [...new Set(chunks.map((c: any) => c.file_id).filter(Boolean))];
+            let sources: Array<{ file_id: string; title: string }> = [];
+            if (fileIds.length > 0) {
+                const { data: fileRecords } = await supabase
+                    .from("files")
+                    .select("id, title")
+                    .in("id", fileIds);
+                sources = (fileRecords || []).map((f: any) => ({ file_id: f.id, title: f.title }));
+            }
+
+            // 5. Build context and prompt
+            const context = chunks
+                .map((c: any, i: number) => `[Excerpt ${i + 1}]:\n${c.content}`)
+                .join("\n\n");
+
+            const prompt = buildDoubtPrompt(query, context, history);
+
+            // 6. Call Claude with streaming
+            const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                    "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
+                    "anthropic-version": "2023-06-01",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    model: "claude-sonnet-4-5-20250929",
+                    max_tokens: 1024,
+                    messages: [{ role: "user", content: prompt }],
+                    stream: true,
+                }),
+            });
+
+            if (!claudeRes.ok) {
+                const err = await claudeRes.json();
+                throw new Error(`Claude error: ${JSON.stringify(err)}`);
+            }
+
+            // 7. Stream SSE through to client
+            let fullText = "";
+            const encoder = new TextEncoder();
+            const reader = claudeRes.body!.getReader();
+            const decoder = new TextDecoder();
+
+            const stream = new ReadableStream({
+                async start(controller) {
+                    let buffer = "";
+                    try {
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+
+                            buffer += decoder.decode(value, { stream: true });
+                            const lines = buffer.split("\n");
+                            buffer = lines.pop() || "";
+
+                            for (const line of lines) {
+                                if (!line.startsWith("data: ")) continue;
+                                const jsonStr = line.slice(6).trim();
+                                if (!jsonStr || jsonStr === "[DONE]") continue;
+
+                                try {
+                                    const evt = JSON.parse(jsonStr);
+                                    if (evt.type === "content_block_delta" && evt.delta?.text) {
+                                        fullText += evt.delta.text;
+                                        controller.enqueue(
+                                            encoder.encode(`data: ${JSON.stringify({ text: evt.delta.text })}\n\n`)
+                                        );
+                                    }
+                                } catch {
+                                    // skip malformed lines
+                                }
+                            }
+                        }
+
+                        // Parse suggestions from accumulated text
+                        const [answerPart, suggestionsPart] = fullText.split("---SUGGESTIONS---");
+                        const cleanAnswer = (answerPart || fullText).trim();
+                        const suggestions = suggestionsPart
+                            ? suggestionsPart.trim().split("\n").map(s => s.trim()).filter(s => s && s.length > 5).slice(0, 3)
+                            : [];
+
+                        // Send final event with metadata
+                        controller.enqueue(
+                            encoder.encode(`data: ${JSON.stringify({ done: true, sources, suggestions })}\n\n`)
+                        );
+
+                        // Cache the result (fire-and-forget)
+                        const qHash = await hashQuestion(query);
+                        supabase.from("doubt_cache").upsert({
+                            question_hash: qHash,
+                            subject,
+                            grade,
+                            question_text: query,
+                            answer: cleanAnswer,
+                            sources,
+                            suggestions,
+                        }, { onConflict: "question_hash,subject,grade" }).then(() => {});
+
+                        controller.close();
+                    } catch (err) {
+                        controller.enqueue(
+                            encoder.encode(`data: ${JSON.stringify({ error: (err as Error).message })}\n\n`)
+                        );
+                        controller.close();
+                    }
+                },
+            });
+
+            return new Response(stream, {
+                headers: {
+                    ...corsHeaders,
+                    "Content-Type": "text/event-stream",
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                },
+            });
+        }
+
+        // ── TEST MODE (unchanged) ───────────────────────────────
         // 1. Embed the query
         const embedding = await embedQuery(query);
 
         // 2. Vector search — fetch more chunks for test mode (needs broader context)
-        // When no specific topic, pull even more chunks for comprehensive coverage
-        const isFullMaterial = mode === "test" && query.includes("comprehensive review");
-        const chunkCount = isFullMaterial ? 15 : (mode === "test" ? 8 : 5);
+        const isFullMaterial = query.includes("comprehensive review");
+        const chunkCount = isFullMaterial ? 15 : 8;
         const rpcParams: Record<string, any> = {
             query_embedding: embedding,
             match_subject: subject,
@@ -363,24 +567,15 @@ Deno.serve(async (req) => {
             .map((c: any, i: number) => `[Excerpt ${i + 1}]:\n${c.content}`)
             .join("\n\n");
 
-        // 4. Build prompt based on mode
-        let prompt: string;
-        let maxTokens: number;
-
-        if (mode === "doubt") {
-            prompt = buildDoubtPrompt(query, context);
-            maxTokens = 1024;
-        } else {
-            // test mode — apply config with defaults
-            const marksTarget = marks_target ?? 25;
-            const sectionConfig = sections ?? "AB";
-            const cogConfig = cog_focus ?? "balanced";
-            const aMarks = sec_a_marks ?? 0;
-            const bMarks = sec_b_marks ?? 0;
-            const cMarks = sec_c_marks ?? 0;
-            prompt = buildTestPrompt(query, context, marksTarget, sectionConfig, cogConfig, subject, grade, aMarks, bMarks, cMarks);
-            maxTokens = isFullMaterial ? 6000 : 4000; // Full-material papers need more tokens
-        }
+        // 4. Build prompt
+        const marksTarget = marks_target ?? 25;
+        const sectionConfig = sections ?? "AB";
+        const cogConfig = cog_focus ?? "balanced";
+        const aMarks = sec_a_marks ?? 0;
+        const bMarks = sec_b_marks ?? 0;
+        const cMarks = sec_c_marks ?? 0;
+        const prompt = buildTestPrompt(query, context, marksTarget, sectionConfig, cogConfig, subject, grade, aMarks, bMarks, cMarks);
+        const maxTokens = isFullMaterial ? 6000 : 4000;
 
         // 5. Call Claude
         const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {

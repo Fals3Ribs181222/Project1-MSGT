@@ -7,9 +7,33 @@ let allFiles = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchData();
+    fetchRank();
     document.getElementById('filterSubject').addEventListener('change', renderFiles);
     document.getElementById('searchTitle').addEventListener('input', renderFiles);
 });
+
+async function fetchRank() {
+    const rankRes = await api.get('student_rankings', { student_id: user.id }, '*', { single: true });
+    if (!rankRes.success || !rankRes.data) return;
+
+    const r = rankRes.data;
+    if (!r.tests_taken || r.avg_percentage === null) return;
+
+    // Count ranked students in the same grade for "X out of Y"
+    const allRes = await api.get('student_rankings', { grade: r.grade });
+    const total = allRes.success ? allRes.data.filter(s => s.tests_taken > 0).length : null;
+
+    const rankEl = document.getElementById('statRank');
+    const labelEl = document.getElementById('statRankLabel');
+    const wrapEl = document.getElementById('statRankWrap');
+
+    if (rankEl && labelEl && wrapEl) {
+        rankEl.textContent = `#${r.rank}`;
+        labelEl.textContent = total ? `of ${total} students` : 'Global Rank';
+        wrapEl.style.display = '';
+        document.getElementById('studentPerfCard').classList.add('perf-card--visible');
+    }
+}
 
 async function fetchData() {
     // Fetch Files filtered by Grade

@@ -2517,3 +2517,80 @@ tr.editing-row {
         gap: 1rem;
     }
 }
+
+/* ============================================================
+   DOUBT ANSWER & TEST OUTPUT — MARKDOWN CONTENT
+   ============================================================ */
+#doubtAnswer h1,
+#doubtAnswer h2,
+#doubtAnswer h3,
+#doubtAnswer h4,
+#testOutput h1,
+#testOutput h2,
+#testOutput h3,
+#testOutput h4 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+#doubtAnswer p,
+#testOutput p {
+    margin-bottom: 0.75rem;
+}
+
+#doubtAnswer ul,
+#doubtAnswer ol,
+#testOutput ul,
+#testOutput ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+#doubtAnswer li,
+#testOutput li {
+    margin-bottom: 0.25rem;
+}
+
+#doubtAnswer table,
+#testOutput table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+}
+
+#doubtAnswer th,
+#doubtAnswer td,
+#testOutput th,
+#testOutput td {
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+#doubtAnswer th,
+#testOutput th {
+    background: rgba(115, 147, 179, 0.1);
+    font-weight: 600;
+}
+
+#doubtAnswer code,
+#testOutput code {
+    background: rgba(115, 147, 179, 0.1);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.88rem;
+}
+
+#doubtAnswer strong,
+#testOutput strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+#testOutput hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 1rem 0;
+}

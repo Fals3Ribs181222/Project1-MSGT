@@ -32,27 +32,52 @@ Text split into overlapping chunks (~400 words, 50-word overlap)
 Each chunk embedded via Voyage AI (voyage-3-lite → 512 dimensions)
         ↓
 Chunks + embeddings stored in material_chunks table (pgvector)
+        ↓
+doubt_cache entries for this file_id are deleted (cache invalidation)
 ```
 
-### Pipeline 2 — Querying (runs on doubt/test request)
+### Pipeline 2 — Querying (runs on doubt request)
 
 ```
-User submits question or topic + config
+User submits question + optional conversation history
         ↓
 rag-query Edge Function
         ↓
+Check doubt_cache (keyed by question hash + subject + grade)
+  ↓ cache hit → stream cached answer immediately
+  ↓ cache miss ↓
 Query embedded via Voyage AI
         ↓
 pgvector similarity search on material_chunks
-(filtered by subject + grade, or by specific file_id)
+(filtered by subject + grade, similarity ≥ 0.3, or by specific file_id)
         ↓
-Top 5–15 most relevant chunks retrieved
-        ↓
+Top 5 chunks above threshold retrieved with source file names
+        ↓ no chunks above threshold → "ask your teacher" response
 Chunks + ISC-specific system prompt injected into Claude
         ↓
-Claude (claude-sonnet-4-5) generates answer or test paper
+Claude (claude-sonnet-4-6) streams answer via SSE
         ↓
-Response returned to UI
+Sources (file titles) and follow-up suggestions returned at stream end
+        ↓
+Result stored in doubt_cache (7-day TTL)
+```
+
+### Pipeline 3 — Test generation (runs on test request)
+
+```
+Teacher configures test (class, subject, topic, marks, sections, cog_focus)
+        ↓
+rag-query Edge Function (mode: "test")
+        ↓
+Query embedded via Voyage AI
+        ↓
+pgvector similarity search (8 chunks for specific topic, 15 for comprehensive)
+        ↓
+ISC-specific test generation prompt injected into Claude
+        ↓
+Claude generates full test paper + answer key (non-streaming)
+        ↓
+Response returned to UI for copy / download
 ```
 
 ---
@@ -72,25 +97,65 @@ Response returned to UI
 | `grade` | text | e.g. `11th`, `12th` |
 | `teacher_id` | uuid | References `profiles(id)` |
 
+### `doubt_cache` table
+
+Caches doubt answers to avoid re-embedding and re-querying identical questions.
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `question_hash` | text | MD5-style hash of the normalised question text |
+| `subject` | text | Subject filter used |
+| `grade` | text | Grade filter used |
+| `answer` | text | Cached answer text |
+| `sources` | jsonb | Array of source file objects `[{file_id, title}]` |
+| `suggestions` | jsonb | Array of suggested follow-up question strings |
+| `created_at` | timestamptz | Used for 7-day TTL expiry |
+
+**Cache key:** `question_hash + subject + grade`. A match is only used if `created_at > now() - 7 days`.
+
+**Cache invalidation:** When a file is re-indexed via `index-material`, all `doubt_cache` rows are deleted — forcing fresh answers that reflect the updated material.
+
+### `doubt_feedback` table
+
+Records teacher thumbs up / thumbs down ratings on doubt answers.
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `question` | text | The question that was asked |
+| `answer` | text | The answer that was rated |
+| `rating` | text | `"up"` or `"down"` |
+| `subject` | text | Subject context |
+| `grade` | text | Grade context |
+| `teacher_id` | uuid | References `profiles(id)` |
+| `created_at` | timestamptz | Timestamp |
+
+**RLS:** Teachers can only insert and read their own feedback rows.
+
 ### `match_chunks` SQL function
 
-Performs cosine similarity search with optional file-level filtering:
+Performs cosine similarity search with optional file-level filtering and a minimum similarity threshold:
 
 ```sql
 create or replace function match_chunks(
-  query_embedding vector(512),
-  match_subject   text,
-  match_grade     text,
-  match_count     int  default 5,
-  match_file_id   uuid default null
+  query_embedding  vector(512),
+  match_subject    text,
+  match_grade      text,
+  match_count      int              default 5,
+  match_file_id    uuid             default null,
+  match_threshold  double precision default 0.0
 )
-returns table (content text, similarity float)
+returns table (content text, similarity float, file_id uuid)
 language sql stable
 as $$
-  select content, 1 - (embedding <=> query_embedding) as similarity
+  select content,
+         1 - (embedding <=> query_embedding) as similarity,
+         file_id
   from material_chunks
   where
     embedding is not null
+    and (1 - (embedding <=> query_embedding)) >= match_threshold
     and (
       (match_file_id is not null and file_id = match_file_id)
       or
@@ -101,7 +166,10 @@ as $$
 $$;
 ```
 
-**Key behaviour:** When `match_file_id` is provided, filtering is done purely by file — subject and grade are ignored. When `match_file_id` is null, filtering is by subject + grade across all indexed files.
+**Key behaviour:**
+- `match_threshold` (default `0.0`) filters out low-relevance chunks. Doubt mode passes `0.3`.
+- Returns `file_id` alongside `content` and `similarity` so the caller can join to `files.title` for source attribution.
+- When `match_file_id` is provided, filtering is done purely by file — subject and grade are ignored.
 
 ---
 
@@ -129,6 +197,7 @@ $$;
 
 **Key behaviour:**
 - Deletes existing chunks for `file_id` before re-indexing (safe for re-uploads)
+- Deletes all `doubt_cache` rows (cache invalidation on re-index)
 - Skips chunks shorter than 20 characters
 - Runs in the background — teacher does not wait for indexing to complete
 
@@ -138,17 +207,48 @@ $$;
 
 **Trigger:** Called from `ai-tools.js` when the teacher submits a doubt question or test generation request.
 
-**Request body — Doubt mode:**
+#### Doubt mode
+
+**Request body:**
 ```json
 {
   "query": "What is the difference between equity and preference shares?",
   "subject": "Commerce",
   "grade": "12th",
-  "mode": "doubt"
+  "mode": "doubt",
+  "conversation_history": [
+    { "role": "user", "content": "What is equity?" },
+    { "role": "assistant", "content": "Equity shares represent ownership..." }
+  ]
 }
 ```
 
-**Request body — Test mode:**
+`conversation_history` is optional. When provided (last 3 exchanges), it is prepended to the Claude messages array for multi-turn context.
+
+**Response — SSE stream:**
+
+The function responds with `Content-Type: text/event-stream`. Events:
+
+| Event | Payload | When |
+|---|---|---|
+| `delta` | `{ "text": "..." }` | Each streamed token |
+| `sources` | `[{ "file_id": "uuid", "title": "Chapter 15 – CoPrA" }, ...]` | After stream completes |
+| `suggestions` | `["What is preference share?", "...", "..."]` | After stream completes |
+| `done` | `{}` | End of stream |
+| `error` | `{ "message": "..." }` | On failure |
+
+**If no chunks meet threshold (similarity < 0.3):**
+```
+event: delta
+data: {"text":"I couldn't find relevant material on this topic..."}
+
+event: done
+data: {}
+```
+
+#### Test mode
+
+**Request body:**
 ```json
 {
   "query": "Principles of Management",
@@ -177,9 +277,9 @@ $$;
 | `cog_focus` | string | `"balanced"` | Cognitive difficulty mode (see below) |
 | `file_id` | uuid | null | Restrict AI to a specific indexed file |
 
-**Response:**
+**Response (non-streaming):**
 ```json
-{ "answer": "SECTION A — 10 MARKS\n\nQ1. ..." }
+{ "answer": "# ISC COMMERCE CLASS 12\n\n## MODEL TEST PAPER\n..." }
 ```
 
 **If no material found:**
@@ -268,9 +368,40 @@ Generated answer keys follow CISCE marking scheme conventions:
 ### Chunk count by mode
 | Mode | Topic given | Chunks fetched |
 |---|---|---|
-| Doubt | Any | 5 |
+| Doubt | Any | 5 (similarity ≥ 0.3) |
 | Test | Specific topic | 8 |
 | Test | No topic (comprehensive review) | 15 |
+
+---
+
+## UI — Doubt Solver
+
+### Controls
+
+| Control | Description |
+|---|---|
+| Subject + Class | Filters material scope for the RAG search |
+| Question textarea | Free-text doubt question |
+| Ask button | Submits question, starts SSE stream |
+
+### Answer display
+
+- Answer is streamed token-by-token into the answer box
+- Rendered as **markdown** (via `marked.js` + `DOMPurify`) — headings, tables, bold, lists, code blocks all display correctly
+- Source files are shown as small tags below the answer (e.g. "Chapter 15 – CoPrA")
+- Follow-up suggestions appear as clickable pill buttons — clicking pre-fills and auto-submits the question
+
+### Feedback
+
+- Thumbs up (👍) / thumbs down (👎) buttons appear after each answer
+- Rating is saved to `doubt_feedback` table with the question + answer text for later review
+- Buttons disable after one click per answer
+
+### Conversation continuity
+
+- The last 3 Q&A exchanges are kept in memory (`conversationHistory` array in `ai-tools.js`)
+- Each new question sends the history to `rag-query`, allowing follow-up questions without restating context
+- History is cleared when the Subject or Class selector changes
 
 ---
 
@@ -287,11 +418,12 @@ The Test Generator UI uses a custom section marks picker (matching the time-pick
 | Topic / Unit | Optional — leave blank to cover all uploaded material |
 | Section A / B / C marks | Click each section to pick marks from a dropdown panel |
 | Total marks display | Auto-updates as sections are configured |
-| Cognitive Focus | Radio: Balanced / Recall-heavy / Application-heavy |
+| Cognitive Focus | Pill selector: Balanced / Recall-heavy / Application-heavy |
 
 ### Output actions
 - **Copy** — copies full test paper text to clipboard
 - **Download .txt** — saves as a `.txt` file named after the topic
+- Output is rendered as markdown (same renderer as doubt solver)
 
 ### Material dropdown behaviour
 - Populated on `init()` by querying `files` and `material_chunks` tables
@@ -315,10 +447,10 @@ The Test Generator UI uses a custom section marks picker (matching the time-pick
 
 | File | Purpose |
 |---|---|
-| `supabase/functions/index-material/index.ts` | Chunks, embeds, and stores uploaded file content |
-| `supabase/functions/rag-query/index.ts` | Semantic search + Claude prompt builder + response |
-| `js/dashboard/ai-tools.js` | Frontend logic for Doubt Solver and Test Generator |
-| `components/tabs/ai-tools.html` | UI for both AI tools |
+| `supabase/functions/index-material/index.ts` | Chunks, embeds, stores uploaded file content; invalidates doubt cache |
+| `supabase/functions/rag-query/index.ts` | Semantic search + Claude prompt builder + SSE streaming response |
+| `js/dashboard/ai-tools.js` | Frontend logic — streaming reader, markdown render, conversation state, feedback, suggestions |
+| `components/tabs/ai-tools.html` | UI for both AI tools — sources, feedback buttons, suggestions container |
 | `js/dashboard/upload.js` | Triggers indexing after successful file upload |
 
 ---
@@ -326,8 +458,8 @@ The Test Generator UI uses a custom section marks picker (matching the time-pick
 ## Deployment
 
 ```bash
-npx supabase functions deploy index-material --no-verify-jwt
-npx supabase functions deploy rag-query --no-verify-jwt
+npx supabase functions deploy index-material --no-verify-jwt --project-ref <ref>
+npx supabase functions deploy rag-query --no-verify-jwt --project-ref <ref>
 ```
 
 ```bash
@@ -454,10 +586,14 @@ These question patterns appear consistently across years. The AI generator is pr
 
 ## Important Notes
 
-- **Model:** `claude-sonnet-4-5` is used for test generation. Haiku was the original model but was replaced due to inconsistent formatting on complex structured output.
+- **Model:** `claude-sonnet-4-6` is used for both doubt solving and test generation.
+- **Streaming:** Doubt mode uses SSE (`text/event-stream`). Test mode uses a standard JSON response (non-streaming).
+- **Similarity threshold:** Doubt mode uses `match_threshold: 0.3`. Chunks scoring below this are discarded — if none pass, the user is told the topic isn't covered in the uploaded material.
+- **Caching:** Doubt answers are cached for 7 days by question hash + subject + grade. Re-uploading a file clears the cache.
+- **Markdown rendering:** Both doubt answers and test papers are rendered as markdown in the UI using `marked.js` + `DOMPurify`.
 - **File format:** Currently supports plain text (`.txt`) and text-extractable files. PDF text extraction requires additional parsing (future improvement).
 - **Embedding model:** `voyage-3-lite` → 512-dimensional vectors. Both `material_chunks` table and `match_chunks` function are configured for 512 dimensions.
-- **Re-uploads:** Uploading a new version of a file automatically re-indexes it — old chunks are deleted first.
+- **Re-uploads:** Uploading a new version of a file automatically re-indexes it — old chunks are deleted and doubt cache is invalidated.
 - **Grade must be set:** Files uploaded without a grade will not be found by similarity search when no `file_id` is specified. Always select a grade when uploading.
 - **Token limits:** `max_tokens` is set to 4000 for standard test papers and 6000 for full-material comprehensive papers.
 - **Cost:** Voyage AI free tier covers current scale. Embedding a full chapter costs a fraction of a cent.

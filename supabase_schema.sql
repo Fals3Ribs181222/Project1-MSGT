@@ -303,3 +303,141 @@ CREATE POLICY "Public batch transfers are viewable by everyone" ON batch_transfe
 DROP POLICY IF EXISTS "Teachers can manage batch transfers" ON batch_transfers;
 CREATE POLICY "Teachers can manage batch transfers" ON batch_transfers FOR ALL
 USING (public.is_teacher());
+
+-- 15. RAG: match_chunks RPC (pgvector similarity search)
+CREATE OR REPLACE FUNCTION match_chunks(
+  query_embedding vector(512),
+  match_subject   text,
+  match_grade     text,
+  match_count     int    default 5,
+  match_file_id   uuid   default null,
+  match_threshold float  default 0.0
+)
+RETURNS TABLE (content text, similarity float, file_id uuid)
+LANGUAGE sql STABLE
+AS $$
+  SELECT mc.content, 1 - (mc.embedding <=> query_embedding) AS similarity, mc.file_id
+  FROM material_chunks mc
+  WHERE mc.embedding IS NOT NULL
+    AND (1 - (mc.embedding <=> query_embedding)) >= match_threshold
+    AND (
+      (match_file_id IS NOT NULL AND mc.file_id = match_file_id)
+      OR (match_file_id IS NULL AND mc.subject = match_subject AND mc.grade = match_grade)
+    )
+  ORDER BY mc.embedding <=> query_embedding
+  LIMIT match_count;
+$$;
+
+-- 16. Doubt Cache
+CREATE TABLE IF NOT EXISTS doubt_cache (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  question_hash TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  grade TEXT NOT NULL,
+  question_text TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  sources JSONB DEFAULT '[]'::jsonb,
+  suggestions JSONB DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(question_hash, subject, grade)
+);
+
+ALTER TABLE doubt_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role full access on doubt_cache" ON doubt_cache;
+CREATE POLICY "Service role full access on doubt_cache" ON doubt_cache
+  FOR ALL USING (true);
+
+-- 17. Student Rankings View
+-- Ranks students by a Bayesian (confidence-weighted) score that blends each student's avg %
+-- with the class mean. Formula: (tests_taken × avg_pct + C × class_avg) / (tests_taken + C)
+-- where C = 3. Students with no tests taken get NULL final_score and appear last (unranked).
+CREATE OR REPLACE VIEW student_rankings AS
+WITH student_stats AS (
+  SELECT
+    p.id AS student_id,
+    p.name,
+    p.grade,
+    ROUND(
+      SUM(m.marks_obtained::numeric) / NULLIF(SUM(t.max_marks), 0) * 100,
+      2
+    ) AS avg_percentage,
+    COUNT(m.id) AS tests_taken
+  FROM profiles p
+  LEFT JOIN marks m ON m.student_id = p.id
+  LEFT JOIN tests t ON t.id = m.test_id
+  WHERE p.role = 'student'
+  GROUP BY p.id, p.name, p.grade
+),
+class_avg_cte AS (
+  -- Class average computed per grade separately
+  SELECT grade, ROUND(AVG(avg_percentage), 2) AS class_avg
+  FROM student_stats
+  WHERE tests_taken > 0
+  GROUP BY grade
+)
+SELECT
+  ss.student_id,
+  ss.name,
+  ss.grade,
+  ss.avg_percentage,
+  ss.tests_taken,
+  ca.class_avg,
+  CASE
+    WHEN ss.tests_taken > 0 THEN
+      ROUND((ss.tests_taken * ss.avg_percentage + 3 * ca.class_avg) / (ss.tests_taken + 3), 2)
+    ELSE NULL
+  END AS final_score,
+  -- Rank is partitioned per grade — Grade 11 and Grade 12 each have their own #1
+  RANK() OVER (
+    PARTITION BY ss.grade
+    ORDER BY
+      CASE
+        WHEN ss.tests_taken > 0 THEN
+          (ss.tests_taken * ss.avg_percentage + 3 * ca.class_avg) / (ss.tests_taken + 3)
+        ELSE NULL
+      END DESC NULLS LAST
+  ) AS rank
+FROM student_stats ss
+LEFT JOIN class_avg_cte ca ON ca.grade = ss.grade;
+
+-- 18. Rank History (weekly snapshots for movement tracking)
+CREATE TABLE IF NOT EXISTS rank_history (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  rank INTEGER,
+  avg_percentage NUMERIC,
+  snapshot_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(student_id, snapshot_date)
+);
+
+ALTER TABLE rank_history ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public rank history is viewable by everyone" ON rank_history;
+CREATE POLICY "Public rank history is viewable by everyone" ON rank_history FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Service role can manage rank history" ON rank_history;
+CREATE POLICY "Service role can manage rank history" ON rank_history FOR ALL USING (true);
+
+-- 19. Doubt Feedback
+CREATE TABLE IF NOT EXISTS doubt_feedback (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  subject TEXT,
+  grade TEXT,
+  rating TEXT CHECK (rating IN ('up', 'down')) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE doubt_feedback ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can insert own feedback" ON doubt_feedback;
+CREATE POLICY "Users can insert own feedback" ON doubt_feedback
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Teachers can view all feedback" ON doubt_feedback;
+CREATE POLICY "Teachers can view all feedback" ON doubt_feedback
+  FOR SELECT USING (public.is_teacher());
