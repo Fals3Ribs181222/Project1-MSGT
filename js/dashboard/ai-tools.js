@@ -1,5 +1,10 @@
 const user = window.auth.getUser();
 
+// ── Module-level state for conversation history ─────────────
+let conversationHistory = [];
+let lastQuestion = '';
+let lastAnswer = '';
+
 function attachAIToolListeners() {
 
     // ── Pill toggle ───────────────────────────────────────────
@@ -22,8 +27,7 @@ function attachAIToolListeners() {
         doubtPanel.style.display = 'none';
     });
 
-    // ── Shared RAG query helper ───────────────────────────────
-    // extraParams is used for test mode config (marks_target, sections, cog_focus)
+    // ── Shared RAG query helper (used by test mode — non-streaming) ─
     async function ragQuery(query, subject, grade, mode, extraParams = {}) {
         const { data: { session } } = await window.supabaseClient.auth.getSession();
         const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/rag-query`, {
@@ -39,6 +43,88 @@ function attachAIToolListeners() {
         return data.answer;
     }
 
+    // ── Streaming RAG query (used by doubt mode) ────────────
+    async function ragQueryStream(query, subject, grade, onChunk, onDone) {
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/rag-query`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+                query, subject, grade, mode: 'doubt',
+                conversation_history: conversationHistory.slice(-3)
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Request failed');
+        }
+
+        // Cache hit returns JSON, stream returns text/event-stream
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            const data = await res.json();
+            onChunk(data.answer);
+            onDone({ fullText: data.answer, sources: data.sources || [], suggestions: data.suggestions || [] });
+            return;
+        }
+
+        // Stream SSE
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullText = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const jsonStr = line.slice(6).trim();
+                if (!jsonStr) continue;
+
+                try {
+                    const evt = JSON.parse(jsonStr);
+                    if (evt.text) {
+                        fullText += evt.text;
+                        onChunk(evt.text);
+                    }
+                    if (evt.done) {
+                        onDone({
+                            fullText,
+                            sources: evt.sources || [],
+                            suggestions: evt.suggestions || []
+                        });
+                    }
+                    if (evt.error) {
+                        throw new Error(evt.error);
+                    }
+                } catch (e) {
+                    if (e.message && e.message !== 'Unexpected end of JSON input') throw e;
+                }
+            }
+        }
+    }
+
+    // ── Render markdown safely ──────────────────────────────
+    function renderMarkdown(text) {
+        if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+            return DOMPurify.sanitize(marked.parse(text));
+        }
+        // Fallback: plain text
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     // ── Doubt Solver ──────────────────────────────────────────
     document.getElementById('btnAskDoubt')?.addEventListener('click', async () => {
         const question = document.getElementById('doubtQuestion').value.trim();
@@ -47,6 +133,10 @@ function attachAIToolListeners() {
         const btn      = document.getElementById('btnAskDoubt');
         const answerBox = document.getElementById('doubtAnswerBox');
         const answerEl  = document.getElementById('doubtAnswer');
+        const sourcesEl = document.getElementById('doubtSources');
+        const sourcesList = document.getElementById('doubtSourcesList');
+        const suggestionsEl = document.getElementById('doubtSuggestions');
+        const suggestionBtns = document.getElementById('doubtSuggestionBtns');
 
         if (!question || !subject || !grade) {
             window.showStatus('doubtStatus', 'Please fill in subject, grade and your question.', 'error');
@@ -56,27 +146,107 @@ function attachAIToolListeners() {
         btn.disabled    = true;
         btn.textContent = 'Thinking...';
         answerBox.style.display = 'none';
+        sourcesEl.style.display = 'none';
+        suggestionsEl.style.display = 'none';
+        answerEl.innerHTML = '';
         window.showStatus('doubtStatus', '', 'success');
 
+        // Reset feedback buttons
+        const fbUp = document.getElementById('btnFeedbackUp');
+        const fbDown = document.getElementById('btnFeedbackDown');
+        if (fbUp) { fbUp.disabled = false; fbUp.style.background = ''; fbUp.style.color = ''; }
+        if (fbDown) { fbDown.disabled = false; fbDown.style.background = ''; fbDown.style.color = ''; }
+
+        let accumulated = '';
+
         try {
-            const answer = await ragQuery(question, subject, grade, 'doubt');
-            answerEl.textContent = answer;
             answerBox.style.display = 'block';
+
+            await ragQueryStream(
+                question, subject, grade,
+                // onChunk: render streamed text incrementally
+                (text) => {
+                    accumulated += text;
+                    const mainText = accumulated.split('---SUGGESTIONS---')[0];
+                    answerEl.innerHTML = renderMarkdown(mainText);
+                },
+                // onDone: show sources, suggestions, update history
+                (result) => {
+                    const mainAnswer = result.fullText.split('---SUGGESTIONS---')[0].trim();
+                    conversationHistory.push({ question, answer: mainAnswer });
+                    if (conversationHistory.length > 3) conversationHistory.shift();
+                    lastQuestion = question;
+                    lastAnswer = mainAnswer;
+
+                    // Final render
+                    answerEl.innerHTML = renderMarkdown(mainAnswer);
+
+                    // Sources
+                    if (result.sources.length > 0) {
+                        sourcesList.textContent = result.sources.map(s => s.title).join(', ');
+                        sourcesEl.style.display = 'block';
+                    }
+
+                    // Follow-up suggestions
+                    if (result.suggestions.length > 0) {
+                        suggestionBtns.innerHTML = '';
+                        result.suggestions.forEach(q => {
+                            const sBtn = document.createElement('button');
+                            sBtn.className = 'btn btn--outline btn--sm';
+                            sBtn.textContent = q;
+                            sBtn.addEventListener('click', () => {
+                                document.getElementById('doubtQuestion').value = q;
+                                document.getElementById('btnAskDoubt').click();
+                            });
+                            suggestionBtns.appendChild(sBtn);
+                        });
+                        suggestionsEl.style.display = 'block';
+                    }
+                }
+            );
         } catch (err) {
             window.showStatus('doubtStatus', err.message || 'Something went wrong.', 'error');
+            answerBox.style.display = 'none';
         } finally {
             btn.disabled    = false;
             btn.textContent = '✨ Ask AI';
         }
     });
 
+    // ── Copy doubt answer ──────────────────────────────────
     document.getElementById('btnCopyDoubt')?.addEventListener('click', () => {
-        const text = document.getElementById('doubtAnswer').textContent;
+        const text = document.getElementById('doubtAnswer').innerText;
         navigator.clipboard.writeText(text);
         const btn = document.getElementById('btnCopyDoubt');
         btn.textContent = 'Copied!';
         setTimeout(() => btn.textContent = 'Copy', 2000);
     });
+
+    // ── Feedback handlers ──────────────────────────────────
+    async function submitFeedback(rating) {
+        try {
+            await window.api.post('doubt_feedback', {
+                user_id: user?.id,
+                question: lastQuestion,
+                answer: lastAnswer,
+                subject: document.getElementById('doubtSubject').value,
+                grade: document.getElementById('doubtGrade').value,
+                rating,
+            });
+            const fbUp = document.getElementById('btnFeedbackUp');
+            const fbDown = document.getElementById('btnFeedbackDown');
+            fbUp.disabled = true;
+            fbDown.disabled = true;
+            const activeBtn = rating === 'up' ? fbUp : fbDown;
+            activeBtn.style.background = 'var(--primary)';
+            activeBtn.style.color = 'white';
+        } catch (e) {
+            console.error('Feedback error:', e);
+        }
+    }
+
+    document.getElementById('btnFeedbackUp')?.addEventListener('click', () => submitFeedback('up'));
+    document.getElementById('btnFeedbackDown')?.addEventListener('click', () => submitFeedback('down'));
 
     // ── Test Generator — Section Marks Picker (mirrors time-picker) ──
     const sectionConfig = {
@@ -168,11 +338,20 @@ function attachAIToolListeners() {
         return { secAMarks, secBMarks, secCMarks, sections, marksTarget };
     }
 
+    // ── Cognitive Focus pill toggle ───────────────────────────
+    document.querySelectorAll('[data-cog]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-cog]').forEach(b => b.classList.remove('pill-toggle__btn--active'));
+            btn.classList.add('pill-toggle__btn--active');
+            document.getElementById('cogFocusValue').value = btn.dataset.cog;
+        });
+    });
+
     document.getElementById('btnGenerateTest')?.addEventListener('click', async () => {
         const topic    = document.getElementById('testTopic').value.trim();
         const subject  = document.getElementById('testSubject').value;
         const grade    = document.getElementById('testGrade').value;
-        const cogFocus = document.querySelector('input[name="cogFocus"]:checked')?.value ?? 'balanced';
+        const cogFocus = document.getElementById('cogFocusValue')?.value ?? 'balanced';
         const fileId   = document.getElementById('testMaterial')?.value || undefined;
         const { secAMarks, secBMarks, secCMarks, sections, marksTarget } = getSectionValues();
 
@@ -205,7 +384,7 @@ function attachAIToolListeners() {
                 cog_focus:    cogFocus,
                 ...(fileId ? { file_id: fileId } : {}),
             });
-            outputEl.textContent    = result;
+            outputEl.innerHTML      = renderMarkdown(result);
             outputBox.style.display = 'block';
             window.showStatus('testStatus', '', 'success');
         } catch (err) {
@@ -221,7 +400,7 @@ function attachAIToolListeners() {
     document.getElementById('testSubject')?.addEventListener('change', () => filterMaterialDropdown());
 
     document.getElementById('btnCopyTest')?.addEventListener('click', () => {
-        const text = document.getElementById('testOutput').textContent;
+        const text = document.getElementById('testOutput').innerText;
         navigator.clipboard.writeText(text);
         const btn = document.getElementById('btnCopyTest');
         btn.textContent = 'Copied!';
@@ -229,7 +408,7 @@ function attachAIToolListeners() {
     });
 
     document.getElementById('btnDownloadTest')?.addEventListener('click', () => {
-        const text  = document.getElementById('testOutput').textContent;
+        const text  = document.getElementById('testOutput').innerText;
         const topic = document.getElementById('testTopic').value.trim() || 'test-paper';
         const filename = topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.txt';
         const blob = new Blob([text], { type: 'text/plain' });

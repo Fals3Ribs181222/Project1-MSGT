@@ -1,8 +1,11 @@
 <!-- AI Tools Tab -->
-<div class="pill-toggle" style="margin-bottom: 2rem;">
-    <button class="pill-toggle__btn pill-toggle__btn--active" id="pillDoubtSolver">🤔 Doubt Solver</button>
-    <button class="pill-toggle__btn" id="pillTestGenerator">📝 Test Generator</button>
-</div>
+<header class="panel__header" style="margin-bottom: 2rem;">
+    <h2>AI Tools</h2>
+    <div class="pill-toggle">
+        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillDoubtSolver">🤔 Doubt Solver</button>
+        <button class="pill-toggle__btn" id="pillTestGenerator">📝 Test Generator</button>
+    </div>
+</header>
 
 <!-- ── Doubt Solver ─────────────────────────────────────────── -->
 <div id="doubtSolverPanel">
@@ -43,7 +46,15 @@
     <div id="doubtAnswerBox" style="display:none; margin-top: 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h4 style="color: var(--primary); margin: 0;">AI Answer</h4>
-            <button class="btn btn--outline btn--sm" id="btnCopyDoubt">Copy</button>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button class="btn btn--outline btn--sm" id="btnCopyDoubt">Copy</button>
+                <button class="btn btn--outline btn--sm" id="btnFeedbackUp" title="Helpful" style="padding: 0.4rem 0.6rem; font-size: 1rem;">👍</button>
+                <button class="btn btn--outline btn--sm" id="btnFeedbackDown" title="Not helpful" style="padding: 0.4rem 0.6rem; font-size: 1rem;">👎</button>
+            </div>
+        </div>
+        <div id="doubtSources" style="display:none; margin-bottom: 0.75rem;">
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Sources: </span>
+            <span id="doubtSourcesList" style="font-size: 0.8rem; color: var(--primary); font-weight: 500;"></span>
         </div>
         <div id="doubtAnswer" style="
             background: var(--glass-bg);
@@ -53,8 +64,12 @@
             color: var(--text-main);
             font-size: 0.95rem;
             line-height: 1.7;
-            white-space: pre-wrap;
         "></div>
+    </div>
+
+    <div id="doubtSuggestions" style="display:none; margin-top: 1rem;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Related questions:</p>
+        <div id="doubtSuggestionBtns" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
     </div>
 </div>
 
@@ -145,20 +160,12 @@
     <!-- Row 3: Cognitive Focus -->
     <div class="form__group" style="margin-bottom: 1.5rem;">
         <label class="form__label">Cognitive Focus</label>
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.4rem;">
-            <label class="cog-option" style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
-                <input type="radio" name="cogFocus" value="balanced" checked>
-                <span>Balanced <span style="color: var(--text-muted); font-size: 0.8rem;">(mixed levels)</span></span>
-            </label>
-            <label class="cog-option" style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
-                <input type="radio" name="cogFocus" value="recall">
-                <span>Recall-heavy <span style="color: var(--text-muted); font-size: 0.8rem;">(define / state / name)</span></span>
-            </label>
-            <label class="cog-option" style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
-                <input type="radio" name="cogFocus" value="application">
-                <span>Application-heavy <span style="color: var(--text-muted); font-size: 0.8rem;">(case-based / identify)</span></span>
-            </label>
+        <div class="pill-toggle" style="margin-top: 0.4rem; width: 100%; display: flex;">
+            <button type="button" class="pill-toggle__btn pill-toggle__btn--active" data-cog="balanced" style="flex: 1; text-align: center;">Balanced</button>
+            <button type="button" class="pill-toggle__btn" data-cog="recall" style="flex: 1; text-align: center;">Recall-heavy</button>
+            <button type="button" class="pill-toggle__btn" data-cog="application" style="flex: 1; text-align: center;">Application</button>
         </div>
+        <input type="hidden" name="cogFocus" id="cogFocusValue" value="balanced">
     </div>
 
     <button class="btn btn--primary" id="btnGenerateTest">✨ Generate Test Paper</button>
@@ -180,8 +187,6 @@
             color: var(--text-main);
             font-size: 0.95rem;
             line-height: 1.8;
-            white-space: pre-wrap;
-            font-family: var(--font-mono, monospace);
         "></div>
     </div>
 </div>

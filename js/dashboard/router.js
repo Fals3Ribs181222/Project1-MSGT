@@ -5,6 +5,10 @@ export async function loadTab(targetId) {
     const allPanels = panelsContainer.querySelectorAll('.tabs__panel');
     allPanels.forEach(p => p.classList.remove('tabs__panel--active'));
 
+    // Update URL hash to reflect active tab
+    const featureSlug = targetId.replace('panel-', '');
+    history.replaceState(null, '', featureSlug === 'home' ? location.pathname : `#${featureSlug}`);
+
     // Check if the panel already exists in the DOM
     let targetPanel = document.getElementById(targetId);
 
@@ -73,6 +77,12 @@ export async function loadTab(targetId) {
 
 // Set up global event listeners for navigation pills and back buttons
 document.addEventListener('DOMContentLoaded', () => {
+    // Restore tab from URL hash on page load
+    const initialTab = location.hash.slice(1);
+    if (initialTab) {
+        loadTab(`panel-${initialTab}`);
+    }
+
     // Listen for clicks on landing pills
     document.addEventListener('click', (e) => {
         const pill = e.target.closest('.landing-pill');

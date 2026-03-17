@@ -100,6 +100,9 @@ Deno.serve(async (req) => {
         const { error } = await supabase.from("material_chunks").insert(rows);
         if (error) throw new Error(`Supabase insert error: ${error.message}`);
 
+        // Invalidate doubt cache for this subject+grade (material changed)
+        await supabase.from("doubt_cache").delete().eq("subject", subject).eq("grade", grade);
+
         return new Response(
             JSON.stringify({ success: true, chunks_indexed: chunks.length }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
