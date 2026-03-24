@@ -71,6 +71,27 @@
             font-weight: 600;
             color: #444;
         }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            color: #2d3748;
+            cursor: pointer;
+        }
+
+        .controls button {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 
@@ -83,7 +104,13 @@
         Open your teacher dashboard first, then come back to this file.
     </p>
 
-    <button id="btnRun" onclick="runSeed()">Create 15 Students</button>
+    <div class="controls">
+        <select id="gradeSelect">
+            <option value="12th" selected>Grade 12th</option>
+            <option value="11th">Grade 11th</option>
+        </select>
+        <button id="btnRun" onclick="runSeed()">Create 15 Students</button>
+    </div>
     <div id="progress"></div>
     <div class="log" id="log">Waiting to start...</div>
 
@@ -96,22 +123,23 @@
         const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ── Trial Students Data ───────────────────────────────────────────────────────
-        const STUDENTS = [
-            { name: 'Aarav Mehta', username: 'aarav.mehta', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Priya Sharma', username: 'priya.sharma', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Rohan Patel', username: 'rohan.patel', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Sneha Joshi', username: 'sneha.joshi', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Kiran Desai', username: 'kiran.desai', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Ananya Verma', username: 'ananya.verma', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Dev Malhotra', username: 'dev.malhotra', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Riya Shah', username: 'riya.shah', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Arjun Nair', username: 'arjun.nair', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Pooja Gupta', username: 'pooja.gupta', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Vivek Iyer', username: 'vivek.iyer', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Meera Pillai', username: 'meera.pillai', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Sahil Kapoor', username: 'sahil.kapoor', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Nisha Reddy', username: 'nisha.reddy', grade: '12th', subjects: 'Accounts, Commerce' },
-            { name: 'Yash Bhatt', username: 'yash.bhatt', grade: '12th', subjects: 'Accounts, Commerce' },
+        // Base names — grade and username suffix are applied at runtime from the selector
+        const STUDENT_NAMES = [
+            { name: 'Aarav Mehta',   base: 'aarav.mehta' },
+            { name: 'Priya Sharma',  base: 'priya.sharma' },
+            { name: 'Rohan Patel',   base: 'rohan.patel' },
+            { name: 'Sneha Joshi',   base: 'sneha.joshi' },
+            { name: 'Kiran Desai',   base: 'kiran.desai' },
+            { name: 'Ananya Verma',  base: 'ananya.verma' },
+            { name: 'Dev Malhotra',  base: 'dev.malhotra' },
+            { name: 'Riya Shah',     base: 'riya.shah' },
+            { name: 'Arjun Nair',    base: 'arjun.nair' },
+            { name: 'Pooja Gupta',   base: 'pooja.gupta' },
+            { name: 'Vivek Iyer',    base: 'vivek.iyer' },
+            { name: 'Meera Pillai',  base: 'meera.pillai' },
+            { name: 'Sahil Kapoor',  base: 'sahil.kapoor' },
+            { name: 'Nisha Reddy',   base: 'nisha.reddy' },
+            { name: 'Yash Bhatt',    base: 'yash.bhatt' },
         ];
 
         // All trial accounts use this password — change it if you like
@@ -138,6 +166,17 @@
             btn.disabled = true;
             document.getElementById('log').innerHTML = '';
 
+            const selectedGrade = document.getElementById('gradeSelect').value;
+            const gradeSuffix = selectedGrade.replace('th', ''); // '12th' → '12'
+
+            // Build students list for the selected grade
+            const STUDENTS = STUDENT_NAMES.map(s => ({
+                name: s.name,
+                username: `${s.base}.${gradeSuffix}`,
+                grade: selectedGrade,
+                subjects: 'Accounts, Commerce',
+            }));
+
             // 1. Check the teacher is logged in
             const { data: sessionData } = await client.auth.getSession();
             const teacherSession = sessionData?.session;
@@ -148,15 +187,16 @@
                 return;
             }
 
-            log(`Logged in as teacher. Starting seed...`, 'info');
+            log(`Logged in as teacher. Seeding grade ${selectedGrade}...`, 'info');
 
-            // 2. Fetch and Delete Existing Students
-            log('Fetching existing students to remove...', 'info');
+            // 2. Fetch and Delete Existing Students for this grade only
+            log(`Fetching existing ${selectedGrade} students to remove...`, 'info');
             try {
                 const { data: existingStudents, error: fetchError } = await client
                     .from('profiles')
                     .select('id, username')
-                    .eq('role', 'student');
+                    .eq('role', 'student')
+                    .eq('grade', selectedGrade);
 
                 if (fetchError) {
                     log(`✗ Error fetching existing students: ${fetchError.message}`, 'err');
@@ -218,6 +258,8 @@
                                 grade: s.grade,
                                 subjects: s.subjects,
                                 role: 'student',
+                                phone: '9769767219',
+                                parent_phone: '9769767219',
                             }
                         }
                     });
@@ -249,6 +291,8 @@
                             grade: s.grade,
                             subjects: s.subjects,
                             role: 'student',
+                            phone: '9769767219',
+                            parent_phone: '9769767219',
                         });
                     }
 

@@ -54,14 +54,14 @@ The teacher dashboard is a tab-based SPA. Hash routing keeps the URL in sync wit
 
 Implemented in [js/dashboard/router.js](../js/dashboard/router.js).
 
-**On tab switch** — `loadTab()` calls `history.replaceState` to update the hash:
+**On tab switch** — `loadTab()` calls `history.replaceState` to always update the hash, including for the home panel:
 
 ```js
-history.replaceState(null, '', featureSlug === 'home' ? location.pathname : `#${featureSlug}`);
+history.replaceState(null, '', `#${featureSlug}`);
 ```
 
 - Navigating to **Students** → URL becomes `teacher_dashboard#students`
-- Navigating back to **Home** → hash is removed, URL returns to `teacher_dashboard`
+- Navigating to **Home** → URL becomes `teacher_dashboard#home`
 
 **On page load** — the `DOMContentLoaded` listener reads the hash and loads the matching tab:
 
@@ -76,7 +76,7 @@ if (initialTab) {
 
 | Active tab | URL |
 |------------|-----|
-| Home (overview) | `/teacher_dashboard` |
+| Home (overview) | `/teacher_dashboard#home` |
 | Students | `/teacher_dashboard#students` |
 | Attendance | `/teacher_dashboard#attendance` |
 | AI Tools | `/teacher_dashboard#ai-tools` |

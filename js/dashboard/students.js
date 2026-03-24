@@ -28,7 +28,12 @@ export async function loadStudents() {
     btnRefresh.textContent = 'Refresh List';
 
     if (response.success) {
-        allStudents = response.data || [];
+        let students = response.data || [];
+        const teacherGrade = window.auth.getUser()?.grade;
+        if (teacherGrade && teacherGrade !== 'All Grades') {
+            students = students.filter(s => s.grade === teacherGrade);
+        }
+        allStudents = students;
         filterStudents();
     } else {
         tbody.innerHTML = '';
@@ -531,6 +536,9 @@ function attachAddStudentListeners() {
     const form = document.getElementById('addStudentForm');
     if (!form) return;
 
+    window.populateGradeSelect('studentGrade', false);
+    window.lockGradeSelect('studentGrade');
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -597,7 +605,7 @@ function attachAddStudentListeners() {
                     The student can now log in.`;
                 status.className = 'status status--info';
                 status.style.display = 'block';
-                form.reset();
+                window.safeFormReset(form);
                 loadStudents();
             }
         } catch (err) {
@@ -624,9 +632,17 @@ export function init() {
     const studentSearchInput = document.getElementById('studentSearchInput');
     const studentGradeFilter = document.getElementById('studentGradeFilter');
     const studentSubjectFilter = document.getElementById('studentSubjectFilter');
+
+    window.populateGradeSelect('studentGradeFilter');
+
     if (studentSearchInput) studentSearchInput.addEventListener('input', filterStudents);
     if (studentGradeFilter) studentGradeFilter.addEventListener('change', filterStudents);
     if (studentSubjectFilter) studentSubjectFilter.addEventListener('change', filterStudents);
+
+    const teacherGrade = window.auth.getUser()?.grade;
+    if (teacherGrade && teacherGrade !== 'All Grades' && studentGradeFilter) {
+        studentGradeFilter.style.display = 'none';
+    }
 
     const pillView = document.getElementById('pillViewStudents');
     const pillAdd = document.getElementById('pillAddStudent');

@@ -1,17 +1,21 @@
+<header class="panel__header">
+    <h2>Students</h2>
+    <div class="pill-toggle">
+        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewStudents">View Students</button>
+        <button class="pill-toggle__btn" id="pillAddStudent">+ Add Student</button>
+    </div>
+</header>
+
 <!-- ══════════════════════════════════════════════════════════
      STUDENT LIST CONTAINER
 ══════════════════════════════════════════════════════════ -->
 <div id="studentsListContainer">
     <div id="studentsListStatus" class="status"></div>
 
-    <div class="students-toolbar">
+    <div class="students-toolbar" style="background:none;border:none;border-radius:0;padding:0;margin-bottom:1rem;">
         <input type="text" class="students-toolbar__search" id="studentSearchInput"
             placeholder="🔍 Search by name or username...">
-        <select class="students-toolbar__filter" id="studentGradeFilter">
-            <option value="">All Grades</option>
-            <option value="11th">11th</option>
-            <option value="12th">12th</option>
-        </select>
+        <select class="students-toolbar__filter" id="studentGradeFilter"></select>
         <select class="students-toolbar__filter" id="studentSubjectFilter">
             <option value="">All Subjects</option>
             <option value="Accounts">Accounts</option>
@@ -65,7 +69,7 @@
     <div class="panel__header">
         <h2>Profile Information</h2>
     </div>
-    <div class="profile-card" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.5rem;background:var(--surface-bg);padding:1.5rem;border-radius:var(--radius-lg);border:1px solid var(--border-light);margin-bottom:2rem;">
+    <div class="profile-card student-profile-grid">
         <div>
             <p class="stat-card__label" style="margin-bottom:0.25rem;">Name</p>
             <p class="stat-card__value" id="studentDetailName" style="font-size:1.25rem;">-</p>
@@ -145,7 +149,7 @@
     </div>
 
     <!-- ── Attendance Calendar + Batches (two-column) ───────── -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem;">
+    <div class="student-detail__twocol">
 
         <!-- Attendance Calendar -->
         <div>

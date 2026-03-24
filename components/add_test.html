@@ -5,24 +5,20 @@
     </div>
 
     <div class="form__group">
-        <label class="form__label" for="testGrade">Grade</label>
-        <select id="testGrade" class="form__control" required>
-            <option value="">-- Select Grade --</option>
-            <option value="11th">11th</option>
-            <option value="12th">12th</option>
-        </select>
+        <label class="form__label" for="schedTestGrade">Grade</label>
+        <select id="schedTestGrade" class="form__control" required></select>
     </div>
 
     <div class="form__group">
         <label class="form__label">Subjects</label>
-        <div class="form__checkbox-group">
-            <label class="form__checkbox-label">
-                <input type="checkbox" name="testSubjects" value="Accounts" class="form__checkbox">
-                Accounts
+        <div class="subject-pills">
+            <label class="subject-pill">
+                <input type="checkbox" name="testSubjects" value="Accounts">
+                <span class="subject-pill__label">Accounts</span>
             </label>
-            <label class="form__checkbox-label">
-                <input type="checkbox" name="testSubjects" value="Commerce" class="form__checkbox">
-                Commerce
+            <label class="subject-pill">
+                <input type="checkbox" name="testSubjects" value="Commerce">
+                <span class="subject-pill__label">Commerce</span>
             </label>
         </div>
     </div>

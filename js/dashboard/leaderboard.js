@@ -3,8 +3,10 @@ async function loadRankings() {
     if (btnRefresh) { btnRefresh.disabled = true; btnRefresh.textContent = 'Refreshing...'; }
 
     document.getElementById('leaderboardStatus').className = 'status';
-    window.tableLoading('leaderboardBody11', 5, 'Loading...');
-    window.tableLoading('leaderboardBody12', 5, 'Loading...');
+    window.tableLoading('lb11A', 5, 'Loading...');
+    window.tableLoading('lb11C', 5, 'Loading...');
+    window.tableLoading('lb12A', 5, 'Loading...');
+    window.tableLoading('lb12C', 5, 'Loading...');
 
     const res = await window.api.get('student_rankings', {}, '*', { order: 'rank', ascending: true });
 
@@ -16,18 +18,22 @@ async function loadRankings() {
     }
 
     const all = res.data || [];
-    const byGrade = {};
+    const byKey = {};
     all.forEach(r => {
-        const g = r.grade || 'Unknown';
-        if (!byGrade[g]) byGrade[g] = [];
-        byGrade[g].push(r);
+        const key = `${r.grade}||${r.subject}`;
+        if (!byKey[key]) byKey[key] = [];
+        byKey[key].push(r);
     });
 
-    renderGrade('11th', byGrade['11th'] || [], 'leaderboardBody11', 'classAvg11');
-    renderGrade('12th', byGrade['12th'] || [], 'leaderboardBody12', 'classAvg12');
+    const get = (grade, subject) => byKey[`${grade}||${subject}`] || [];
+
+    renderTable(get(_Grade11, _Subject_Accounts), 'lb11A', 'avg11A');
+    renderTable(get(_Grade11, _Subject_Commerce), 'lb11C', 'avg11C');
+    renderTable(get(_Grade12, _Subject_Accounts), 'lb12A', 'avg12A');
+    renderTable(get(_Grade12, _Subject_Commerce), 'lb12C', 'avg12C');
 }
 
-function renderGrade(grade, rows, tbodyId, avgId) {
+function renderTable(rows, tbodyId, avgId) {
     const tbody = document.getElementById(tbodyId);
     const avgEl = document.getElementById(avgId);
 
@@ -68,7 +74,22 @@ function renderGrade(grade, rows, tbodyId, avgId) {
     }).join('');
 }
 
+function applyGradeVisibility() {
+    const teacherGrade = window.auth.getUser()?.grade;
+    if (!teacherGrade || teacherGrade === 'All Grades') return;
+
+    const col11 = document.getElementById('leaderboardCol11');
+    const col12 = document.getElementById('leaderboardCol12');
+    const grid = document.getElementById('leaderboardColumns');
+
+    if (teacherGrade === _Grade11 && col12) col12.style.display = 'none';
+    if (teacherGrade === _Grade12 && col11) col11.style.display = 'none';
+
+    if (grid) grid.classList.add('leaderboard-grid--single');
+}
+
 export function init() {
+    applyGradeVisibility();
     loadRankings();
     document.getElementById('btnRefreshLeaderboard')?.addEventListener('click', loadRankings);
 }

@@ -34,7 +34,7 @@ async function loadTodaysClasses() {
 
     grid.innerHTML = todaysClasses.map(c => `
         <button class="landing-pill" data-class-id="${c.id}" data-batch-id="${c.batch_id}" data-title="${c.title.replace(/'/g, "\\'")}" data-batch-name="${c.batches ? c.batches.name.replace(/'/g, "\\'") : 'Unknown Batch'}" data-time="${c.start_time.substring(0, 5)}">
-            <span class="landing-pill__icon" style="background: rgba(115,147,179,0.15); font-size: 0.75rem; font-weight: 600; color: var(--primary); width: auto; height: auto; padding: 0.3rem 0.75rem; border-radius: var(--radius-full); letter-spacing: 0.05em; text-transform: uppercase;">${c.type === 'extra' ? 'Extra' : 'Regular'}</span>
+            <span class="landing-pill__icon" style="${c.type === 'extra' ? 'background: rgba(255,191,0,0.15); color: var(--amber);' : 'background: rgba(115,147,179,0.15); color: var(--primary);'} font-size: 0.75rem; font-weight: 600; width: auto; height: auto; padding: 0.3rem 0.75rem; border-radius: var(--radius-full); letter-spacing: 0.05em; text-transform: uppercase;">${c.type === 'extra' ? 'Extra' : 'Regular'}</span>
             <span class="landing-pill__text">
                 ${c.title}
                 <span style="display:block; font-size: 0.85rem; font-weight: 400; color: var(--text-muted); margin-top: 0.15rem;">${c.batches ? c.batches.name : 'Unknown Batch'} &bull; ${c.start_time.substring(0, 5)}</span>
@@ -52,6 +52,7 @@ async function loadTodaysClasses() {
     });
 }
 
+window.openAttendanceGrid = openAttendanceGrid;
 async function openAttendanceGrid(classId, batchId, title, batchName, time) {
     currentAttendanceClass = classId;
     currentAttendanceBatch = batchId;
@@ -128,11 +129,9 @@ async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
     if (!res.success || !res.data) return;
 
     const todaysGuests = res.data.filter(t => {
-        if (t.transfer_date > dateStr) return false;
-        if (t.end_date && t.end_date < dateStr) return false;
-        if (!t.end_date && t.transfer_date !== dateStr) return false;
-        if (t.reason === `classId:${classId}`) return true;
-        if (t.reason && t.reason.startsWith('classId:') && t.reason !== `classId:${classId}`) return false;
+        if (t.transfer_date !== dateStr) return false;
+        if (!t.end_date || t.end_date !== dateStr) return false;
+        if (t.reason !== `classId:${classId}`) return false;
         return true;
     });
 

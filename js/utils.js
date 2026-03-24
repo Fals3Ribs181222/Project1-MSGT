@@ -1,5 +1,55 @@
 // Shared UI and Formatting Utilities
 
+// ── Grade Constants ───────────────────────────────────────────────────────
+window._Grade11 = '11th';
+window._Grade12 = '12th';
+
+// ── Subject Constants ─────────────────────────────────────────────────────
+window._Subject_Accounts = 'Accounts';
+window._Subject_Commerce = 'Commerce';
+
+// Populates a grade <select> with standard options derived from the constants.
+// includeAll=true adds an "All Grades" first option (for filters/announcements).
+window.populateGradeSelect = function (selectId, includeAll = true) {
+    const el = document.getElementById(selectId);
+    if (!el) return;
+    el.innerHTML = '';
+    if (includeAll) el.innerHTML += `<option value="">All Grades</option>`;
+    else el.innerHTML += `<option value="">-- Select Grade --</option>`;
+    el.innerHTML += `<option value="${window._Grade11}">${window._Grade11}</option>`;
+    el.innerHTML += `<option value="${window._Grade12}">${window._Grade12}</option>`;
+};
+
+// Replaces a grade <select> with a green pill badge for grade-restricted teachers.
+// Pass one or more element IDs. Safe to call multiple times (guarded by data attr).
+window.lockGradeSelect = function (...elementIds) {
+    const teacherGrade = window.auth.getUser()?.grade;
+    if (!teacherGrade || teacherGrade === 'All Grades') return;
+    elementIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.gradeLocked) return;
+        el.value = teacherGrade;
+        el.style.display = 'none';
+        el.dataset.gradeLocked = '1';
+        const pill = document.createElement('span');
+        pill.className = 'badge badge--green';
+        pill.textContent = teacherGrade;
+        el.parentElement.appendChild(pill);
+    });
+};
+
+// Resets a form and restores any grade-locked selects to the teacher's grade.
+// Use this instead of form.reset() to avoid breaking locked grade selects.
+window.safeFormReset = function (form) {
+    if (!form) return;
+    form.reset();
+    const teacherGrade = window.auth.getUser()?.grade;
+    if (!teacherGrade || teacherGrade === 'All Grades') return;
+    form.querySelectorAll('select[data-grade-locked]').forEach(el => {
+        el.value = teacherGrade;
+    });
+};
+
 /**
  * Formats a 24-hour time string (e.g., "14:30") into a 12-hour format with AM/PM
  * @param {string} timeStr - The time string in HH:MM format
@@ -52,3 +102,14 @@ function showConfirmModal(title, message, onConfirm) {
 // Expose utilities globally
 window.formatTime = formatTime;
 window.showConfirmModal = showConfirmModal;
+
+// ── Navbar mobile toggle ───────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.querySelector('.navbar__toggle');
+    if (!toggle) return;
+    const nav = document.querySelector('.navbar');
+    toggle.addEventListener('click', function () {
+        const open = nav.classList.toggle('navbar--open');
+        this.setAttribute('aria-expanded', open);
+    });
+});
