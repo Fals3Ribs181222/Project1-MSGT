@@ -30,7 +30,6 @@ async function loadBoardResults() {
                     </td>
                 </tr>
             `).join('');
-            window.tableLoading('boardResultsTableBody', 6, 'No board results added yet.');
         }
     } else {
         document.getElementById('boardResultsTableBody').innerHTML = '';

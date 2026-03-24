@@ -305,7 +305,7 @@ document.getElementById('btnSendScores')?.addEventListener('click', async () => 
         }
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="ri-whatsapp-line"></i> Send Scores via WhatsApp';
+        btn.innerHTML = '📱 Send Scores via WhatsApp';
     }
 });
 

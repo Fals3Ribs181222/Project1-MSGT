@@ -12,10 +12,15 @@ async function loadMaterials() {
     btnRefresh.textContent = 'Refreshing...';
     window.tableLoading('materialsTableBody', 6, 'Loading materials...');
 
-    const response = await window.api.get('files');
+    const [response, profilesRes] = await Promise.all([
+        window.api.get('files'),
+        window.api.get('profiles', {}, 'id, name')
+    ]);
 
     btnRefresh.disabled = false;
     btnRefresh.textContent = 'Refresh List';
+
+    const nameMap = Object.fromEntries((profilesRes.data || []).map(p => [p.id, p.name]));
 
     const teacherGrade = user.grade;
     let files = response.data || [];
@@ -30,7 +35,7 @@ async function loadMaterials() {
             <td class="data-table__td">${file.subject || '-'}</td>
             <td class="data-table__td">${file.grade || 'All'}</td>
             <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
-            <td class="data-table__td">${window.esc(file.uploaded_by) || '-'}</td>
+            <td class="data-table__td">${window.esc(nameMap[file.uploaded_by]) || '-'}</td>
             <td class="data-table__td"><a href="${window.safeUrl(file.file_url)}" target="_blank" class="navbar__link">View</a></td>
         </tr>
     `).join('');
@@ -116,7 +121,6 @@ function attachUploadListeners() {
                         })
                     }).then(res => res.json()).then(result => {
                         if (result.success) {
-                            console.log(`✅ Indexed ${result.chunks_indexed} chunks for "${payload.title}"`);
                             window.showStatus('uploadStatus', `✅ Uploaded & indexed ${result.chunks_indexed} chunks for AI!`, 'success');
                         } else {
                             console.warn('⚠️ Indexing failed:', result.error);

@@ -20,7 +20,7 @@ A standalone admin page accessible at `/manage_teachers`. Teacher-only (redirect
 | File | Purpose |
 |---|---|
 | `manage_teachers.html` | Standalone page — full UI + inline script |
-| `js/dashboard/teachers.js` | Module version (available for future tab use) |
+| `js/dashboard/teachers.js` | Dashboard tab module — fully implemented, paired with `components/tabs/teachers.html` |
 
 ---
 

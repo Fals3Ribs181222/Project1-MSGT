@@ -27,10 +27,10 @@ async function loadRankings() {
 
     const get = (grade, subject) => byKey[`${grade}||${subject}`] || [];
 
-    renderTable(get(_Grade11, _Subject_Accounts), 'lb11A', 'avg11A');
-    renderTable(get(_Grade11, _Subject_Commerce), 'lb11C', 'avg11C');
-    renderTable(get(_Grade12, _Subject_Accounts), 'lb12A', 'avg12A');
-    renderTable(get(_Grade12, _Subject_Commerce), 'lb12C', 'avg12C');
+    renderTable(get(window._Grade11, window._Subject_Accounts), 'lb11A', 'avg11A');
+    renderTable(get(window._Grade11, window._Subject_Commerce), 'lb11C', 'avg11C');
+    renderTable(get(window._Grade12, window._Subject_Accounts), 'lb12A', 'avg12A');
+    renderTable(get(window._Grade12, window._Subject_Commerce), 'lb12C', 'avg12C');
 }
 
 function renderTable(rows, tbodyId, avgId) {
@@ -82,8 +82,8 @@ function applyGradeVisibility() {
     const col12 = document.getElementById('leaderboardCol12');
     const grid = document.getElementById('leaderboardColumns');
 
-    if (teacherGrade === _Grade11 && col12) col12.style.display = 'none';
-    if (teacherGrade === _Grade12 && col11) col11.style.display = 'none';
+    if (teacherGrade === window._Grade11 && col12) col12.style.display = 'none';
+    if (teacherGrade === window._Grade12 && col11) col11.style.display = 'none';
 
     if (grid) grid.classList.add('leaderboard-grid--single');
 }

@@ -48,10 +48,9 @@ Check doubt_cache (keyed by question hash + subject + grade)
   ↓ cache miss ↓
 Query embedded via Voyage AI
         ↓
-pgvector similarity search on material_chunks
-(filtered by subject + grade, similarity ≥ 0.3, or by specific file_id)
-        ↓
-Top 5 chunks above threshold retrieved with source file names
+Direct fetch from material_chunks table (filtered by subject + grade, or by specific file_id)
+Cosine similarity computed in TypeScript for each row
+Top 5 chunks above similarity ≥ 0.3 selected
         ↓ no chunks above threshold → "ask your teacher" response
 Chunks + ISC-specific system prompt injected into Claude
         ↓
@@ -71,7 +70,9 @@ rag-query Edge Function (mode: "test")
         ↓
 Query embedded via Voyage AI
         ↓
-pgvector similarity search (8 chunks for specific topic, 15 for comprehensive)
+Direct fetch from material_chunks table (filtered by subject + grade, or by specific file_id)
+Cosine similarity computed in TypeScript (threshold: 0 — all chunks kept)
+8 chunks for specific topic, 15 for comprehensive review, sorted by similarity
         ↓
 ISC-specific test generation prompt injected into Claude
         ↓
@@ -135,7 +136,7 @@ Records teacher thumbs up / thumbs down ratings on doubt answers.
 
 ### `match_chunks` SQL function
 
-Performs cosine similarity search with optional file-level filtering and a minimum similarity threshold:
+Performs cosine similarity search with optional file-level filtering and a minimum similarity threshold. **Not used at runtime** — the edge function bypasses this via TypeScript cosine similarity (see note below). Retained for ad-hoc SQL analysis.
 
 ```sql
 create or replace function match_chunks(
@@ -166,10 +167,8 @@ as $$
 $$;
 ```
 
-**Key behaviour:**
-- `match_threshold` (default `0.0`) filters out low-relevance chunks. Doubt mode passes `0.3`.
-- Returns `file_id` alongside `content` and `similarity` so the caller can join to `files.title` for source attribution.
-- When `match_file_id` is provided, filtering is done purely by file — subject and grade are ignored.
+> [!NOTE]
+> **Why the RPC is bypassed:** PostgREST (the layer `supabase.rpc()` goes through) silently returns empty results when a JavaScript array is passed as a PostgreSQL `vector` custom type — even with explicit casting or a `text`-parameter wrapper function. The edge function instead fetches rows via `supabase.from('material_chunks').select(...)` and computes cosine similarity in TypeScript using a `cosineSim()` helper. This is functionally identical and confirmed to work correctly.
 
 ---
 

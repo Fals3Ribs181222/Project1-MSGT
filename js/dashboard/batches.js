@@ -257,7 +257,7 @@ async function loadStudentPicker(batchId) {
 
 window.removeStudentFromBatch = async function (batchStudentId) {
     if (!confirm('Remove this student from the batch?')) return;
-    const { error } = await window.api.deleteWhere('batch_students', { id: batchStudentId });
+    const { error } = await window.api.deleteMany('batch_students', { id: batchStudentId });
     if (error) {
         alert('Failed to remove: ' + error);
     } else {
@@ -382,7 +382,7 @@ export function init() {
     if (btnDeleteBatch) {
         btnDeleteBatch.addEventListener('click', async () => {
             if (!confirm('Are you sure you want to delete this entire batch? All student assignments will be removed.')) return;
-            const res = await window.api.deleteWhere('batches', { id: currentBatchId });
+            const res = await window.api.deleteMany('batches', { id: currentBatchId });
             if (!res.success) {
                 alert('Failed to delete batch: ' + res.error);
             } else {

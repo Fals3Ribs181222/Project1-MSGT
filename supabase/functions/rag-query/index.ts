@@ -41,6 +41,51 @@ async function embedQuery(text: string): Promise<number[]> {
     return data.data[0].embedding;
 }
 
+// ── Cosine similarity (bypasses PostgREST vector type issues) ──
+function cosineSim(a: number[], b: number[]): number {
+    let dot = 0, magA = 0, magB = 0;
+    for (let i = 0; i < a.length; i++) {
+        dot += a[i] * b[i];
+        magA += a[i] * a[i];
+        magB += b[i] * b[i];
+    }
+    const denom = Math.sqrt(magA) * Math.sqrt(magB);
+    return denom === 0 ? 0 : dot / denom;
+}
+
+function parseEmbedding(v: any): number[] {
+    if (Array.isArray(v)) return v as number[];
+    if (typeof v === "string") return JSON.parse(v) as number[];
+    return [];
+}
+
+async function fetchSimilarChunks(
+    embedding: number[],
+    subject: string,
+    grade: string,
+    file_id: string | undefined,
+    count: number,
+    threshold: number,
+): Promise<Array<{ content: string; file_id: string; similarity: number }>> {
+    let query = supabase.from("material_chunks").select("content, embedding, file_id");
+    if (file_id) {
+        query = query.eq("file_id", file_id);
+    } else {
+        query = query.eq("subject", subject).eq("grade", grade);
+    }
+    const { data, error } = await query;
+    if (error) throw new Error(`Chunk fetch error: ${error.message}`);
+    return (data || [])
+        .map((c: any) => ({
+            content: c.content as string,
+            file_id: c.file_id as string,
+            similarity: cosineSim(embedding, parseEmbedding(c.embedding)),
+        }))
+        .filter(c => c.similarity >= threshold)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, count);
+}
+
 // ── Doubt Solver Prompt ───────────────────────────────────────
 function buildDoubtPrompt(
     question: string,
@@ -392,19 +437,9 @@ Deno.serve(async (req) => {
             const embedding = await embedQuery(query);
 
             // 3. Vector search with similarity threshold
-            const rpcParams: Record<string, any> = {
-                query_embedding: embedding,
-                match_subject: subject,
-                match_grade: grade,
-                match_count: 5,
-                match_threshold: 0.3,
-            };
-            if (file_id) rpcParams.match_file_id = file_id;
-            const { data: chunks, error: searchError } = await supabase.rpc("match_chunks", rpcParams);
+            const chunks = await fetchSimilarChunks(embedding, subject, grade, file_id, 5, 0.3);
 
-            if (searchError) throw new Error(`Search error: ${searchError.message}`);
-
-            if (!chunks || chunks.length === 0) {
+            if (chunks.length === 0) {
                 return new Response(
                     JSON.stringify({
                         answer: "No relevant material found for this subject and grade. Please upload study materials first.",
@@ -542,18 +577,9 @@ Deno.serve(async (req) => {
         // 2. Vector search — fetch more chunks for test mode (needs broader context)
         const isFullMaterial = query.includes("comprehensive review");
         const chunkCount = isFullMaterial ? 15 : 8;
-        const rpcParams: Record<string, any> = {
-            query_embedding: embedding,
-            match_subject: subject,
-            match_grade: grade,
-            match_count: chunkCount,
-        };
-        if (file_id) rpcParams.match_file_id = file_id;
-        const { data: chunks, error: searchError } = await supabase.rpc("match_chunks", rpcParams);
+        const chunks = await fetchSimilarChunks(embedding, subject, grade, file_id, chunkCount, 0);
 
-        if (searchError) throw new Error(`Search error: ${searchError.message}`);
-
-        if (!chunks || chunks.length === 0) {
+        if (chunks.length === 0) {
             return new Response(
                 JSON.stringify({
                     answer: "No relevant material found for this subject and grade. Please upload study materials first.",

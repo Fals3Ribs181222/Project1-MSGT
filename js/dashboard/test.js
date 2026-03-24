@@ -11,14 +11,14 @@ async function loadTestsList() {
     btnRefresh.textContent = 'Refreshing...';
     window.tableLoading('testsListTableBody', 7, 'Loading tests...');
 
-    const response = await window.api.get('tests', {}, '*, profiles:scheduled_by(name)');
+    const response = await window.api.get('tests', {}, '*, profiles:scheduled_by(name)', { order: 'date', ascending: true });
 
     btnRefresh.disabled = false;
     btnRefresh.textContent = 'Refresh List';
 
     if (response.success) {
         if (response.data && response.data.length > 0) {
-            tbody.innerHTML = response.data.reverse().map(test => {
+            tbody.innerHTML = response.data.map(test => {
                 const teacherName = test.profiles?.name || '-';
                 return `
                 <tr class="data-table__row">

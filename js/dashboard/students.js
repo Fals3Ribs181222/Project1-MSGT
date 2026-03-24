@@ -23,7 +23,7 @@ export async function loadStudents() {
     status.style.display = 'none';
     window.tableLoading('studentsTableBody', 5, 'Loading students...');
 
-    const response = await window.api.get('profiles', { role: 'student' });
+    const response = await window.api.get('profiles', { role: 'student' }, '*', { order: 'name', ascending: true });
 
     btnRefresh.disabled = false;
     btnRefresh.textContent = 'Refresh List';

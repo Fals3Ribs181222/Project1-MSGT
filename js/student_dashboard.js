@@ -88,9 +88,9 @@ async function fetchData() {
             const item = document.createElement('article');
             item.className = 'notice-list__item';
             item.innerHTML = `
-                <h4>${a.title}</h4>
+                <h4>${window.esc(a.title)}</h4>
                 <p class="notice-list__meta">${new Date(a.created_at).toLocaleDateString()}</p>
-                <p class="notice-list__body">${a.message}</p>
+                <p class="notice-list__body">${window.esc(a.message)}</p>
             `;
             annList.appendChild(item);
         });
