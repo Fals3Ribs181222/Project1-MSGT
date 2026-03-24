@@ -26,12 +26,12 @@ async function loadMaterials() {
     if (files.length > 0) {
         tbody.innerHTML = files.map(file => `
         <tr class="data-table__row">
-            <td class="data-table__td--main">${file.title || '-'}</td>
+            <td class="data-table__td--main">${window.esc(file.title) || '-'}</td>
             <td class="data-table__td">${file.subject || '-'}</td>
             <td class="data-table__td">${file.grade || 'All'}</td>
             <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
-            <td class="data-table__td">${file.uploaded_by || '-'}</td>
-            <td class="data-table__td"><a href="${file.file_url || '#'}" target="_blank" class="navbar__link">View</a></td>
+            <td class="data-table__td">${window.esc(file.uploaded_by) || '-'}</td>
+            <td class="data-table__td"><a href="${window.safeUrl(file.file_url)}" target="_blank" class="navbar__link">View</a></td>
         </tr>
     `).join('');
     } else {

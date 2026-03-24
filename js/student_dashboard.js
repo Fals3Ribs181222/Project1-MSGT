@@ -1,11 +1,22 @@
 // Require student role
-const user = auth.requireRole('student');
-document.getElementById('studentName').textContent = user.name;
-document.getElementById('studentClassInfo').textContent = `Grade: ${user.grade || 'N/A'} | Subjects: ${user.subjects || 'N/A'}`;
-
+let user = null;
 let allFiles = [];
 
-document.addEventListener('DOMContentLoaded', async () => {
+(async () => {
+    user = await window.auth.requireRole('student');
+    if (!user) return;
+
+    document.getElementById('studentName').textContent = user.name;
+    document.getElementById('studentClassInfo').textContent = `Grade: ${user.grade || 'N/A'} | Subjects: ${user.subjects || 'N/A'}`;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', onDOMReady);
+    } else {
+        await onDOMReady();
+    }
+})();
+
+async function onDOMReady() {
     const flags = await window.loadFeatureFlags();
     if (!flags.student_portal_enabled) {
         document.querySelector('main').innerHTML =
@@ -18,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchRank();
     document.getElementById('filterSubject').addEventListener('change', renderFiles);
     document.getElementById('searchTitle').addEventListener('input', renderFiles);
-});
+}
 
 async function fetchRank() {
     const rankRes = await api.get('student_rankings', { student_id: user.id }, '*', { single: true });

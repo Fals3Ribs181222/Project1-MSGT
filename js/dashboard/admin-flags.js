@@ -40,8 +40,8 @@ function renderFlags(flags) {
 
         const info = document.createElement('div');
         info.innerHTML = `
-            <strong style="display:block;margin-bottom:0.2rem;">${flag.label}</strong>
-            <span style="color:var(--text-muted);font-size:0.85rem;">${flag.description || ''}</span>
+            <strong style="display:block;margin-bottom:0.2rem;">${window.esc(flag.label)}</strong>
+            <span style="color:var(--text-muted);font-size:0.85rem;">${DOMPurify.sanitize(flag.description) || ''}</span>
         `;
 
         const btn = document.createElement('button');

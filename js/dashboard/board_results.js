@@ -20,8 +20,8 @@ async function loadBoardResults() {
         if (response.data && response.data.length > 0) {
             tbody.innerHTML = response.data.reverse().map(br => `
                 <tr class="data-table__row">
-                    <td class="data-table__td--main">${br.student_name || '-'}</td>
-                    <td class="data-table__td">${br.subject || '-'}</td>
+                    <td class="data-table__td--main">${window.esc(br.student_name) || '-'}</td>
+                    <td class="data-table__td">${window.esc(br.subject) || '-'}</td>
                     <td class="data-table__td">${br.marks_obtained}</td>
                     <td class="data-table__td">${br.max_marks}</td>
                     <td class="data-table__td">${br.passing_year}</td>

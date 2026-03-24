@@ -39,16 +39,16 @@ function renderTeachersTable() {
         const gradeLabel = t.grade && t.grade !== '' ? t.grade : 'All Grades';
         return `
         <tr class="data-table__row">
-            <td class="data-table__td--main">${t.name || '-'}</td>
-            <td class="data-table__td">${t.username || '-'}</td>
+            <td class="data-table__td--main">${window.esc(t.name) || '-'}</td>
+            <td class="data-table__td">${window.esc(t.username) || '-'}</td>
             <td class="data-table__td">
                 <span style="font-weight:600; color:${gradeLabel === 'All Grades' ? 'var(--text-muted)' : 'var(--primary)'};">
-                    ${gradeLabel}
+                    ${window.esc(gradeLabel)}
                 </span>
             </td>
-            <td class="data-table__td">${t.subjects || '-'}</td>
+            <td class="data-table__td">${window.esc(t.subjects) || '-'}</td>
             <td class="data-table__td">
-                <button class="btn btn--outline btn--sm" data-action="edit-grade" data-id="${t.id}" data-name="${t.name || ''}" data-grade="${t.grade || ''}">
+                <button class="btn btn--outline btn--sm" data-action="edit-grade" data-id="${t.id}" data-name="${window.esc(t.name) || ''}" data-grade="${window.esc(t.grade) || ''}">
                     Assign Grade
                 </button>
             </td>

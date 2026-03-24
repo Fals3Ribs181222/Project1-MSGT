@@ -22,12 +22,12 @@ async function loadTestsList() {
                 const teacherName = test.profiles?.name || '-';
                 return `
                 <tr class="data-table__row">
-                    <td class="data-table__td--main">${test.title || '-'}</td>
+                    <td class="data-table__td--main">${window.esc(test.title) || '-'}</td>
                     <td class="data-table__td">${test.subject || '-'}</td>
                     <td class="data-table__td">${test.grade || '-'}</td>
                     <td class="data-table__td">${test.date || '-'}</td>
                     <td class="data-table__td">${test.max_marks || '-'}</td>
-                    <td class="data-table__td">${teacherName}</td>
+                    <td class="data-table__td">${window.esc(teacherName)}</td>
                     <td class="data-table__td">
                         <a href="manage_marks?testId=${test.id}" class="btn btn--primary btn--sm">Manage Marks</a>
                     </td>

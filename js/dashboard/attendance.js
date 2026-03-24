@@ -33,11 +33,11 @@ async function loadTodaysClasses() {
     todaysClasses.sort((a, b) => a.start_time.localeCompare(b.start_time));
 
     grid.innerHTML = todaysClasses.map(c => `
-        <button class="landing-pill" data-class-id="${c.id}" data-batch-id="${c.batch_id}" data-title="${c.title.replace(/'/g, "\\'")}" data-batch-name="${c.batches ? c.batches.name.replace(/'/g, "\\'") : 'Unknown Batch'}" data-time="${c.start_time.substring(0, 5)}">
+        <button class="landing-pill" data-class-id="${c.id}" data-batch-id="${c.batch_id}" data-title="${window.esc(c.title)}" data-batch-name="${window.esc(c.batches ? c.batches.name : 'Unknown Batch')}" data-time="${c.start_time.substring(0, 5)}">
             <span class="landing-pill__icon" style="${c.type === 'extra' ? 'background: rgba(255,191,0,0.15); color: var(--amber);' : 'background: rgba(115,147,179,0.15); color: var(--primary);'} font-size: 0.75rem; font-weight: 600; width: auto; height: auto; padding: 0.3rem 0.75rem; border-radius: var(--radius-full); letter-spacing: 0.05em; text-transform: uppercase;">${c.type === 'extra' ? 'Extra' : 'Regular'}</span>
             <span class="landing-pill__text">
-                ${c.title}
-                <span style="display:block; font-size: 0.85rem; font-weight: 400; color: var(--text-muted); margin-top: 0.15rem;">${c.batches ? c.batches.name : 'Unknown Batch'} &bull; ${c.start_time.substring(0, 5)}</span>
+                ${window.esc(c.title)}
+                <span style="display:block; font-size: 0.85rem; font-weight: 400; color: var(--text-muted); margin-top: 0.15rem;">${window.esc(c.batches ? c.batches.name : 'Unknown Batch')} &bull; ${c.start_time.substring(0, 5)}</span>
             </span>
         </button>
     `).join('');
@@ -96,7 +96,7 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
         const status = statusMap[s.id] || 'present';
         return `
         <tr>
-            <td><strong>${s.name}</strong></td>
+            <td><strong>${window.esc(s.name)}</strong></td>
             <td style="text-align: right;">
                 <div class="attendance-toggles">
                     <label class="attendance-toggle" title="Present">
@@ -152,9 +152,9 @@ async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
         row.innerHTML = `
             <td>
                 <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
-                    <strong>${s.name}</strong>
+                    <strong>${window.esc(s.name)}</strong>
                     <span style="${tagStyle} background:rgba(115,147,179,0.15); color:var(--primary);">Guest</span>
-                    <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${batchName}</span>
+                    <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${window.esc(batchName)}</span>
                     <span style="${tagStyle} background:rgba(0,0,0,0.06); color:var(--text-muted);">${todayDay}</span>
                     <button class="btn-remove-guest" data-id="${t.id}" style="margin-left:auto; background:none; border:none; color:var(--cadmium-red); cursor:pointer; font-size:1.1rem; padding:0 0.3rem;" title="Remove guest">✕</button>
                 </div>
@@ -304,9 +304,9 @@ export function init() {
             row.innerHTML = `
                 <td>
                     <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
-                        <strong>${studentName}</strong>
+                        <strong>${window.esc(studentName)}</strong>
                         <span style="${tagStyle} background:rgba(115,147,179,0.15); color:var(--primary);">Guest</span>
-                        <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${batchName}</span>
+                        <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${window.esc(batchName)}</span>
                         <span style="${tagStyle} background:rgba(0,0,0,0.06); color:var(--text-muted);">${todayDay}</span>
                         <button class="btn-remove-guest" data-id="${transferId}" style="margin-left:auto; background:none; border:none; color:var(--cadmium-red); cursor:pointer; font-size:1.1rem; padding:0 0.3rem;" title="Remove guest">✕</button>
                     </div>

@@ -79,14 +79,16 @@ function showConfirmModal(title, message, onConfirm) {
     overlay.className = 'confirm-overlay';
     overlay.innerHTML = `
         <div class="confirm-modal">
-            <h3>${title}</h3>
-            <p>${message}</p>
+            <h3></h3>
+            <p></p>
             <div class="confirm-modal__actions">
                 <button class="btn btn--outline btn--sm" id="confirmCancel">Cancel</button>
                 <button class="btn btn--danger btn--sm" id="confirmOk">Delete</button>
             </div>
         </div>
     `;
+    overlay.querySelector('h3').textContent = title;
+    overlay.querySelector('p').textContent = message;
     document.body.appendChild(overlay);
 
     overlay.querySelector('#confirmCancel').addEventListener('click', () => overlay.remove());
@@ -99,17 +101,49 @@ function showConfirmModal(title, message, onConfirm) {
     });
 }
 
+// Escapes a plain-text string for safe insertion into innerHTML.
+// Converts < > & " etc. using the browser's own DOM encoding.
+function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str ?? '';
+    return d.innerHTML;
+}
+
+// Validates a URL for use in href/src attributes.
+// Blocks javascript: and data: URIs to prevent injection.
+function safeUrl(url) {
+    if (!url) return '#';
+    const t = url.trim().toLowerCase();
+    if (t.startsWith('javascript:') || t.startsWith('data:text/html')) return '#';
+    return url;
+}
+
 // Expose utilities globally
 window.formatTime = formatTime;
 window.showConfirmModal = showConfirmModal;
+window.esc = esc;
+window.safeUrl = safeUrl;
 
 // ── Navbar mobile toggle ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const toggle = document.querySelector('.navbar__toggle');
     if (!toggle) return;
-    const nav = document.querySelector('.navbar');
-    toggle.addEventListener('click', function () {
-        const open = nav.classList.toggle('navbar--open');
-        this.setAttribute('aria-expanded', open);
-    });
+    const sidebar = document.getElementById('dashSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar && backdrop) {
+        toggle.addEventListener('click', () => {
+            sidebar.classList.add('dash-sidebar--open');
+            backdrop.classList.add('dash-sidebar-backdrop--visible');
+        });
+        backdrop.addEventListener('click', () => {
+            sidebar.classList.remove('dash-sidebar--open');
+            backdrop.classList.remove('dash-sidebar-backdrop--visible');
+        });
+    } else {
+        const nav = document.querySelector('.navbar');
+        toggle.addEventListener('click', function () {
+            const open = nav.classList.toggle('navbar--open');
+            this.setAttribute('aria-expanded', open);
+        });
+    }
 });

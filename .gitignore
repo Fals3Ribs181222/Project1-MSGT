@@ -3,3 +3,4 @@ supabase.exe
 supabase/.temp/
 .vercel
 .env*.local
+.tmp.driveupload/

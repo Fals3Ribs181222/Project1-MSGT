@@ -90,8 +90,8 @@ async function renderCalendar() {
             const batchName = c.batches?.name || '';
             pill.innerHTML = `
                 <div class="calendar__pill-time">${window.formatTime(c.start_time)}</div>
-                <div class="calendar__pill-title">${batchGrade} ${batchSubject}</div>
-                <div class="calendar__pill-subtitle">${batchName}</div>
+                <div class="calendar__pill-title">${window.esc(batchGrade)} ${window.esc(batchSubject)}</div>
+                <div class="calendar__pill-subtitle">${window.esc(batchName)}</div>
             `;
 
             const relatedClasses = c.class_group_id ? classes.filter(other =>
@@ -389,9 +389,9 @@ window.openClassModal = async function (data) {
 
     document.getElementById('modalClassTitle').textContent = data.title;
 
-    let metaString = `${data.timeSpan} • ${data.batchName} (${data.type === 'regular' ? 'Weekly' : 'Extra Class'})`;
+    let metaString = `${window.esc(data.timeSpan)} • ${window.esc(data.batchName)} (${data.type === 'regular' ? 'Weekly' : 'Extra Class'})`;
     if (data.relatedDays) {
-        metaString += `<br><span style="color: var(--primary); font-weight: 500; font-size: 0.85rem;">Also held on: ${data.relatedDays}</span>`;
+        metaString += `<br><span style="color: var(--primary); font-weight: 500; font-size: 0.85rem;">Also held on: ${window.esc(data.relatedDays)}</span>`;
     }
     document.getElementById('modalClassMeta').innerHTML = metaString;
 
@@ -416,8 +416,8 @@ window.openClassModal = async function (data) {
             tbody.innerHTML = res.data.map(m => {
                 const p = m.profiles || {};
                 return `<tr>
-                            <td>${p.name || '-'}</td>
-                            <td>${p.grade || '-'}</td>
+                            <td>${window.esc(p.name) || '-'}</td>
+                            <td>${window.esc(p.grade) || '-'}</td>
                         </tr>`;
             }).join('');
         } else {

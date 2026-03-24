@@ -1,17 +1,32 @@
-const user = auth.requireRole('teacher');
-const urlParams = new URLSearchParams(window.location.search);
-const testId = urlParams.get('testId');
-
-if (!testId) {
-    alert('No Test ID specified.');
-    window.location.href = 'teacher_dashboard';
-}
-
+let user = null;
+let urlParams = null;
+let testId = null;
 let currentTest = null;
 let allStudents = [];
 let existingMarks = [];
 
-document.addEventListener('DOMContentLoaded', init);
+// Async initialization wrapper
+(async () => {
+    user = await window.auth.requireRole('teacher');
+    if (!user) return;
+
+    urlParams = new URLSearchParams(window.location.search);
+    testId = urlParams.get('testId');
+
+    if (!testId) {
+        alert('No Test ID specified.');
+        window.location.href = 'teacher_dashboard';
+        return;
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+    if (document.readyState === 'loading') {
+        // Page is still loading, event will fire
+    } else {
+        // Page already loaded, call init immediately
+        await init();
+    }
+})();
 
 async function init() {
     try {

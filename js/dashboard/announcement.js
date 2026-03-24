@@ -20,10 +20,10 @@ async function loadAnnouncements() {
         if (response.data && response.data.length > 0) {
             tbody.innerHTML = response.data.reverse().map(ann => `
                 <tr class="data-table__row">
-                    <td class="data-table__td--main">${ann.title || '-'}</td>
+                    <td class="data-table__td--main">${window.esc(ann.title) || '-'}</td>
                     <td class="data-table__td">${ann.grade || 'All'}</td>
                     <td class="data-table__td">${ann.created_at ? new Date(ann.created_at).toLocaleDateString() : '-'}</td>
-                    <td class="data-table__td">${ann.posted_by || '-'}</td>
+                    <td class="data-table__td">${window.esc(ann.posted_by) || '-'}</td>
                 </tr>
             `).join('');
         } else {

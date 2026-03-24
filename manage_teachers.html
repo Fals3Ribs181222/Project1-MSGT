@@ -193,8 +193,10 @@
         });
 
         // Auth guard: teacher-only
-        const user = window.auth.requireRole('teacher');
-        if (user) loadTeachers();
+        (async () => {
+            const user = await window.auth.requireRole('teacher');
+            if (user) loadTeachers();
+        })();
     </script>
 </body>
 

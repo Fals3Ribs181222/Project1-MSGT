@@ -1,6 +1,7 @@
 // js/dashboard/students.js
 
 let allStudents = [];
+let currentStudent = null;
 const user = window.auth.getUser();
 
 let studentReportData = null;
@@ -55,10 +56,10 @@ function renderStudentsTable(students) {
 
     tbody.innerHTML = students.map(student => `
         <tr class="data-table__row" data-student-id="${student.id}">
-            <td class="data-table__td--main">${student.name || '-'}</td>
-            <td class="data-table__td">${student.username || '-'}</td>
-            <td class="data-table__td">${student.grade || '-'}</td>
-            <td class="data-table__td">${student.subjects || '-'}</td>
+            <td class="data-table__td--main">${window.esc(student.name) || '-'}</td>
+            <td class="data-table__td">${window.esc(student.username) || '-'}</td>
+            <td class="data-table__td">${window.esc(student.grade) || '-'}</td>
+            <td class="data-table__td">${window.esc(student.subjects) || '-'}</td>
             <td class="data-table__td">
                 <button class="btn btn--primary btn--sm" data-action="detail" data-id="${student.id}">Manage Student</button>
             </td>
@@ -107,7 +108,7 @@ async function showStudentDetail(studentId) {
     const student = allStudents.find(s => s.id === studentId);
     if (!student) return;
 
-    window.currentStudent = student; // Store for WhatsApp delivery
+    currentStudent = student; // Store for WhatsApp delivery
 
     studentReportData = {
         student: {
@@ -222,10 +223,10 @@ async function showStudentDetail(studentId) {
 
                         batchBody.innerHTML = batches.map((b, idx) => `
                             <tr class="data-table__row">
-                                <td class="data-table__td--main">${b.name || '-'}</td>
-                                <td class="data-table__td">${b.subject || '-'}</td>
-                                <td class="data-table__td">${b.grade || '-'}</td>
-                                <td class="data-table__td">${studentReportData.batches[idx].schedule || '-'}</td>
+                                <td class="data-table__td--main">${window.esc(b.name) || '-'}</td>
+                                <td class="data-table__td">${window.esc(b.subject) || '-'}</td>
+                                <td class="data-table__td">${window.esc(b.grade) || '-'}</td>
+                                <td class="data-table__td">${window.esc(studentReportData.batches[idx].schedule) || '-'}</td>
                             </tr>
                         `).join('');
                     } else {
@@ -317,8 +318,8 @@ async function showStudentDetail(studentId) {
                                 : 'color:#E24B4A;font-weight:600;';
                         return `
                     <tr class="data-table__row">
-                        <td class="data-table__td--main">${test.title || '-'}</td>
-                        <td class="data-table__td">${test.subject || '-'}</td>
+                        <td class="data-table__td--main">${window.esc(test.title) || '-'}</td>
+                        <td class="data-table__td">${window.esc(test.subject) || '-'}</td>
                         <td class="data-table__td"><strong>${m.marks_obtained || '-'}</strong></td>
                         <td class="data-table__td">${test.max_marks || '-'}</td>
                         <td class="data-table__td" style="${pctColor}">${pct}%</td>
@@ -441,7 +442,7 @@ async function generateReport() {
 async function sendWhatsAppReport() {
     const textEl = document.getElementById('reportOutputText');
     const reportText = textEl?.textContent || '';
-    const student = window.currentStudent;
+    const student = currentStudent;
 
     if (!reportText || !student) return;
 
@@ -601,7 +602,7 @@ function attachAddStudentListeners() {
                 status.style.display = 'block';
             } else {
                 status.innerHTML = `<strong>✓ Student registered!</strong><br>
-                    Name: ${name}<br>Username: ${username}<br>Grade: ${grade}<br>
+                    Name: ${window.esc(name)}<br>Username: ${window.esc(username)}<br>Grade: ${window.esc(grade)}<br>
                     The student can now log in.`;
                 status.className = 'status status--info';
                 status.style.display = 'block';
@@ -687,7 +688,7 @@ export function init() {
     const btnDeleteDetail = document.getElementById('btnDeleteStudentDetail');
     if (btnDeleteDetail) {
         btnDeleteDetail.addEventListener('click', () => {
-            if (window.currentStudent?.id) deleteStudent(window.currentStudent.id);
+            if (currentStudent?.id) deleteStudent(currentStudent.id);
         });
     }
 
@@ -778,7 +779,7 @@ function renderTrendChart(marks) {
                 <div style="width:100%;height:${BAR_MAX_H}px;display:flex;align-items:flex-end;">
                     <div style="width:100%;height:${height}px;background:${color};border-radius:4px 4px 0 0;"></div>
                 </div>
-                <span style="font-size:0.68rem;color:var(--text-muted);text-align:center;line-height:1.3;word-break:break-word;">${label}</span>
+                <span style="font-size:0.68rem;color:var(--text-muted);text-align:center;line-height:1.3;word-break:break-word;">${window.esc(label)}</span>
             </div>
         `;
     }).join('');
@@ -850,8 +851,8 @@ async function fetchAndRenderRanks(studentId, marksData, testMap) {
 
             return `
                 <tr class="data-table__row">
-                    <td class="data-table__td--main">${test.title || '-'}</td>
-                    <td class="data-table__td">${test.subject || '-'}</td>
+                    <td class="data-table__td--main">${window.esc(test.title) || '-'}</td>
+                    <td class="data-table__td">${window.esc(test.subject) || '-'}</td>
                     <td class="data-table__td"><strong>${m.marks_obtained || '-'}</strong></td>
                     <td class="data-table__td">${test.max_marks || '-'}</td>
                     <td class="data-table__td" style="${pctColor}">${pct}%</td>
@@ -951,7 +952,7 @@ async function loadWhatsappLog(studentId) {
                     <div style="flex:1;min-width:0;">
                         <div style="font-size:0.9rem;font-weight:600;color:var(--text-main);">${typeLabel}</div>
                         ${log.preview
-                    ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:2px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${log.preview}…</div>`
+                    ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:2px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${DOMPurify.sanitize(log.preview)}…</div>`
                     : ''}
                     </div>
                     <div style="font-size:0.78rem;color:var(--text-muted);white-space:nowrap;padding-top:2px;">${date}</div>

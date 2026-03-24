@@ -45,13 +45,13 @@ async function loadBatches() {
 
                 return `
                 <tr class="data-table__row">
-                    <td class="data-table__td--main">${batch.name || '-'}</td>
+                    <td class="data-table__td--main">${window.esc(batch.name) || '-'}</td>
                     <td class="data-table__td">${batch.subject || '-'}</td>
                     <td class="data-table__td">${batch.grade || '-'}</td>
                     <td class="data-table__td"><div class="text-truncate" style="max-width:200px;" title="${scheduleStr}">${scheduleStr}</div></td>
                     <td class="data-table__td"><span class="badge">${counts[batch.id] || 0}</span></td>
                     <td class="data-table__td">
-                        <button class="btn btn--primary btn--sm" data-action="manage" data-id="${batch.id}" data-name="${(batch.name || '').replace(/'/g, "\\'")}">Manage</button>
+                        <button class="btn btn--primary btn--sm" data-action="manage" data-id="${batch.id}" data-name="${window.esc(batch.name) || ''}">Manage</button>
                     </td>
                 </tr>
                 `;
@@ -182,9 +182,9 @@ async function loadBatchMembers(batchId) {
                 const p = m.profiles || {};
                 return `
                     <tr class="data-table__row">
-                        <td class="data-table__td--main">${p.name || '-'}</td>
-                        <td class="data-table__td">${p.username || '-'}</td>
-                        <td class="data-table__td">${p.grade || '-'}</td>
+                        <td class="data-table__td--main">${window.esc(p.name) || '-'}</td>
+                        <td class="data-table__td">${window.esc(p.username) || '-'}</td>
+                        <td class="data-table__td">${window.esc(p.grade) || '-'}</td>
                         <td class="data-table__td">
                             <button class="btn btn--danger btn--sm" data-action="remove-student" data-id="${m.id}">Remove</button>
                         </td>
@@ -227,10 +227,10 @@ async function loadStudentPicker(batchId) {
 
         if (available.length > 0) {
             listEl.innerHTML = available.map(s => `
-                <label class="student-picker__item" data-name="${(s.name || '').toLowerCase()}">
+                <label class="student-picker__item" data-name="${window.esc(s.name).toLowerCase()}">
                     <input type="checkbox" class="form__checkbox" value="${s.id}">
-                    <span class="student-picker__name">${s.name || 'Unnamed'}</span>
-                    <span class="student-picker__info">${s.grade || ''} • ${s.username || ''}</span>
+                    <span class="student-picker__name">${window.esc(s.name) || 'Unnamed'}</span>
+                    <span class="student-picker__info">${window.esc(s.grade) || ''} • ${window.esc(s.username) || ''}</span>
                 </label>
             `).join('');
         } else {

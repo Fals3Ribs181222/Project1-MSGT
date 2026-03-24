@@ -3172,6 +3172,27 @@ tr.editing-row {
     display: block;
 }
 
+/* Public page floating sidebar — hidden on desktop, slides in on mobile */
+.dash-sidebar--floating {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .dash-sidebar--floating {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: -260px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.28s ease;
+    }
+
+    .dash-sidebar--floating.dash-sidebar--open {
+        left: 0;
+    }
+}
+
 /* Main content area */
 .dash-main {
     flex: 1;

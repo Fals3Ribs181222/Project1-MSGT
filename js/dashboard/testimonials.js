@@ -21,11 +21,11 @@ async function loadTestimonials() {
         if (response.data && response.data.length > 0) {
             tbody.innerHTML = response.data.reverse().map(t => `
                 <tr class="data-table__row">
-                    <td class="data-table__td--main">${t.student_name || '-'}</td>
-                    <td class="data-table__td">${t.subject || '-'}</td>
-                    <td class="data-table__td">${t.year || '-'}</td>
-                    <td class="data-table__td"><div class="text-truncate" style="max-width: 200px;">${t.testimonial_text || '-'}</div></td>
-                    <td class="data-table__td">${t.media_url ? `<a href="${t.media_url}" target="_blank" class="navbar__link">View Media</a>` : 'None'}</td>
+                    <td class="data-table__td--main">${window.esc(t.student_name) || '-'}</td>
+                    <td class="data-table__td">${window.esc(t.subject) || '-'}</td>
+                    <td class="data-table__td">${window.esc(t.year) || '-'}</td>
+                    <td class="data-table__td"><div class="text-truncate" style="max-width: 200px;">${DOMPurify.sanitize(t.testimonial_text) || '-'}</div></td>
+                    <td class="data-table__td">${t.media_url ? `<a href="${window.safeUrl(t.media_url)}" target="_blank" class="navbar__link">View Media</a>` : 'None'}</td>
                     <td class="data-table__td">${t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'}</td>
                     <td class="data-table__td">
                         <button class="btn btn--danger btn--sm" onclick="deleteTestimonial('${t.id}', '${t.media_url || ''}')">Delete</button>

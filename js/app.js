@@ -210,11 +210,21 @@ const auth = {
         return userStr ? JSON.parse(userStr) : null;
     },
 
-    requireRole(role) {
+    async requireRole(role) {
+        document.body.style.visibility = 'hidden';
         const user = this.getUser();
         if (!user || user.role !== role) {
             window.location.href = 'login';
+            return null;
         }
+        // Verify real session
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            localStorage.removeItem('mitesh_tutions_user');
+            window.location.href = 'login';
+            return null;
+        }
+        document.body.style.visibility = '';
         return user;
     },
 
@@ -291,6 +301,14 @@ document.addEventListener('DOMContentLoaded', () => {
             link.classList.add('navbar__link--active');
         } else {
             link.classList.remove('navbar__link--active');
+        }
+    });
+
+    // Monitor auth state changes
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+            localStorage.removeItem('mitesh_tutions_user');
+            window.location.href = 'login';
         }
     });
 });

@@ -146,8 +146,8 @@ async function loadHistory() {
             return `
                 <tr class="data-table__row">
                     <td class="data-table__td" style="white-space:nowrap;">${typeLabel}</td>
-                    <td class="data-table__td">${recipientName}${recipientType}</td>
-                    <td class="data-table__td"><div class="text-truncate" style="max-width:300px;" title="${preview.replace(/"/g, '&quot;')}">${preview}</div></td>
+                    <td class="data-table__td">${window.esc(recipientName)}${window.esc(recipientType)}</td>
+                    <td class="data-table__td"><div class="text-truncate" style="max-width:300px;" title="${window.esc(preview)}">${DOMPurify.sanitize(preview)}</div></td>
                     <td class="data-table__td" style="white-space:nowrap;">${date}</td>
                 </tr>
             `;

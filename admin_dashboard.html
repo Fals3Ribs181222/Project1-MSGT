@@ -89,8 +89,11 @@
         window.loadTab = loadTab;
     </script>
     <script>
-        const user = window.auth.requireRole('admin');
-        document.getElementById('adminName').textContent = user.name;
+        (async () => {
+            const user = await window.auth.requireRole('admin');
+            if (!user) return;
+            document.getElementById('adminName').textContent = user.name;
+        })();
     </script>
 </body>
 

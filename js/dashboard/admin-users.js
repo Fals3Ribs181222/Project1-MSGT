@@ -60,10 +60,10 @@ function renderUsers(users) {
     users.forEach(u => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${u.name || '—'}</td>
-            <td>${u.username || '—'}</td>
-            <td><span class="badge">${u.role || '—'}</span></td>
-            <td>${u.grade || '—'}</td>
+            <td>${window.esc(u.name) || '—'}</td>
+            <td>${window.esc(u.username) || '—'}</td>
+            <td><span class="badge">${window.esc(u.role) || '—'}</span></td>
+            <td>${window.esc(u.grade) || '—'}</td>
             <td></td>
         `;
 

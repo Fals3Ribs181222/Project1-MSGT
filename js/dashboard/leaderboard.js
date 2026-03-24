@@ -65,7 +65,7 @@ function renderTable(rows, tbodyId, avgId) {
         return `
             <tr class="data-table__row">
                 <td class="data-table__td" style="font-weight:600;">${rankDisplay}</td>
-                <td class="data-table__td--main">${r.name}</td>
+                <td class="data-table__td--main">${window.esc(r.name)}</td>
                 <td class="data-table__td" style="font-weight:600;">${score}</td>
                 <td class="data-table__td" style="color:var(--gray-500);">${avg}</td>
                 <td class="data-table__td">${r.tests_taken}</td>

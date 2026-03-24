@@ -52,7 +52,12 @@ export async function loadTab(targetId) {
             try {
                 const module = await import(`./${featureName}.js`);
                 if (module.init) {
-                    module.init();
+                    try {
+                        await module.init();
+                    } catch (initError) {
+                        console.error(`Error initializing ${featureName}:`, initError);
+                        targetPanel.innerHTML = `<div class="status status--error">Error loading ${featureName}: ${initError.message || 'Unknown error'}</div>`;
+                    }
                 }
             } catch (jsError) {
                 console.warn(`No specific JS module found for ${featureName} or failed to load:`, jsError);
@@ -72,7 +77,16 @@ export async function loadTab(targetId) {
         try {
             const module = await import(`./${featureName}.js`);
             if (module.refresh) {
-                module.refresh();
+                try {
+                    await module.refresh();
+                } catch (refreshError) {
+                    console.error(`Error refreshing ${featureName}:`, refreshError);
+                    // Show error toast or message to user
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'status status--error';
+                    errorDiv.textContent = `Error refreshing ${featureName}: ${refreshError.message || 'Unknown error'}`;
+                    targetPanel.prepend(errorDiv);
+                }
             }
         } catch (e) {
             // Ignore if no module or refresh method
