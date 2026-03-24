@@ -69,7 +69,7 @@ function attachBoardResultListeners() {
 
         if (response.success) {
             window.showStatus('boardResultStatus', 'Board result added successfully!', 'success');
-            e.target.reset();
+            window.safeFormReset(e.target);
             document.getElementById('brMaxMarks').value = '100';
             loadBoardResults();
         } else {

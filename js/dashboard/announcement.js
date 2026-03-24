@@ -43,6 +43,9 @@ function attachAnnouncementListeners() {
     const form = document.getElementById('noticeForm');
     if (!form) return;
 
+    window.populateGradeSelect('noticeGrade');
+    window.lockGradeSelect('noticeGrade');
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnNotice');
@@ -128,7 +131,7 @@ function attachAnnouncementListeners() {
                 }
             }
 
-            e.target.reset();
+            window.safeFormReset(e.target);
             loadAnnouncements();
         } else {
             window.showStatus('noticeStatus', response.error || 'Failed to post.', 'error');

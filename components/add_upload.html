@@ -6,23 +6,19 @@
 
     <div class="form__group">
         <label class="form__label" for="fileGrade">Grade</label>
-        <select id="fileGrade" class="form__control">
-            <option value="">All Grades</option>
-            <option value="11th">11th</option>
-            <option value="12th">12th</option>
-        </select>
+        <select id="fileGrade" class="form__control"></select>
     </div>
 
     <div class="form__group">
         <label class="form__label">Subjects</label>
-        <div class="form__checkbox-group">
-            <label class="form__checkbox-label">
-                <input type="checkbox" name="fileSubjects" value="Accounts" class="form__checkbox">
-                Accounts
+        <div class="subject-pills">
+            <label class="subject-pill">
+                <input type="checkbox" name="fileSubjects" value="Accounts">
+                <span class="subject-pill__label">Accounts</span>
             </label>
-            <label class="form__checkbox-label">
-                <input type="checkbox" name="fileSubjects" value="Commerce" class="form__checkbox">
-                Commerce
+            <label class="subject-pill">
+                <input type="checkbox" name="fileSubjects" value="Commerce">
+                <span class="subject-pill__label">Commerce</span>
             </label>
         </div>
     </div>

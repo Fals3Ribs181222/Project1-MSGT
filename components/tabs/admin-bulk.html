@@ -1,0 +1,66 @@
+<header class="panel__header">
+    <h2>Bulk Operations</h2>
+</header>
+<p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">
+    Destructive operations. All actions require confirmation and are permanent.
+</p>
+
+<div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+    <!-- Delete attendance for a batch -->
+    <div class="panel" style="padding:1.25rem;">
+        <h3 style="margin-bottom:0.5rem;">Delete All Attendance for a Batch</h3>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">
+            Permanently removes every attendance record belonging to the selected batch.
+        </p>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+            <select id="bulkAttendanceBatch" class="filter-bar__control" style="flex:1;min-width:180px;">
+                <option value="">Loading batches...</option>
+            </select>
+            <button class="btn btn--danger btn--sm" id="btnDeleteAttendance">Delete Attendance</button>
+        </div>
+        <div id="bulkAttendanceStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
+    </div>
+
+    <!-- Clear marks for a test -->
+    <div class="panel" style="padding:1.25rem;">
+        <h3 style="margin-bottom:0.5rem;">Clear All Marks for a Test</h3>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">
+            Deletes every mark record for the selected test. The test itself remains.
+        </p>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+            <select id="bulkMarksTest" class="filter-bar__control" style="flex:1;min-width:180px;">
+                <option value="">Loading tests...</option>
+            </select>
+            <button class="btn btn--danger btn--sm" id="btnDeleteMarks">Clear Marks</button>
+        </div>
+        <div id="bulkMarksStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
+    </div>
+
+    <!-- Delete a student account -->
+    <div class="panel" style="padding:1.25rem;">
+        <h3 style="margin-bottom:0.5rem;">Delete a Student Account</h3>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">
+            Permanently deletes the student's auth account and all related data (marks, attendance, batch memberships).
+        </p>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+            <select id="bulkDeleteStudent" class="filter-bar__control" style="flex:1;min-width:180px;">
+                <option value="">Loading students...</option>
+            </select>
+            <button class="btn btn--danger btn--sm" id="btnDeleteStudent">Delete Student</button>
+        </div>
+        <div id="bulkStudentStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
+    </div>
+
+    <!-- Wipe seed data -->
+    <div class="panel" style="padding:1.25rem;border:2px solid var(--danger,#e74c3c);">
+        <h3 style="margin-bottom:0.5rem;color:var(--danger,#e74c3c);">Wipe All Seed Data</h3>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">
+            Deletes <strong>all student accounts</strong> and their linked data (marks, attendance, batch memberships).
+            Teacher accounts are preserved. This cannot be undone.
+        </p>
+        <button class="btn btn--danger" id="btnWipeSeed">Wipe All Seed Data</button>
+        <div id="bulkWipeStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
+    </div>
+
+</div>

@@ -459,6 +459,9 @@ function filterMaterialDropdown() {
 }
 
 export function init() {
+    window.populateGradeSelect('doubtGrade');
+    window.populateGradeSelect('testGrade', false);
+    window.lockGradeSelect('doubtGrade', 'testGrade');
     attachAIToolListeners();
     populateMaterialDropdown();
 }

@@ -1,5 +1,6 @@
 const user = window.auth.getUser();
 let currentBatchId = null;
+let currentBatchGrade = null;
 
 async function loadBatches() {
     const tbody = document.getElementById('batchesTableBody');
@@ -80,6 +81,8 @@ async function loadBatchComponent() {
 function attachBatchFormListeners() {
     const form = document.getElementById('batchForm');
     if (!form) return;
+    window.populateGradeSelect('batchGrade', false);
+    window.lockGradeSelect('batchGrade');
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -109,7 +112,7 @@ function attachBatchFormListeners() {
 
         if (response.success) {
             window.showStatus('batchFormStatus', 'Batch created successfully!', 'success');
-            form.reset();
+            window.safeFormReset(form);
             loadBatches();
         } else {
             window.showStatus('batchFormStatus', response.error || 'Failed to create batch.', 'error');
@@ -137,11 +140,26 @@ window.openBatchDetail = async function (batchId, batchName) {
 
     document.getElementById('batchDetailName').textContent = batchName;
 
-    const batchRes = await window.api.get('batches', { id: batchId });
+    const batchRes = await window.api.get('batches', { id: batchId }, '*, classes(type, day_of_week, class_date, start_time)');
     if (batchRes.success && batchRes.data && batchRes.data.length > 0) {
         const b = batchRes.data[0];
+        currentBatchGrade = b.grade || null;
+
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        let scheduleStr = '';
+        if (b.classes && b.classes.length > 0) {
+            const regularClasses = b.classes.filter(c => c.type === 'regular');
+            if (regularClasses.length > 0) {
+                const schedParts = regularClasses.map(c => {
+                    const timeFormat = window.formatTime(c.start_time);
+                    return `${days[c.day_of_week]} ${timeFormat}`;
+                });
+                scheduleStr = [...new Set(schedParts)].join(', ');
+            }
+        }
+
         document.getElementById('batchDetailMeta').textContent =
-            `${b.grade || ''} • ${b.subject || ''} • ${b.schedule || ''}`;
+            `${b.grade || ''} • ${b.subject || ''} • ${scheduleStr}`;
     }
 
     await loadBatchMembers(batchId);
@@ -196,7 +214,16 @@ async function loadStudentPicker(batchId) {
     }
 
     if (studentsRes.success && studentsRes.data) {
-        const available = studentsRes.data.filter(s => !memberIds.has(s.id));
+        let allStudents = studentsRes.data;
+        if (currentBatchGrade) {
+            allStudents = allStudents.filter(s => s.grade === currentBatchGrade);
+        } else {
+            const teacherGrade = window.auth.getUser()?.grade;
+            if (teacherGrade && teacherGrade !== 'All Grades') {
+                allStudents = allStudents.filter(s => s.grade === teacherGrade);
+            }
+        }
+        const available = allStudents.filter(s => !memberIds.has(s.id));
 
         if (available.length > 0) {
             listEl.innerHTML = available.map(s => `
@@ -303,6 +330,7 @@ export function init() {
             if (btnRefresh) btnRefresh.style.display = 'inline-block';
             if (pillView) pillView.classList.add('pill-toggle__btn--active');
             currentBatchId = null;
+            currentBatchGrade = null;
             loadBatches();
         });
     }
@@ -363,6 +391,7 @@ export function init() {
                 if (btnRefresh) btnRefresh.style.display = 'inline-block';
                 if (pillView) pillView.classList.add('pill-toggle__btn--active');
                 currentBatchId = null;
+                currentBatchGrade = null;
                 loadBatches();
             }
         });
@@ -385,5 +414,6 @@ export function refresh() {
     if (btnRefresh) btnRefresh.style.display = 'inline-block';
 
     currentBatchId = null;
+    currentBatchGrade = null;
     loadBatches();
 }

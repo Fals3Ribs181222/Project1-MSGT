@@ -50,6 +50,9 @@ function attachTestListeners() {
     const form = document.getElementById('testForm');
     if (!form) return;
 
+    window.populateGradeSelect('schedTestGrade', false);
+    window.lockGradeSelect('schedTestGrade');
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnScheduleTest');
@@ -65,7 +68,7 @@ function attachTestListeners() {
         const response = await window.api.post('tests', {
             title: document.getElementById('testTitle').value,
             subject: subjects,
-            grade: document.getElementById('testGrade').value,
+            grade: document.getElementById('schedTestGrade').value,
             date: document.getElementById('testDate').value,
             max_marks: document.getElementById('testMaxMarks').value,
             scheduled_by: user.id
@@ -76,7 +79,7 @@ function attachTestListeners() {
 
         if (response.success) {
             window.showStatus('testStatus', 'Test scheduled successfully!', 'success');
-            e.target.reset();
+            window.safeFormReset(e.target);
             loadTestsList();
         } else {
             window.showStatus('testStatus', response.error || 'Failed to schedule.', 'error');

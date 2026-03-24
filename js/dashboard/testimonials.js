@@ -110,7 +110,7 @@ function attachTestimonialListeners() {
                 status.textContent = 'Testimonial added successfully!';
                 status.className = 'status status--success';
                 status.style.display = 'block';
-                e.target.reset();
+                window.safeFormReset(e.target);
                 loadTestimonials();
             } else {
                 throw new Error(response.error);

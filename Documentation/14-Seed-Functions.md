@@ -1,8 +1,10 @@
 # Data Seeding Tools
 
-During development and testing of features like the AI Report Card Generator, it's essential to have realistic mock data populated in the Supabase database. 
+During development and testing of features like the AI Report Card Generator, it's essential to have realistic mock data populated in the Supabase database.
 
 We have created three separate, lightweight HTML utility files that interact directly with the Supabase JavaScript API to clear out old dummy data and safely generate fresh, standardized test data while respecting rate limits.
+
+Each seeder that creates grade-specific data exposes a **Grade selector** (`11th` / `12th`) at the top of the page. All three grade-aware seeders must be run with the **same grade selected** so that students, tests, and marks stay consistent with each other.
 
 ## Overview of Seed Files
 
@@ -19,12 +21,15 @@ We have created three separate, lightweight HTML utility files that interact dir
 
 **Purpose**: Sets up the foundational student profiles required for marks and reports.
 
+**Grade selector**: Choose `11th` or `12th` before clicking the button. Defaults to `12th`.
+
 **Logic**:
-1. Locates all existing students connected to the teacher's profile.
-2. Identifies and deletes any students explicitly marked with `"Dummy Student"` in their data.
-3. Generates 15 new dummy students with standardized names (e.g., `Dummy Student 1`, `Dummy Student 2`).
-4. Assigns them to the **12th** grade with **Accounts, Commerce** as their subjects.
-5. Injects a slight delay (`setTimeout`) between Supabase insertions to avoid tripping API rate limits.
+1. Reads the selected grade from the dropdown.
+2. Fetches and deletes only existing students whose `grade` matches the selection (students of other grades are untouched).
+3. Generates 15 new trial students with realistic names (e.g., `Aarav Mehta`, `Priya Sharma`).
+4. Assigns them to the **selected grade** with **Accounts, Commerce** as their subjects.
+5. Usernames include a grade suffix to prevent auth conflicts when both grades are seeded (e.g., `aarav.mehta.12` for 12th, `aarav.mehta.11` for 11th).
+6. Injects a slight delay (`setTimeout`) between Supabase insertions to avoid tripping API rate limits.
 
 ---
 
@@ -32,13 +37,15 @@ We have created three separate, lightweight HTML utility files that interact dir
 
 **Purpose**: Creates academic assessments to which marks can be attached.
 
+**Grade selector**: Choose `11th` or `12th` before clicking the button. Defaults to `12th`.
+
 **Logic**:
-1. Fetches all tests where `scheduled_by` matches the currently logged-in teacher.
-2. Finds and deletes existing tests containing `"Dummy Test"` in their title.
-3. Creates **15 new Dummy Tests**, alternating subjects between `Accounts` and `Commerce`.
-4. Sets the `grade` uniformly to **12th** to match the generated students.
+1. Reads the selected grade from the dropdown.
+2. Finds and deletes existing tests with titles matching `Test %` **and** the selected grade (tests of other grades are untouched).
+3. Creates **15 new tests** (`Test 1` – `Test 15`), alternating subjects between `Accounts` and `Commerce`.
+4. Sets the `grade` to the **selected grade**.
 5. Randomizes recent dates and enforces a `max_marks` of **50** for each test.
-6. Crucially attaches the active Teacher's `user.id` to the `scheduled_by` column so the tests appear correctly in the Teacher's academic dashboard.
+6. Attaches the active teacher's `user.id` to `scheduled_by` so the tests appear correctly in the teacher's academic dashboard.
 
 ---
 
@@ -46,12 +53,15 @@ We have created three separate, lightweight HTML utility files that interact dir
 
 **Purpose**: Bridges the gap between students and tests, synthesizing realistic academic performance data.
 
+**Grade selector**: Choose `11th` or `12th` before clicking the button. Defaults to `12th`. Must match the grade used in the student and test seeders.
+
 **Logic**:
-1. Fetches all dummy students and dummy tests created by the previous scripts.
-2. Identifies all existing marks associated with both these dummy students and dummy tests, and deletes them to start fresh.
-3. Iterates through every test, and for each test, generates a mark for every single dummy student.
-4. Generates a randomized `marks_obtained` array between **50% and 100%** of the `max_marks` capacity (e.g., between 25 and 50 marks out of 50).
-5. Excludes the `updated_at` schema row to avoid violating Supabase column constraints during insertion.
+1. Reads the selected grade from the dropdown.
+2. Fetches only tests with titles matching `Test %` **and** the selected grade.
+3. Fetches only students whose `grade` matches the selection.
+4. Clears existing marks for the fetched tests to allow clean re-runs.
+5. Iterates through every test and generates a mark for every matching student.
+6. Generates a randomized `marks_obtained` value between **50% and 100%** of `max_marks` (e.g., 25–50 out of 50).
 
 ---
 
@@ -63,9 +73,11 @@ Because these scripts rely heavily on the Teacher's active Supabase session (spe
 1. Run your local server (e.g., `npx serve -l 8080`).
 2. Open `http://localhost:8080/login.html` and log in as a Teacher.
 3. Once logged in (you should be on `teacher_dashboard.html`), open a new tab in the **same browser**.
-4. Navigate sequentially to the seed files:
-   - Go to `http://localhost:8080/seed-students.html`. Once it finishes and confirms success on the screen, proceed.
-   - Go to `http://localhost:8080/seed-tests.html`. Once finished, proceed.
-   - Go to `http://localhost:8080/seed-marks.html`. Let it finish executing.
+4. Navigate sequentially to the seed files, **selecting the same grade in each**:
+   - Go to `http://localhost:8080/seed-students.html`. Select the desired grade, click **Create 15 Students**, and wait for completion.
+   - Go to `http://localhost:8080/seed-tests.html`. Select the **same grade**, click **Create 15 Tests**, and wait for completion.
+   - Go to `http://localhost:8080/seed-marks.html`. Select the **same grade**, click **Assign Marks**, and let it finish.
 5. Once all three scripts complete successfully, navigate back to your `teacher_dashboard.html` tab.
 6. Refresh the page to see your newly generated dummy data populated across your Student lists and Academic tests.
+
+> **Tip — seeding both grades**: You can seed 11th and 12th independently. Run all three seeders for `11th`, then run all three again for `12th`. Because deletion is grade-scoped and usernames carry a grade suffix, the two sets of data will not interfere with each other.

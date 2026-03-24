@@ -9,8 +9,7 @@
 <div id="attendancePreSelectionContainer">
     <p class="text-muted" style="margin-bottom: 1.5rem;">Select a class scheduled for today to mark
         attendance.</p>
-    <div id="todaysClassesGrid" class="classes-grid"
-        style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+    <div id="todaysClassesGrid" class="classes-grid">
         <div class="loading-text">Loading today's classes...</div>
     </div>
 </div>
@@ -52,7 +51,7 @@
     <div id="addGuestForm"
         style="display:none; margin-top: 1.5rem; padding: 1.25rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); backdrop-filter: blur(16px);">
         <h4 style="margin: 0 0 1rem 0; color: var(--primary);">Cross-Batch Transfer</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="transfer-form-grid">
             <div class="form__group">
                 <label class="form__label" for="guestBatchSelect">From Batch</label>
                 <select class="form__control" id="guestBatchSelect">

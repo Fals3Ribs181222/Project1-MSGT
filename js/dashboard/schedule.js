@@ -46,7 +46,7 @@ async function renderCalendar() {
     loadingCell.textContent = 'Loading classes...';
     grid.appendChild(loadingCell);
 
-    const resClasses = await window.api.get('classes', {}, '*, batches:batch_id(name)');
+    const resClasses = await window.api.get('classes', {}, '*, batches:batch_id(name, grade, subject)');
     const classes = resClasses.success ? resClasses.data : [];
 
     loadingCell.remove();
@@ -85,9 +85,13 @@ async function renderCalendar() {
         dayClasses.forEach(c => {
             const pill = document.createElement('div');
             pill.className = `calendar__pill calendar__pill--${c.type}`;
+            const batchGrade = c.batches?.grade || '';
+            const batchSubject = c.batches?.subject || '';
+            const batchName = c.batches?.name || '';
             pill.innerHTML = `
                 <div class="calendar__pill-time">${window.formatTime(c.start_time)}</div>
-                <div class="calendar__pill-title">${c.title}</div>
+                <div class="calendar__pill-title">${batchGrade} ${batchSubject}</div>
+                <div class="calendar__pill-subtitle">${batchName}</div>
             `;
 
             const relatedClasses = c.class_group_id ? classes.filter(other =>
@@ -109,9 +113,12 @@ async function renderCalendar() {
                 relatedDays: relatedDays
             });
 
-            pill.addEventListener('click', (e) => {
+            pill.addEventListener('click', async (e) => {
                 const data = JSON.parse(e.currentTarget.dataset.classData);
-                window.openClassModal(data);
+                await window.loadTab('panel-attendance');
+                if (window.openAttendanceGrid) {
+                    window.openAttendanceGrid(data.id, data.batch_id, data.title, data.batchName, data.timeSpan);
+                }
             });
 
             pillsContainer.appendChild(pill);
@@ -361,7 +368,7 @@ function attachClassFormListeners() {
             status.textContent = type === 'regular' ? 'Classes scheduled successfully!' : 'Class scheduled successfully!';
             status.className = 'status status--success';
             status.style.display = 'block';
-            form.reset();
+            window.safeFormReset(form);
             if (type === 'regular' && btnReg) btnReg.click();
             else if (btnEx) btnEx.click();
             renderCalendar();

@@ -13,3 +13,11 @@ Batches help teachers structure their curriculum and schedules for specific grou
 Teachers have administrative capabilities over student records:
 1.  **Profile Oversight:** Viewing comprehensive details of all student profiles securely via the `profiles` table. This overrides standard RLS visibility limits using the `is_teacher()` function.
 2.  **Assignment:** Managing individual student assignments to relevant batches or initiating cross-batch transfers.
+
+### Grade-Scoped Access
+If a teacher has been assigned a specific grade (`11th` or `12th`) via the Manage Teachers page:
+- The **student list** (`students.js`) is filtered to show only students of that grade.
+- The **add-to-batch student picker** (`batches.js`) only shows students of that grade.
+- The **batch creation form** has the grade dropdown locked to the teacher's assigned grade.
+
+Teachers with no grade or `All Grades` see all students and batches regardless of grade. See [19-Teacher-Grade-Access-Control.md](./19-Teacher-Grade-Access-Control.md).

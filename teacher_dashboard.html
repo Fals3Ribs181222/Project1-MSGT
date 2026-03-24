@@ -14,11 +14,11 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
-<body class="is-home-active">
+<body class="is-home-active dash-page">
     <nav class="navbar" aria-label="Main navigation">
-        <div class="container navbar__container">
+        <div class="navbar__container" style="padding: 0 2rem;">
             <a href="index" class="navbar__logo">Mitesh Sir's Group Tuitions</a>
-            <ul class="navbar__links">
+            <ul class="navbar__links" style="background:none;border:none;padding:0;gap:0.25rem;">
                 <li><a href="index" class="navbar__link">Home</a></li>
                 <li><a href="testimonials" class="navbar__link">Testimonials</a></li>
                 <li><a href="results" class="navbar__link">Results</a></li>
@@ -26,78 +26,145 @@
         </div>
     </nav>
 
-    <main class="container section">
-        <header class="welcome">
-            <h1>Welcome, <span class="welcome__name" id="teacherName">Teacher</span>!</h1>
-            <p class="welcome__sub">Teacher Portal - Manage study materials and announcements.</p>
-        </header>
+    <div class="dash-layout">
 
-
-        <div class="panels-container" id="dashboard-content">
-            <div class="back-to-home-container" style="margin-bottom: 2rem; display: none;">
-                <button class="btn btn--outline btn--sm" id="btnBackToHome">← Back to Overview</button>
+        <!-- SIDEBAR -->
+        <aside class="dash-sidebar" id="dashSidebar">
+            <div class="dash-sidebar__top">
+                <span class="dash-sidebar__brand">📚 TuteFlow</span>
             </div>
-
-            <!-- Home Panel -->
-            <section class="panel tabs__panel tabs__panel--active" id="panel-home" role="tabpanel" aria-label="Home">
-                <header class="panel__header" style="margin-bottom: 2rem;">
-                    <h2>Dashboard Overview</h2>
-                </header>
-                <div class="landing-grid">
-                    <button class="landing-pill" data-target="panel-students">
-                        <span class="landing-pill__icon">🎓</span>
-                        <span class="landing-pill__text">Students</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-attendance">
-                        <span class="landing-pill__icon">✅</span>
-                        <span class="landing-pill__text">Attendance</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-upload">
-                        <span class="landing-pill__icon">📚</span>
-                        <span class="landing-pill__text">Materials</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-test">
-                        <span class="landing-pill__icon">📝</span>
-                        <span class="landing-pill__text">Tests</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-announcement">
-                        <span class="landing-pill__icon">📢</span>
-                        <span class="landing-pill__text">Announcements</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-batches">
-                        <span class="landing-pill__icon">🧑‍🤝‍🧑</span>
-                        <span class="landing-pill__text">Batches</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-schedule">
-                        <span class="landing-pill__icon">📅</span>
-                        <span class="landing-pill__text">Schedule</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-board_results">
-                        <span class="landing-pill__icon">🏆</span>
-                        <span class="landing-pill__text">Board Results</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-testimonials">
-                        <span class="landing-pill__icon">⭐</span>
-                        <span class="landing-pill__text">Testimonials</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-messages">
-                        <span class="landing-pill__icon">💬</span>
-                        <span class="landing-pill__text">Messages</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-ai-tools">
-                        <span class="landing-pill__icon">🧠</span>
-                        <span class="landing-pill__text">AI Tools</span>
-                    </button>
-                    <button class="landing-pill" data-target="panel-leaderboard">
-                        <span class="landing-pill__icon">🏅</span>
-                        <span class="landing-pill__text">Leaderboard</span>
-                    </button>
-
+            <nav class="dash-sidebar__nav">
+                <button class="dash-sidebar__item dash-sidebar__item--active" data-target="panel-home">
+                    <span>⊞</span> Dashboard
+                </button>
+                <button class="dash-sidebar__item" data-target="panel-students">
+                    <span>🎓</span> Students
+                </button>
+                <button class="dash-sidebar__item" data-target="panel-upload">
+                    <span>📚</span> Materials
+                </button>
+                <button class="dash-sidebar__item" data-target="panel-test">
+                    <span>📝</span> Tests
+                </button>
+                <button class="dash-sidebar__item" data-target="panel-announcement">
+                    <span>📢</span> Announcements
+                </button>
+                <button class="dash-sidebar__item" data-target="panel-batches">
+                    <span>🧑‍🤝‍🧑</span> Batches
+                </button>
+                <button class="dash-sidebar__item" data-target="panel-schedule">
+                    <span>📅</span> Schedule
+                </button>
+                <button class="dash-sidebar__item" data-target="panel-messages">
+                    <span>💬</span> Messages
+                </button>
+                <button class="dash-sidebar__item" data-target="panel-ai-tools">
+                    <span>🧠</span> AI Tools
+                </button>
+                <button class="dash-sidebar__item" data-target="panel-leaderboard">
+                    <span>🏅</span> Leaderboard
+                </button>
+            </nav>
+            <div class="dash-sidebar__bottom">
+                <div class="dash-sidebar__ext-links">
+                    <a href="index" class="dash-sidebar__item">🏠 Home</a>
+                    <a href="testimonials" class="dash-sidebar__item">⭐ Testimonials</a>
+                    <a href="results" class="dash-sidebar__item">📊 Results</a>
                 </div>
-            </section>
-            <!-- Dynamic Tabs loaded by router.js -->
+                <button class="dash-sidebar__logout" id="btnSidebarLogout">⏻ Logout</button>
+                <div class="dash-sidebar__profile">
+                    <div class="dash-sidebar__avatar" id="sidebarAvatar">T</div>
+                    <div>
+                        <div class="dash-sidebar__name" id="sidebarName">Teacher</div>
+                        <div class="dash-sidebar__role">Teacher</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
-    </main>
+        <!-- MAIN CONTENT -->
+        <main class="dash-main">
+            <!-- Hamburger toggle (mobile only) -->
+            <button class="dash-menu-toggle" id="dashMenuToggle" aria-label="Open navigation">☰</button>
+
+            <div class="panels-container" id="dashboard-content">
+                <div class="back-to-home-container" style="margin-bottom: 2rem; display: none;">
+                    <button class="btn btn--outline btn--sm" id="btnBackToHome">
+                        <span class="back-text-full">← Back to Overview</span>
+                        <span class="back-text-mobile">Overview</span>
+                    </button>
+                </div>
+
+                <!-- HOME PANEL -->
+                <section class="tabs__panel tabs__panel--active" id="panel-home" role="tabpanel" aria-label="Home">
+                    <div class="dash-widgets">
+
+                        <!-- Widget 1: Today's Classes -->
+                        <div class="dash-widget dash-widget--classes dash-widget--full">
+                            <div class="dash-widget__header">
+                                <div>
+                                    <h3>Today's Classes</h3>
+                                    <p class="dash-widget__sub" id="todayDate">—</p>
+                                </div>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-schedule')">View Full Schedule</button>
+                            </div>
+                            <div class="classes-list" id="todaysClassesList">
+                                <p class="loading-text">Loading...</p>
+                            </div>
+                        </div>
+
+                        <!-- Widget 2: Tests Preview (1 past + 2 upcoming) -->
+                        <div class="dash-widget dash-widget--tests">
+                            <div class="dash-widget__header">
+                                <h3>Tests</h3>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-test')">View All</button>
+                            </div>
+                            <div class="tests-preview-list" id="testsPreviewList">
+                                <p class="loading-text">Loading...</p>
+                            </div>
+                        </div>
+
+                        <!-- Widget 3: Quick Announcement -->
+                        <div class="dash-widget dash-widget--announce">
+                            <div class="dash-widget__header">
+                                <h3>Quick Announcement</h3>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-announcement')">View All</button>
+                            </div>
+                            <form class="quick-announce-form" id="quickAnnounceForm">
+                                <input type="text" id="qaTitle" class="form__input" placeholder="Title" required>
+                                <textarea id="qaMessage" class="form__textarea" rows="3" placeholder="Message..." required></textarea>
+                                <div class="quick-announce-footer">
+                                    <select id="qaGrade" class="form__select"></select>
+                                    <button type="submit" class="btn btn--primary btn--sm" id="btnQASubmit">Post</button>
+                                </div>
+                                <p class="status" id="qaStatus"></p>
+                            </form>
+                        </div>
+
+                        <!-- Widget 4: Mini Leaderboard -->
+                        <div class="dash-widget dash-widget--leaderboard">
+                            <div class="dash-widget__header">
+                                <div>
+                                    <h3>🏆 Leaderboard</h3>
+                                    <span class="dash-widget__badge">GLOBAL RANK</span>
+                                </div>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-leaderboard')">Full Board</button>
+                            </div>
+                            <div class="mini-leaderboard" id="miniLeaderboard">
+                                <p class="loading-text">Loading...</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+                <!-- Dynamic Tabs loaded by router.js -->
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Sidebar backdrop (mobile) -->
+    <div class="dash-sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <!-- Class Detail Modal Overlay -->
     <div id="classModalOverlay" class="modal-overlay" style="display:none;">
@@ -134,11 +201,9 @@
         </div>
     </div>
 
-    <footer class="footer">
+    <footer class="footer" style="background: var(--glass-bg); backdrop-filter: blur(16px); padding: 1rem 0; border-top: 1px solid var(--border-color);">
         <div class="container">
-            <div class="footer__bottom">
-                <p>&copy; 2026 Mitesh Sir's Group Tuitions. All rights reserved.</p>
-            </div>
+            <p style="text-align:center; font-size:0.875rem; color:var(--text-muted); margin:0;">&copy; 2026 Mitesh Sir's Group Tuitions. All rights reserved.</p>
         </div>
     </footer>
 
@@ -152,10 +217,207 @@
         import { loadTab } from "./js/dashboard/router.js";
         window.loadTab = loadTab;
     </script>
+
+    <!-- Remove logout from navbar — sidebar handles it -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.navbar__links a').forEach(a => {
+                if (a.textContent.trim() === 'Logout') a.closest('li')?.remove();
+            });
+        });
+    </script>
+
+    <!-- Auth guard -->
     <script>
         const user = window.auth.requireRole("teacher");
         document.getElementById("teacherName").textContent = user.name;
+        document.getElementById("sidebarName").textContent = user.name;
+        document.getElementById("sidebarAvatar").textContent = user.name?.[0]?.toUpperCase() || 'T';
+        window.auth.refreshProfile();
     </script>
+
+    <!-- Feature flags: hide disabled sidebar items -->
+    <script>
+        (async () => {
+            const flags = await window.loadFeatureFlags();
+            const hideSidebarItem = (target) => {
+                const btn = document.querySelector(`.dash-sidebar__item[data-target="${target}"]`);
+                if (btn) btn.style.display = 'none';
+            };
+            if (!flags.students_enabled)      hideSidebarItem('panel-students');
+            if (!flags.attendance_enabled)    hideSidebarItem('panel-attendance');
+            if (!flags.materials_enabled)     hideSidebarItem('panel-upload');
+            if (!flags.tests_enabled)         hideSidebarItem('panel-test');
+            if (!flags.announcements_enabled) hideSidebarItem('panel-announcement');
+            if (!flags.batches_enabled)       hideSidebarItem('panel-batches');
+            if (!flags.schedule_enabled)      hideSidebarItem('panel-schedule');
+            if (!flags.messages_enabled)      hideSidebarItem('panel-messages');
+            if (!flags.ai_tools_enabled)      hideSidebarItem('panel-ai-tools');
+            if (!flags.leaderboard_enabled)   hideSidebarItem('panel-leaderboard');
+        })();
+    </script>
+
+    <!-- Sidebar wiring -->
+    <script>
+        const sidebar = document.getElementById('dashSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+
+        // Hamburger open
+        document.getElementById('dashMenuToggle').addEventListener('click', () => {
+            sidebar.classList.add('dash-sidebar--open');
+            backdrop.classList.add('dash-sidebar-backdrop--visible');
+        });
+        // Backdrop close
+        backdrop.addEventListener('click', () => {
+            sidebar.classList.remove('dash-sidebar--open');
+            backdrop.classList.remove('dash-sidebar-backdrop--visible');
+        });
+
+        // Nav items
+        document.querySelectorAll('.dash-sidebar__item[data-target]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                window.loadTab(btn.dataset.target);
+                sidebar.classList.remove('dash-sidebar--open');
+                backdrop.classList.remove('dash-sidebar-backdrop--visible');
+            });
+        });
+
+        // Logout
+        document.getElementById('btnSidebarLogout').addEventListener('click', () => window.auth.logout());
+    </script>
+
+    <!-- Dashboard widget data -->
+    <script>
+        async function loadDashboardWidgets() {
+            const user = window.auth.getUser();
+
+            // Today's date
+            const now = new Date();
+            document.getElementById('todayDate').textContent =
+                now.toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' });
+
+            const todayDow = now.getDay();
+            const todayIso = now.toISOString().slice(0, 10);
+
+            // --- Today's Classes ---
+            const classesRes = await window.api.get(
+                'classes', {}, '*, batches(name, subject)',
+                { order: 'start_time', ascending: true }
+            );
+            const todaysList = document.getElementById('todaysClassesList');
+            if (classesRes.success && classesRes.data && classesRes.data.length) {
+                const todays = classesRes.data.filter(c =>
+                    c.class_date === todayIso || (!c.class_date && c.day_of_week === todayDow)
+                );
+                if (todays.length) {
+                    todaysList.innerHTML = todays.map(c => {
+                        const timeStr = window.formatTime ? window.formatTime(c.start_time) : c.start_time;
+                        const isExtra = c.type === 'extra';
+                        const type = isExtra ? 'Extra' : 'Regular';
+                        return `
+                        <div class="class-item" data-class-id="${c.id}" data-batch-id="${c.batch_id}" data-title="${(c.title || '').replace(/"/g, '&quot;')}" data-batch-name="${(c.batches?.name || '').replace(/"/g, '&quot;')}" data-time="${timeStr}">
+                            <span class="class-item__badge${isExtra ? ' class-item__badge--extra' : ''}">${type}</span>
+                            <div class="class-item__body">
+                                <strong>${c.batches?.subject || 'Class'}</strong>
+                                <span class="text-muted">${c.batches?.name || ''} &bull; ${timeStr}</span>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    todaysList.querySelectorAll('.class-item[data-class-id]').forEach(item => {
+                        item.addEventListener('click', async () => {
+                            await window.loadTab('panel-attendance');
+                            if (window.openAttendanceGrid) {
+                                window.openAttendanceGrid(item.dataset.classId, item.dataset.batchId, item.dataset.title, item.dataset.batchName, item.dataset.time);
+                            }
+                        });
+                    });
+                } else {
+                    todaysList.innerHTML = '<p class="loading-text">No classes today.</p>';
+                }
+            } else {
+                todaysList.innerHTML = '<p class="loading-text">No classes scheduled.</p>';
+            }
+
+            // --- Tests Preview: 1 past + 2 upcoming ---
+            const testsRes = await window.api.get('tests', {}, '*', { order: 'date', ascending: true });
+            const testsList = document.getElementById('testsPreviewList');
+            if (testsRes.success && testsRes.data && testsRes.data.length) {
+                const past = testsRes.data.filter(t => t.date < todayIso).slice(-1);
+                const upcoming = testsRes.data.filter(t => t.date >= todayIso).slice(0, 2);
+                const show = [...past, ...upcoming];
+                if (show.length) {
+                    testsList.innerHTML = show.map(t => {
+                        const isPast = t.date < todayIso;
+                        return `
+                        <a href="manage_marks?testId=${t.id}" class="test-preview-item ${isPast ? 'test-preview-item--past' : ''}" style="text-decoration:none; color:inherit; cursor:pointer;">
+                            <span class="test-preview-item__badge">${isPast ? 'Past' : 'Upcoming'}</span>
+                            <div class="test-preview-item__body">
+                                <strong>${t.title || t.subject || '—'}</strong>
+                                <span class="text-muted">${t.subject || ''} · ${t.date || ''} · ${t.max_marks || '?'} marks</span>
+                            </div>
+                        </a>`;
+                    }).join('');
+                } else {
+                    testsList.innerHTML = '<p class="loading-text">No tests found.</p>';
+                }
+            } else {
+                testsList.innerHTML = '<p class="loading-text">No tests found.</p>';
+            }
+
+            // --- Quick Announcement form ---
+            window.populateGradeSelect('qaGrade', true);
+            window.lockGradeSelect('qaGrade');
+            document.getElementById('quickAnnounceForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnQASubmit');
+                btn.disabled = true;
+                btn.textContent = 'Posting...';
+                const res = await window.api.post('announcements', {
+                    title: document.getElementById('qaTitle').value,
+                    message: document.getElementById('qaMessage').value,
+                    grade: document.getElementById('qaGrade').value,
+                    posted_by: user.id
+                });
+                btn.disabled = false;
+                btn.textContent = 'Post';
+                if (res.success) {
+                    window.showStatus('qaStatus', 'Announcement posted!', 'success');
+                    document.getElementById('quickAnnounceForm').reset();
+                    window.populateGradeSelect('qaGrade', true);
+                    window.lockGradeSelect('qaGrade');
+                } else {
+                    window.showStatus('qaStatus', res.error || 'Failed to post.', 'error');
+                }
+            });
+
+            // --- Mini Leaderboard (top 3) ---
+            const gradeFilter = user.grade && user.grade !== 'All Grades' ? { grade: user.grade } : {};
+            const lbRes = await window.api.get(
+                'student_rankings', gradeFilter, '*',
+                { order: 'rank', ascending: true }
+            );
+            const miniLb = document.getElementById('miniLeaderboard');
+            if (lbRes.success && lbRes.data && lbRes.data.length) {
+                const medals = ['🥇', '🥈', '🥉'];
+                miniLb.innerHTML = lbRes.data.slice(0, 3).map((s, i) => `
+                    <div class="mini-lb-row">
+                        <span class="mini-lb-row__medal">${medals[i] || (i + 1)}</span>
+                        <div class="mini-lb-row__avatar">${s.name?.[0]?.toUpperCase() || '?'}</div>
+                        <div class="mini-lb-row__info">
+                            <strong>${s.name || '—'}</strong>
+                            <span>${s.grade || ''}</span>
+                        </div>
+                        <span class="mini-lb-row__score">${Math.round(s.final_score ?? s.avg_percentage ?? 0)}</span>
+                    </div>`).join('');
+            } else {
+                miniLb.innerHTML = '<p class="loading-text">No rankings yet.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboardWidgets);
+    </script>
+
+
 </body>
 
 </html>

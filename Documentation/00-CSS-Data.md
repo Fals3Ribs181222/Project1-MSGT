@@ -40,3 +40,11 @@ Used to maintain consistent rounding across components.
 
 ### Transitions
 - `--transition`: `all 0.3s cubic-bezier(0.4, 0, 0.2, 1)` (A standardized, smooth easing curve used globally for hover effects, state changes, and minor animations)
+
+## UI Components
+
+### Pill Toggle (`.pill-toggle`)
+Used for binary/multi-mode switching inside panels (e.g. View Students / + Add Student). A beige container with `--bg-surface-hover` background and `--border-color` border. Active pill fills with `--primary` blue.
+
+### Subject Pill Selector (`.subject-pills`)
+Used on all forms that include a subject field (Add Student, Upload Material, Schedule Test, Create Batch). Shares the same container style as `.pill-toggle` (beige background, border, `--radius-full`). Each subject option is a hidden checkbox with a styled `<span class="subject-pill__label">`. Selected pills fill with `--secondary` (theme green). When **all** subjects are selected, a CSS `:has()` rule also turns the container itself green, filling the gap between pills for a fully unified look.

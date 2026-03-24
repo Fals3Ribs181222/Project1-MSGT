@@ -12,23 +12,19 @@
 
     <div class="form__group">
         <label class="form__label" for="batchGrade">Grade</label>
-        <select id="batchGrade" class="form__control" required>
-            <option value="">-- Select Grade --</option>
-            <option value="11th">11th</option>
-            <option value="12th">12th</option>
-        </select>
+        <select id="batchGrade" class="form__control" required></select>
     </div>
 
     <div class="form__group">
         <label class="form__label">Subjects</label>
-        <div class="form__checkbox-group">
-            <label class="form__checkbox-label">
-                <input type="checkbox" name="batchSubjects" value="Accounts" class="form__checkbox">
-                Accounts
+        <div class="subject-pills">
+            <label class="subject-pill">
+                <input type="checkbox" name="batchSubjects" value="Accounts">
+                <span class="subject-pill__label">Accounts</span>
             </label>
-            <label class="form__checkbox-label">
-                <input type="checkbox" name="batchSubjects" value="Commerce" class="form__checkbox">
-                Commerce
+            <label class="subject-pill">
+                <input type="checkbox" name="batchSubjects" value="Commerce">
+                <span class="subject-pill__label">Commerce</span>
             </label>
         </div>
     </div>
