@@ -17,8 +17,14 @@ async function loadMaterials() {
     btnRefresh.disabled = false;
     btnRefresh.textContent = 'Refresh List';
 
-    if (response.data && response.data.length > 0) {
-        tbody.innerHTML = response.data.map(file => `
+    const teacherGrade = user.grade;
+    let files = response.data || [];
+    if (teacherGrade && teacherGrade !== 'All Grades') {
+        files = files.filter(f => !f.grade || f.grade === '' || f.grade === teacherGrade);
+    }
+
+    if (files.length > 0) {
+        tbody.innerHTML = files.map(file => `
         <tr class="data-table__row">
             <td class="data-table__td--main">${file.title || '-'}</td>
             <td class="data-table__td">${file.subject || '-'}</td>
@@ -41,6 +47,9 @@ async function loadUploadComponent() {
 function attachUploadListeners() {
     const form = document.getElementById('uploadForm');
     if (!form) return;
+
+    window.populateGradeSelect('fileGrade');
+    window.lockGradeSelect('fileGrade');
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -119,7 +128,7 @@ function attachUploadListeners() {
                     });
                 }
 
-                e.target.reset();
+                window.safeFormReset(e.target);
                 loadMaterials();
             } else {
                 throw new Error(response.error);

@@ -7,7 +7,22 @@ export async function loadTab(targetId) {
 
     // Update URL hash to reflect active tab
     const featureSlug = targetId.replace('panel-', '');
-    history.replaceState(null, '', featureSlug === 'home' ? location.pathname : `#${featureSlug}`);
+    history.replaceState(null, '', `#${featureSlug}`);
+
+    // Toggle the "Back to Overview" button and welcome banner immediately
+    const backBtn = document.querySelector('.back-to-home-container');
+    if (targetId === 'panel-home') {
+        document.body.classList.add('is-home-active');
+        backBtn.style.display = 'none';
+    } else {
+        document.body.classList.remove('is-home-active');
+        backBtn.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+    }
+
+    // Update active sidebar item
+    document.querySelectorAll('.dash-sidebar__item').forEach(btn => {
+        btn.classList.toggle('dash-sidebar__item--active', btn.dataset.target === targetId);
+    });
 
     // Check if the panel already exists in the DOM
     let targetPanel = document.getElementById(targetId);
@@ -64,15 +79,6 @@ export async function loadTab(targetId) {
         }
     }
 
-    // Toggle the "Back to Overview" button
-    const backBtn = document.querySelector('.back-to-home-container');
-    if (targetId === 'panel-home') {
-        backBtn.style.display = 'none';
-        document.querySelector('.welcome').style.display = 'block';
-    } else {
-        backBtn.style.display = 'block';
-        document.querySelector('.welcome').style.display = 'none';
-    }
 }
 
 // Set up global event listeners for navigation pills and back buttons
@@ -94,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Listen for back to home button
-        if (e.target.id === 'btnBackToHome') {
+        if (e.target.closest('#btnBackToHome')) {
             loadTab('panel-home');
         }
     });

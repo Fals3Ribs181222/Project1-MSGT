@@ -1,10 +1,9 @@
-<div class="panel__info">
-    <h3>Register New Student</h3>
-    <p>Fill out the details below to create a student account. The student will be able to log in immediately with the
-        username and password you set.</p>
+<div style="margin-bottom:1.5rem;">
+    <h3 style="margin-bottom:0.5rem;">Register New Student</h3>
+    <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.6;margin:0;">Fill out the details below to create a student account. The student will be able to log in immediately with the username and password you set.</p>
 </div>
 
-<form id="addStudentForm">
+<form id="addStudentForm" style="max-width:520px;">
     <div class="form__group">
         <label class="form__label" for="studentName">Student Full Name</label>
         <input type="text" id="studentName" class="form__control" required placeholder="e.g. Rahul Sharma">
@@ -12,26 +11,22 @@
 
     <div class="form__group">
         <label class="form__label" for="studentGrade">Grade</label>
-        <select id="studentGrade" class="form__control" required>
-            <option value="">-- Select Grade --</option>
-            <option value="11th">11th</option>
-            <option value="12th">12th</option>
-        </select>
+        <select id="studentGrade" class="form__control" required></select>
     </div>
 
-    <fieldset class="form__group" style="border: none; padding: 0; margin: 0;">
-        <legend class="form__label">Subjects</legend>
-        <div class="form__checkbox-group">
-            <label class="form__checkbox-label" for="subjAccounts">
-                <input type="checkbox" id="subjAccounts" name="studentSubjects" value="Accounts" class="form__checkbox">
-                Accounts
+    <div class="form__group">
+        <label class="form__label">Subjects</label>
+        <div class="subject-pills">
+            <label class="subject-pill">
+                <input type="checkbox" name="studentSubjects" value="Accounts">
+                <span class="subject-pill__label">Accounts</span>
             </label>
-            <label class="form__checkbox-label" for="subjCommerce">
-                <input type="checkbox" id="subjCommerce" name="studentSubjects" value="Commerce" class="form__checkbox">
-                Commerce
+            <label class="subject-pill">
+                <input type="checkbox" name="studentSubjects" value="Commerce">
+                <span class="subject-pill__label">Commerce</span>
             </label>
         </div>
-    </fieldset>
+    </div>
 
     <div class="form__group">
         <label class="form__label" for="studentUsername">Username</label>

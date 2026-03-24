@@ -128,6 +128,20 @@ const api = {
         return { success: true };
     },
 
+    async patch(tableName, id, updates) {
+        const { data: result, error } = await supabaseClient
+            .from(tableName)
+            .update(updates)
+            .eq('id', id)
+            .select();
+
+        if (error) {
+            console.error(`Supabase Patch Error (${tableName}):`, error);
+            return { success: false, error: error.message };
+        }
+        return { success: true, data: result[0] };
+    },
+
     async deleteMany(tableName, eqConstraints) {
         let query = supabaseClient.from(tableName).delete();
 
@@ -204,11 +218,33 @@ const auth = {
         return user;
     },
 
+    async refreshProfile() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) return;
+        const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+        if (error || !profile) return;
+        const user = {
+            id: profile.id,
+            username: profile.username,
+            name: profile.name,
+            role: profile.role,
+            grade: profile.grade,
+            subjects: profile.subjects
+        };
+        localStorage.setItem('mitesh_tutions_user', JSON.stringify(user));
+    },
+
     redirect(role) {
         if (role === 'teacher') {
             window.location.href = 'teacher_dashboard';
         } else if (role === 'student') {
             window.location.href = 'student_dashboard';
+        } else if (role === 'admin') {
+            window.location.href = 'admin_dashboard';
         }
     },
 
@@ -226,23 +262,20 @@ const auth = {
             const dashLi = document.createElement('li');
             const dashLink = document.createElement('a');
             dashLink.className = 'navbar__link';
-            dashLink.href = user.role === 'teacher' ? 'teacher_dashboard' : 'student_dashboard';
-            dashLink.textContent = 'Dashboard';
+            if (user.role === 'teacher') {
+                dashLink.href = 'teacher_dashboard';
+                dashLink.textContent = 'Dashboard';
+            } else if (user.role === 'student') {
+                dashLink.href = 'student_dashboard';
+                dashLink.textContent = 'Dashboard';
+            } else if (user.role === 'admin') {
+                dashLink.href = 'admin_dashboard';
+                dashLink.textContent = 'Admin Panel';
+            }
             dashLi.appendChild(dashLink);
             navLinks.appendChild(dashLi);
 
-            // Add logout link
-            const logoutLi = document.createElement('li');
-            const logoutLink = document.createElement('a');
-            logoutLink.className = 'navbar__link';
-            logoutLink.href = '#';
-            logoutLink.textContent = 'Logout';
-            logoutLink.onclick = (e) => {
-                e.preventDefault();
-                this.logout();
-            };
-            logoutLi.appendChild(logoutLink);
-            navLinks.appendChild(logoutLi);
+
         }
     }
 };
@@ -270,9 +303,16 @@ function createElement(tag, className, textContent = '') {
     return el;
 }
 
+async function loadFeatureFlags() {
+    const { data, error } = await supabaseClient.from('feature_flags').select('key, enabled');
+    if (error || !data) return {};
+    return Object.fromEntries(data.map(f => [f.key, f.enabled]));
+}
+
 // Global functions accessible to page scripts
 window.api = api;
 window.auth = auth;
 window.createElement = createElement;
 window.supabaseClient = supabaseClient;
 window.CONFIG = CONFIG;
+window.loadFeatureFlags = loadFeatureFlags;

@@ -1,0 +1,51 @@
+<!-- Teachers Tab -->
+<header class="panel__header" style="margin-bottom: 1.5rem;">
+    <h2>Manage Teachers</h2>
+</header>
+
+<div id="teachersListStatus" class="status"></div>
+
+<div class="table-wrap">
+    <table id="teachersTable" aria-label="Teachers list">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Username</th>
+                <th scope="col">Assigned Grade</th>
+                <th scope="col">Subjects</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody id="teachersTableBody">
+            <tr>
+                <td colspan="5" class="loading-text">Loading teachers...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="text-right" style="margin-top: 0.75rem;">
+    <button class="btn btn--primary btn--sm" id="btnRefreshTeachers">Refresh List</button>
+</div>
+
+<!-- Inline Edit Modal -->
+<div id="teacherGradeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:var(--bg-surface,#fff); border-radius:var(--radius-lg); padding:2rem; min-width:320px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+        <h3 style="margin:0 0 0.25rem;">Assign Grade</h3>
+        <p id="teacherGradeModalName" style="color:var(--text-muted); font-size:0.9rem; margin:0 0 1.25rem;"></p>
+
+        <label class="form__label">Grade Access</label>
+        <select id="teacherGradeSelect" class="form__control" style="margin-bottom:1.25rem;">
+            <option value="">All Grades (unrestricted)</option>
+            <option value="11th">11th only</option>
+            <option value="12th">12th only</option>
+        </select>
+
+        <div id="teacherGradeModalStatus" class="status"></div>
+
+        <div style="display:flex; gap:0.75rem; margin-top:0.5rem;">
+            <button class="btn btn--primary" id="btnSaveTeacherGrade">Save</button>
+            <button class="btn btn--outline" id="btnCancelTeacherGrade">Cancel</button>
+        </div>
+    </div>
+</div>

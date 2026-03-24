@@ -71,6 +71,27 @@
             font-weight: 600;
             color: #444;
         }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            color: #2d3748;
+            cursor: pointer;
+        }
+
+        .controls button {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 
@@ -83,7 +104,13 @@
         Open your teacher dashboard first, then come back to this file.
     </p>
 
-    <button id="btnRun" onclick="runSeed()">Create 15 Tests</button>
+    <div class="controls">
+        <select id="gradeSelect">
+            <option value="12th" selected>Grade 12th</option>
+            <option value="11th">Grade 11th</option>
+        </select>
+        <button id="btnRun" onclick="runSeed()">Create 15 Tests</button>
+    </div>
     <div id="progress"></div>
     <div class="log" id="log">Waiting to start...</div>
 
@@ -116,6 +143,8 @@
             btn.disabled = true;
             document.getElementById('log').innerHTML = '';
 
+            const selectedGrade = document.getElementById('gradeSelect').value;
+
             // 1. Check the teacher is logged in
             const { data: sessionData } = await client.auth.getSession();
             const teacherSession = sessionData?.session;
@@ -126,15 +155,16 @@
                 return;
             }
 
-            log(`Logged in as teacher. Starting seed...`, 'info');
+            log(`Logged in as teacher. Seeding grade ${selectedGrade} tests...`, 'info');
 
-            // 2. Fetch and Delete Existing Tests (Optional - we'll just delete ones starting with 'Test ')
-            log('Fetching existing dummy tests to remove...', 'info');
+            // 2. Fetch and Delete Existing Tests for this grade
+            log(`Fetching existing ${selectedGrade} dummy tests to remove...`, 'info');
             try {
                 const { data: existingTests, error: fetchError } = await client
                     .from('tests')
                     .select('id, title')
-                    .ilike('title', 'Test %');
+                    .ilike('title', 'Test %')
+                    .eq('grade', selectedGrade);
 
                 if (fetchError) {
                     log(`✗ Error fetching existing tests: ${fetchError.message}`, 'err');
@@ -179,7 +209,7 @@
 
                 const newTest = {
                     title: `Test ${i}`,
-                    grade: '12th',
+                    grade: selectedGrade,
                     subject: subject,
                     date: testDate.toISOString().split('T')[0],
                     max_marks: 50,

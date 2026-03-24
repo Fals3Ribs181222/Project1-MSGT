@@ -5,7 +5,15 @@ document.getElementById('studentClassInfo').textContent = `Grade: ${user.grade |
 
 let allFiles = [];
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const flags = await window.loadFeatureFlags();
+    if (!flags.student_portal_enabled) {
+        document.querySelector('main').innerHTML =
+            '<div class="status status--error" style="margin:3rem auto;max-width:480px;text-align:center;">' +
+            'The student portal is temporarily unavailable. Please check back later.</div>';
+        return;
+    }
+
     fetchData();
     fetchRank();
     document.getElementById('filterSubject').addEventListener('change', renderFiles);

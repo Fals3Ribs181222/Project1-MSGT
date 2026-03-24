@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Testimonials</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<main class="container section">
+    <header style="margin-bottom:2rem;">
+        <h1>Manage Testimonials</h1>
+        <p style="color:var(--text-muted);">Add or delete student testimonials shown on the public site.</p>
+    </header>
+
+    <!-- Add Form -->
+    <section class="panel" style="margin-bottom:2rem;">
+        <header class="panel__header"><h2>Add Testimonial</h2></header>
+        <form id="testimonialForm">
+            <div class="form__group">
+                <label class="form__label">Student Name *</label>
+                <input type="text" id="tName" class="form__control" required placeholder="e.g. Priya Sharma">
+            </div>
+            <div class="form__group">
+                <label class="form__label">Subject (Optional)</label>
+                <input type="text" id="tSubject" class="form__control" placeholder="e.g. Accounts">
+            </div>
+            <div class="form__group">
+                <label class="form__label">Batch Year (Optional)</label>
+                <input type="text" id="tYear" class="form__control" placeholder="e.g. 2025">
+            </div>
+            <div class="form__group">
+                <label class="form__label">Testimonial Text *</label>
+                <textarea id="tText" class="form__control" required rows="4" placeholder="Enter testimonial..."></textarea>
+            </div>
+            <div class="form__group">
+                <label class="form__label">Media (Photo or Video — Optional)</label>
+                <input type="file" id="tMedia" class="form__control" accept="image/*,video/*">
+            </div>
+            <button type="submit" class="btn btn--primary" id="btnAdd">Add Testimonial</button>
+            <div id="addStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
+        </form>
+    </section>
+
+    <!-- List -->
+    <section class="panel">
+        <header class="panel__header">
+            <h2>All Testimonials</h2>
+            <button class="btn btn--outline btn--sm" id="btnRefresh">Refresh</button>
+        </header>
+        <div id="listStatus" class="status" style="display:none;margin-bottom:0.75rem;"></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Subject</th>
+                        <th>Year</th>
+                        <th>Text</th>
+                        <th>Media</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="listBody">
+                    <tr><td colspan="7" class="loading-text">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/app.js"></script>
+<script>
+const client = window.supabaseClient;
+
+async function loadList() {
+    const tbody = document.getElementById('listBody');
+    const status = document.getElementById('listStatus');
+    status.style.display = 'none';
+    tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Loading...</td></tr>';
+
+    const { data, error } = await client.from('testimonials').select('*').order('created_at', { ascending: false });
+    if (error) {
+        status.textContent = error.message;
+        status.className = 'status status--error';
+        status.style.display = 'block';
+        tbody.innerHTML = '';
+        return;
+    }
+
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="loading-text">No testimonials yet.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = data.map(t => `
+        <tr>
+            <td>${t.student_name || '—'}</td>
+            <td>${t.subject || '—'}</td>
+            <td>${t.year || '—'}</td>
+            <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(t.testimonial_text||'').replace(/"/g,'&quot;')}">${t.testimonial_text || '—'}</td>
+            <td>${t.media_url ? `<a href="${t.media_url}" target="_blank" style="color:var(--primary)">View</a>` : '—'}</td>
+            <td>${t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}</td>
+            <td><button class="btn btn--danger btn--sm" onclick="deleteRow('${t.id}','${(t.media_url||'').replace(/'/g,"\\'")}')">Delete</button></td>
+        </tr>
+    `).join('');
+}
+
+window.deleteRow = async function(id, mediaUrl) {
+    if (!confirm('Delete this testimonial permanently?')) return;
+    if (mediaUrl) {
+        const filePath = mediaUrl.split('/').pop();
+        await client.storage.from('testimonials').remove([`testimonials/${filePath}`]);
+    }
+    const { error } = await client.from('testimonials').delete().eq('id', id);
+    if (error) { alert('Delete failed: ' + error.message); return; }
+    loadList();
+};
+
+document.getElementById('testimonialForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnAdd');
+    const status = document.getElementById('addStatus');
+    btn.disabled = true;
+    btn.textContent = 'Adding...';
+    status.style.display = 'none';
+
+    try {
+        let mediaUrl = null, mediaType = null;
+        const mediaInput = document.getElementById('tMedia');
+        if (mediaInput.files.length > 0) {
+            const file = mediaInput.files[0];
+            mediaType = file.type;
+            const fileName = `${Date.now()}_${file.name}`;
+            const { error: uploadErr } = await client.storage.from('testimonials').upload(`testimonials/${fileName}`, file);
+            if (uploadErr) throw uploadErr;
+            const { data: { publicUrl } } = client.storage.from('testimonials').getPublicUrl(`testimonials/${fileName}`);
+            mediaUrl = publicUrl;
+        }
+
+        const { error } = await client.from('testimonials').insert([{
+            student_name: document.getElementById('tName').value.trim(),
+            subject: document.getElementById('tSubject').value.trim() || null,
+            year: document.getElementById('tYear').value.trim() || null,
+            testimonial_text: document.getElementById('tText').value.trim(),
+            media_url: mediaUrl,
+            media_type: mediaType
+        }]);
+        if (error) throw error;
+
+        status.textContent = 'Testimonial added!';
+        status.className = 'status status--success';
+        status.style.display = 'block';
+        e.target.reset();
+        loadList();
+    } catch (err) {
+        status.textContent = 'Error: ' + err.message;
+        status.className = 'status status--error';
+        status.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Add Testimonial';
+    }
+});
+
+document.getElementById('btnRefresh').addEventListener('click', loadList);
+loadList();
+</script>
+</body>
+</html>

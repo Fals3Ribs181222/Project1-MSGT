@@ -9,11 +9,16 @@ async function loadStudentPicker() {
     const select = document.getElementById('msgStudentSelect');
     if (!select) return;
 
-    const res = await window.api.get('profiles', { role: 'student' }, 'id, name, phone, parent_phone');
+    const res = await window.api.get('profiles', { role: 'student' }, 'id, name, grade, phone, parent_phone');
     if (res.success && res.data) {
-        allStudentsCache = res.data;
+        let students = res.data;
+        const teacherGrade = window.auth.getUser()?.grade;
+        if (teacherGrade && teacherGrade !== 'All Grades') {
+            students = students.filter(s => s.grade === teacherGrade);
+        }
+        allStudentsCache = students;
         select.innerHTML = '<option value="">Select a student...</option>' +
-            res.data.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     } else {
         select.innerHTML = '<option value="">Failed to load students</option>';
     }

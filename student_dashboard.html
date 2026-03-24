@@ -12,19 +12,38 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
-<body>
-    <nav class="navbar" aria-label="Main navigation">
-        <div class="container navbar__container">
-            <a href="index" class="navbar__logo">Mitesh Sir's Group Tuitions</a>
-            <ul class="navbar__links">
-                <li><a href="index" class="navbar__link">Home</a></li>
-                <li><a href="testimonials" class="navbar__link">Testimonials</a></li>
-                <li><a href="results" class="navbar__link">Results</a></li>
-            </ul>
-        </div>
-    </nav>
+<body class="dash-page">
+    <nav class="navbar" aria-label="Main navigation"></nav>
 
-    <main class="container section">
+    <div class="dash-layout">
+        <!-- SIDEBAR -->
+        <aside class="dash-sidebar" id="dashSidebar">
+            <div class="dash-sidebar__top">
+                <span class="dash-sidebar__brand">📚 TuteFlow</span>
+            </div>
+            <nav class="dash-sidebar__nav">
+                <div class="dash-sidebar__ext-links">
+                    <a href="index" class="dash-sidebar__item">🏠 Home</a>
+                    <a href="testimonials" class="dash-sidebar__item">⭐ Testimonials</a>
+                    <a href="results" class="dash-sidebar__item">📊 Results</a>
+                </div>
+            </nav>
+            <div class="dash-sidebar__bottom">
+                <button class="dash-sidebar__logout" id="btnSidebarLogout">⏻ Logout</button>
+                <div class="dash-sidebar__profile">
+                    <div class="dash-sidebar__avatar" id="sidebarAvatar">S</div>
+                    <div>
+                        <div class="dash-sidebar__name" id="sidebarName">Student</div>
+                        <div class="dash-sidebar__role">Student</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="dash-main">
+            <!-- Hamburger toggle (mobile only) -->
+            <button class="dash-menu-toggle" id="dashMenuToggle" aria-label="Open navigation">☰</button>
         <header class="welcome">
             <h1>Welcome, <span class="welcome__name" id="studentName">Student</span>!</h1>
             <p class="welcome__sub" id="studentClassInfo">Student Portal - Access your study materials and notices.</p>
@@ -104,20 +123,37 @@
                 </div>
             </section>
         </div>
-    </main>
+        </main>
+    </div>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer__bottom">
-                <p>&copy; 2026 Mitesh Sir's Group Tuitions. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Sidebar backdrop (mobile) -->
+    <div class="dash-sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
     <script src="js/student_dashboard.js"></script>
+    <script>
+        // Sync sidebar profile from auth
+        const _sdUser = window.auth.getUser();
+        if (_sdUser) {
+            document.getElementById('sidebarName').textContent = _sdUser.name || 'Student';
+            document.getElementById('sidebarAvatar').textContent = _sdUser.name?.[0]?.toUpperCase() || 'S';
+        }
+        document.getElementById('btnSidebarLogout').addEventListener('click', () => window.auth.logout());
+
+        // Mobile sidebar toggle
+        const _sidebar = document.getElementById('dashSidebar');
+        const _backdrop = document.getElementById('sidebarBackdrop');
+        document.getElementById('dashMenuToggle').addEventListener('click', () => {
+            _sidebar.classList.add('dash-sidebar--open');
+            _backdrop.classList.add('dash-sidebar-backdrop--visible');
+        });
+        _backdrop.addEventListener('click', () => {
+            _sidebar.classList.remove('dash-sidebar--open');
+            _backdrop.classList.remove('dash-sidebar-backdrop--visible');
+        });
+    </script>
 </body>
 
 </html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Teachers | Mitesh Sir's Group Tuitions</title>
+    <link rel="icon"
+        href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">📚</text></svg>'>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar" aria-label="Main navigation">
+        <div class="navbar__container" style="padding: 0 2rem;">
+            <a href="teacher_dashboard" class="navbar__logo">Mitesh Sir's Group Tuitions</a>
+            <ul class="navbar__links" style="background:none;border:none;padding:0;gap:0.25rem;">
+                <li><a href="teacher_dashboard" class="navbar__link">← Back to Dashboard</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" style="max-width: 860px; margin: 2rem auto; padding: 0 1rem;">
+        <div class="panel" style="padding: 2rem;">
+            <div class="panel__header" style="margin-bottom: 1.5rem;">
+                <h2>Manage Teachers</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+                    Assign each teacher to a specific grade. A teacher assigned to a grade can only upload and access
+                    materials for that grade.
+                </p>
+            </div>
+
+            <div id="pageStatus" class="status" style="display:none;"></div>
+
+            <div class="table-wrap">
+                <table id="teachersTable" aria-label="Teachers list">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Username</th>
+                            <th scope="col">Assigned Grade</th>
+                            <th scope="col">Subjects</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teachersTableBody">
+                        <tr>
+                            <td colspan="5" class="loading-text">Loading teachers...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align: right; margin-top: 0.75rem;">
+                <button class="btn btn--primary btn--sm" id="btnRefreshTeachers">Refresh</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Grade Assignment Modal -->
+    <div id="gradeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:var(--bg-surface,#fff); border-radius:var(--radius-lg); padding:2rem; min-width:320px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+            <h3 style="margin:0 0 0.25rem;">Assign Grade</h3>
+            <p id="modalTeacherName" style="color:var(--text-muted); font-size:0.9rem; margin:0 0 1.25rem;"></p>
+
+            <label class="form__label" for="modalGradeSelect">Grade Access</label>
+            <select id="modalGradeSelect" class="form__control" style="margin-bottom:1.25rem;">
+                <option value="">All Grades (unrestricted)</option>
+                <option value="11th">11th only</option>
+                <option value="12th">12th only</option>
+            </select>
+
+            <div id="modalStatus" class="status" style="display:none;"></div>
+
+            <div style="display:flex; gap:0.75rem; margin-top:0.5rem;">
+                <button class="btn btn--primary" id="btnSaveGrade">Save</button>
+                <button class="btn btn--outline" id="btnCancelModal">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let allTeachers = [];
+        let editingTeacherId = null;
+
+        function showPageStatus(msg, type = 'error') {
+            const el = document.getElementById('pageStatus');
+            el.textContent = msg;
+            el.className = `status status--${type}`;
+            el.style.display = 'block';
+        }
+
+        async function loadTeachers() {
+            window.tableLoading('teachersTableBody', 5, 'Loading teachers...');
+            const response = await window.api.get('profiles', { role: 'teacher' });
+            if (response.success) {
+                allTeachers = response.data || [];
+                renderTable();
+            } else {
+                showPageStatus(response.error || 'Failed to load teachers.');
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('teachersTableBody');
+            if (!tbody) return;
+
+            if (allTeachers.length === 0) {
+                window.tableLoading('teachersTableBody', 5, 'No teachers found.');
+                return;
+            }
+
+            tbody.innerHTML = allTeachers.map(t => {
+                const gradeLabel = t.grade && t.grade !== '' ? t.grade : 'All Grades';
+                const gradeColor = gradeLabel === 'All Grades' ? 'var(--text-muted)' : 'var(--primary)';
+                const safeName = (t.name || '').replace(/"/g, '&quot;');
+                return `
+                <tr class="data-table__row">
+                    <td class="data-table__td--main">${t.name || '-'}</td>
+                    <td class="data-table__td">${t.username || '-'}</td>
+                    <td class="data-table__td">
+                        <span style="font-weight:600; color:${gradeColor};">${gradeLabel}</span>
+                    </td>
+                    <td class="data-table__td">${t.subjects || '-'}</td>
+                    <td class="data-table__td">
+                        <button class="btn btn--outline btn--sm"
+                            data-id="${t.id}" data-name="${safeName}" data-grade="${t.grade || ''}">
+                            Assign Grade
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+
+        }
+
+        function openModal(teacherId, teacherName, currentGrade) {
+            editingTeacherId = teacherId;
+            document.getElementById('modalTeacherName').textContent = teacherName;
+            document.getElementById('modalGradeSelect').value = currentGrade || '';
+            const modalStatus = document.getElementById('modalStatus');
+            modalStatus.style.display = 'none';
+            document.getElementById('gradeModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('gradeModal').style.display = 'none';
+            editingTeacherId = null;
+        }
+
+        async function saveGrade() {
+            if (!editingTeacherId) return;
+
+            const btn = document.getElementById('btnSaveGrade');
+            const newGrade = document.getElementById('modalGradeSelect').value;
+            const modalStatus = document.getElementById('modalStatus');
+
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            modalStatus.style.display = 'none';
+
+            const response = await window.api.patch('profiles', editingTeacherId, { grade: newGrade || null });
+
+            btn.disabled = false;
+            btn.textContent = 'Save';
+
+            if (response.success) {
+                const teacher = allTeachers.find(t => t.id === editingTeacherId);
+                if (teacher) teacher.grade = newGrade || null;
+                renderTable();
+                closeModal();
+            } else {
+                modalStatus.textContent = response.error || 'Failed to save.';
+                modalStatus.className = 'status status--error';
+                modalStatus.style.display = 'block';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('btnRefreshTeachers').addEventListener('click', loadTeachers);
+        document.getElementById('btnSaveGrade').addEventListener('click', saveGrade);
+        document.getElementById('btnCancelModal').addEventListener('click', closeModal);
+        document.getElementById('gradeModal').addEventListener('click', e => {
+            if (e.target === document.getElementById('gradeModal')) closeModal();
+        });
+        document.getElementById('teachersTableBody').addEventListener('click', e => {
+            const btn = e.target.closest('button[data-id]');
+            if (btn) openModal(btn.dataset.id, btn.dataset.name, btn.dataset.grade);
+        });
+
+        // Auth guard: teacher-only
+        const user = window.auth.requireRole('teacher');
+        if (user) loadTeachers();
+    </script>
+</body>
+
+</html>
