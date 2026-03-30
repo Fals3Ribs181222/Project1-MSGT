@@ -13,6 +13,7 @@ The Mitesh Sir's Group Tuitions project is a web-based educational management sy
 The application uses a serverless architecture where the frontend interacts directly with the Supabase backend via the Supabase JavaScript Client. It relies heavily on Row Level Security (RLS) in PostgreSQL to securely manage data access based on user roles (teacher, student, admin). Privileged developer operations bypass RLS via a server-side edge function (`admin-api`) that holds the service role key.
 
 ### Key Files and Directories
+- `logo.png`: The official brand logo (Mitesh Sir's Study Circle — Commerce & Accountancy). Displayed in the navbar and sidebar across all pages. Also used as the browser tab favicon.
 - `index.html`: The main landing page showcasing the tuition classes, testimonials, and features.
 - `login.html`: The authentication portal for users to sign up or log in.
 - `teacher_dashboard.html`: The primary interface for teachers to manage the entire system.

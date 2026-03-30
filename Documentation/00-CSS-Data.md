@@ -43,6 +43,9 @@ Used to maintain consistent rounding across components.
 
 ## UI Components
 
+### Navbar Logo (`.navbar__logo`)
+Displays the brand in the top navbar as a flex row: `logo.png` (52px tall) + "Mitesh Sir's Study Circle" text. Uses `display: flex; align-items: center; gap: 0.6rem`. Font weight 800, color `--text-main`. On mobile (≤768px) font size reduces to 1.15rem via a media query override.
+
 ### Pill Toggle (`.pill-toggle`)
 Used for binary/multi-mode switching inside panels (e.g. View Students / + Add Student). A beige container with `--bg-surface-hover` background and `--border-color` border. Active pill fills with `--primary` blue.
 

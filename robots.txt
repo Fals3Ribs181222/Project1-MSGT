@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Allow: /results
+Allow: /testimonials
+
+Disallow: /login
+Disallow: /teacher_dashboard
+Disallow: /student_dashboard
+Disallow: /admin_dashboard
+Disallow: /manage_marks
+Disallow: /manage-board-results
+Disallow: /manage-testimonials
+Disallow: /seed-students
+Disallow: /seed-attendance
+Disallow: /seed-marks
+Disallow: /seed-tests
+Disallow: /seed-phone

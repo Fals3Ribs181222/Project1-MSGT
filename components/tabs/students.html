@@ -3,6 +3,7 @@
     <div class="pill-toggle">
         <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewStudents">View Students</button>
         <button class="pill-toggle__btn" id="pillAddStudent">+ Add Student</button>
+        <button class="pill-toggle__btn" id="pillImportStudents">↑ Import CSV</button>
     </div>
 </header>
 
@@ -52,6 +53,72 @@
 ══════════════════════════════════════════════════════════ -->
 <div id="addStudentContainer" class="panel__divider">
     <div class="loading-text">Loading component...</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     IMPORT CSV CONTAINER
+══════════════════════════════════════════════════════════ -->
+<div id="importStudentsContainer" style="display:none;">
+
+    <div style="margin-bottom:1.5rem;">
+        <h3 style="margin-bottom:0.5rem;">Import Students from CSV</h3>
+        <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.6;margin:0;">
+            Upload a CSV from Google Forms or use the template below. The system will auto-detect columns and generate usernames for you to review before importing.
+        </p>
+    </div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom:1.5rem;">
+        <p style="font-weight:600;margin-bottom:0.5rem;">Step 1 — Download Template (optional)</p>
+        <button id="btnDownloadCsvTemplate" class="btn btn--outline btn--sm">Download CSV Template</button>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.4rem;">
+            Required columns: <strong>name</strong>, <strong>grade</strong>, <strong>subjects</strong>, <strong>phone</strong><br>
+            Google Forms column names are auto-detected if they contain those keywords.
+        </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom:1.5rem;max-width:480px;">
+        <p style="font-weight:600;margin-bottom:0.5rem;">Step 2 — Set Default Password</p>
+        <input type="text" id="importDefaultPassword" class="form__control" placeholder="e.g. msgt2025" style="max-width:280px;">
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.4rem;">All imported students get this password. They can change it later.</p>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom:1.5rem;">
+        <p style="font-weight:600;margin-bottom:0.5rem;">Step 3 — Upload CSV File</p>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+            <input type="file" id="importCsvFile" accept=".csv" style="font-size:0.9rem;">
+            <button id="btnPreviewCsv" class="btn btn--primary btn--sm">Preview Import</button>
+        </div>
+    </div>
+
+    <!-- Preview -->
+    <div id="importPreviewSection" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+            <p style="font-weight:600;margin:0;" id="importPreviewCount"></p>
+            <button id="btnImportAll" class="btn btn--primary btn--sm">Import All Students</button>
+        </div>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem;">Review and edit usernames below before importing.</p>
+        <div class="table-wrap" style="margin-bottom:1rem;">
+            <table id="importPreviewTable" aria-label="Import preview">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Grade</th>
+                        <th>Subjects</th>
+                        <th>Phone</th>
+                        <th>Username (editable)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="importPreviewBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="importStatus" class="status" style="display:none;"></div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════

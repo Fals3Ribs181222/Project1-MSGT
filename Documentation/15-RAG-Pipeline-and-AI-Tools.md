@@ -587,7 +587,7 @@ These question patterns appear consistently across years. The AI generator is pr
 
 - **Model:** `claude-sonnet-4-6` is used for both doubt solving and test generation.
 - **Streaming:** Doubt mode uses SSE (`text/event-stream`). Test mode uses a standard JSON response (non-streaming).
-- **Similarity threshold:** Doubt mode uses `match_threshold: 0.3`. Chunks scoring below this are discarded — if none pass, the user is told the topic isn't covered in the uploaded material.
+- **Similarity threshold:** Doubt mode uses a threshold of `0.3`. Chunks scoring below this are discarded — if none pass, the user is told the topic isn't covered in the uploaded material. Test mode uses `0` (no threshold) to maximise coverage. Similarity is computed in TypeScript via dot-product / magnitude normalisation, not via the `match_chunks` SQL function.
 - **Caching:** Doubt answers are cached for 7 days by question hash + subject + grade. Re-uploading a file clears the cache.
 - **Markdown rendering:** Both doubt answers and test papers are rendered as markdown in the UI using `marked.js` + `DOMPurify`.
 - **File format:** Currently supports plain text (`.txt`) and text-extractable files. PDF text extraction requires additional parsing (future improvement).

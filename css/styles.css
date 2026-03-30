@@ -93,7 +93,7 @@ a {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--glass-border);
-    padding: 1rem 0;
+    padding: 0.4rem 0;
 }
 
 .navbar__container {
@@ -107,6 +107,10 @@ a {
     font-weight: 800;
     color: var(--text-main);
     letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
 }
 
 .navbar__links {

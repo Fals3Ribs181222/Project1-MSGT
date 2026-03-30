@@ -1,8 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID')!;
-const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN')!;
-const TWILIO_WHATSAPP_FROM = Deno.env.get('TWILIO_WHATSAPP_FROM')!;
+const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')!;
+const WHATSAPP_ACCESS_TOKEN = Deno.env.get('WHATSAPP_ACCESS_TOKEN')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -12,31 +11,31 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-// ── Twilio sender ─────────────────────────────────────────────
-async function sendViaTwilio(to: string, message: string) {
-    const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-
-    const body = new URLSearchParams({
-        From: TWILIO_WHATSAPP_FROM,
-        To: `whatsapp:+91${to}`,
-        Body: message,
-    });
+// ── Meta Cloud API sender ──────────────────────────────────────
+async function sendViaMetaAPI(to: string, message: string) {
+    // Normalise to E.164 — strip leading 0, prepend 91 if not already there
+    const normalised = to.startsWith('91') ? to : `91${to.replace(/^0/, '')}`;
 
     const response = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+        `https://graph.facebook.com/v19.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
         {
             method: 'POST',
             headers: {
-                'Authorization': `Basic ${credentials}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+                'Content-Type': 'application/json',
             },
-            body: body.toString(),
+            body: JSON.stringify({
+                messaging_product: 'whatsapp',
+                to: normalised,
+                type: 'text',
+                text: { body: message },
+            }),
         }
     );
 
     if (!response.ok) {
         const err = await response.json();
-        throw new Error(`Twilio error: ${err.message}`);
+        throw new Error(`Meta API error: ${err?.error?.message ?? response.statusText}`);
     }
 
     return response.json();
@@ -149,7 +148,7 @@ Deno.serve(async (req: Request) => {
             }
 
             try {
-                await sendViaTwilio(phone, message);
+                await sendViaMetaAPI(phone, message);
 
                 await logMessage(
                     type,

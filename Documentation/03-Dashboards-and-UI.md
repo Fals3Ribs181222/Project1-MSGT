@@ -8,7 +8,9 @@ The teacher dashboard serves as the administrative control center for day-to-day
 ### Navigation and Structure
 -   Uses a **left sidebar** (`aside.dash-sidebar`) for persistent navigation on desktop. Each sidebar item calls `window.loadTab(targetId)` and the active item is highlighted with `.dash-sidebar__item--active`, synced by `router.js` on every tab change. The sidebar also contains the logout button and the teacher's profile avatar/name.
 -   On **mobile (≤768px)** the sidebar slides in from the left via a hamburger button (`.dash-menu-toggle`). A backdrop overlay closes it on tap. The sidebar closes automatically after navigating to a tab.
--   The top navbar is minimal: logo flush-left, plain nav links (Home, Testimonials, Results, Dashboard) flush-right with no pill container. Logout is handled by the sidebar only.
+-   The top navbar is minimal: brand logo (`logo.png`, 52px) with "Mitesh Sir's Study Circle" text flush-left (`.navbar__logo` uses `display:flex; align-items:center; gap:0.6rem`), plain nav links (Home, Testimonials, Results, Dashboard) flush-right with no pill container. Logout is handled by the sidebar only.
+-   The sidebar top (`dash-sidebar__top`) displays the same `logo.png` at 56px instead of the previous "📚 TuteFlow" text brand.
+-   `logo.png` is also set as the browser tab favicon (`<link rel="icon">`) on all pages.
 -   **Modular Architecture & Dynamic Routing:** The dashboard uses `js/dashboard/router.js` to dynamically load HTML components from `components/tabs/` and their corresponding ES6 JavaScript modules from `js/dashboard/`.
 -   **Standardized UI Implementation:** All modules utilize unified global helpers (`window.tableLoading`, `window.showStatus`, `window.loadComponent`) to ensure a consistent user experience during data operations and component transitions.
 -   **Feature Flag Gating:** On load, `window.loadFeatureFlags()` fetches the `feature_flags` table and hides any disabled sidebar items. This allows the admin to control which panels are accessible without redeploying.

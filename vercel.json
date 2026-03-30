@@ -1,3 +1,11 @@
 {
-    "cleanUrls": true
+    "cleanUrls": true,
+    "redirects": [
+        { "source": "/seed-students", "destination": "/", "permanent": false },
+        { "source": "/seed-attendance", "destination": "/", "permanent": false },
+        { "source": "/seed-marks", "destination": "/", "permanent": false },
+        { "source": "/seed-tests", "destination": "/", "permanent": false },
+        { "source": "/seed-phone", "destination": "/", "permanent": false },
+        { "source": "/test-report.js", "destination": "/", "permanent": false }
+    ]
 }

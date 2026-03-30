@@ -125,6 +125,7 @@ async function showStudentDetail(studentId) {
 
     document.getElementById('studentsListContainer').style.display = 'none';
     document.getElementById('addStudentContainer').style.display = 'none';
+    document.getElementById('importStudentsContainer').style.display = 'none';
     document.getElementById('studentDetailContainer').style.display = 'block';
     const refreshBtn = document.getElementById('btnRefreshStudents');
     if (refreshBtn) refreshBtn.style.display = 'none';
@@ -360,8 +361,10 @@ function hideStudentDetail() {
 
     const pillView = document.getElementById('pillViewStudents');
     const pillAdd = document.getElementById('pillAddStudent');
+    const pillImport = document.getElementById('pillImportStudents');
     if (pillView) pillView.classList.add('pill-toggle__btn--active');
     if (pillAdd) pillAdd.classList.remove('pill-toggle__btn--active');
+    if (pillImport) pillImport.classList.remove('pill-toggle__btn--active');
 
     studentReportData = null;
     clearReportOutput();
@@ -647,28 +650,23 @@ export function init() {
 
     const pillView = document.getElementById('pillViewStudents');
     const pillAdd = document.getElementById('pillAddStudent');
+    const pillImport = document.getElementById('pillImportStudents');
     const listContainer = document.getElementById('studentsListContainer');
     const addContainer = document.getElementById('addStudentContainer');
+    const importContainer = document.getElementById('importStudentsContainer');
     const studentDetailCtr = document.getElementById('studentDetailContainer');
 
-    if (pillView && pillAdd) {
-        pillView.addEventListener('click', () => {
-            pillView.classList.add('pill-toggle__btn--active');
-            pillAdd.classList.remove('pill-toggle__btn--active');
-            if (listContainer) listContainer.style.display = 'block';
-            if (addContainer) addContainer.style.display = 'none';
-            if (studentDetailCtr) studentDetailCtr.style.display = 'none';
-            if (btnRefresh) btnRefresh.style.display = 'inline-block';
-        });
-        pillAdd.addEventListener('click', () => {
-            pillAdd.classList.add('pill-toggle__btn--active');
-            pillView.classList.remove('pill-toggle__btn--active');
-            if (addContainer) addContainer.style.display = 'block';
-            if (listContainer) listContainer.style.display = 'none';
-            if (studentDetailCtr) studentDetailCtr.style.display = 'none';
-            if (btnRefresh) btnRefresh.style.display = 'none';
-        });
+    function switchStudentsView(active) {
+        [pillView, pillAdd, pillImport].forEach(p => p?.classList.remove('pill-toggle__btn--active'));
+        [listContainer, addContainer, importContainer, studentDetailCtr].forEach(c => { if (c) c.style.display = 'none'; });
+        active.pill?.classList.add('pill-toggle__btn--active');
+        if (active.container) active.container.style.display = 'block';
+        if (btnRefresh) btnRefresh.style.display = active.showRefresh ? 'inline-block' : 'none';
     }
+
+    pillView?.addEventListener('click', () => switchStudentsView({ pill: pillView, container: listContainer, showRefresh: true }));
+    pillAdd?.addEventListener('click', () => switchStudentsView({ pill: pillAdd, container: addContainer, showRefresh: false }));
+    pillImport?.addEventListener('click', () => switchStudentsView({ pill: pillImport, container: importContainer, showRefresh: false }));
 
     const btnBack = document.getElementById('btnBackToStudents');
     if (btnBack) btnBack.addEventListener('click', hideStudentDetail);
@@ -704,7 +702,209 @@ export function init() {
     }
 
     window.deleteStudent = deleteStudent;
+
+    initImportSection();
 }
+
+// ── CSV IMPORT ─────────────────────────────────────────────────────────────────
+
+function initImportSection() {
+    document.getElementById('btnDownloadCsvTemplate')?.addEventListener('click', downloadCsvTemplate);
+    document.getElementById('btnPreviewCsv')?.addEventListener('click', previewCsvImport);
+    document.getElementById('btnImportAll')?.addEventListener('click', importAllStudents);
+}
+
+function downloadCsvTemplate() {
+    const csv = 'name,grade,subjects,phone\nRahul Sharma,11,"Accounts, Commerce",9876543210\nPriya Patel,12,Accounts,9123456789';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'students_template.csv';
+    a.click();
+}
+
+function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return { headers: [], rows: [] };
+
+    const parseRow = (line) => {
+        const fields = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"') {
+                if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+                else inQuotes = !inQuotes;
+            } else if (ch === ',' && !inQuotes) {
+                fields.push(cur.trim());
+                cur = '';
+            } else {
+                cur += ch;
+            }
+        }
+        fields.push(cur.trim());
+        return fields;
+    };
+
+    const headers = parseRow(lines[0]);
+    const rows = lines.slice(1).filter(l => l.trim()).map(l => parseRow(l));
+    return { headers, rows };
+}
+
+function detectColumns(headers) {
+    const map = {};
+    headers.forEach((h, i) => {
+        const lh = h.toLowerCase();
+        if (!map.name && lh.includes('name')) map.name = i;
+        if (!map.grade && (lh.includes('grade') || lh.includes('class') || lh.includes('std'))) map.grade = i;
+        if (!map.subjects && lh.includes('subject')) map.subjects = i;
+        if (!map.phone && (lh.includes('phone') || lh.includes('mobile') || lh.includes('whatsapp') || lh.includes('contact'))) map.phone = i;
+    });
+    return map;
+}
+
+function generateUsername(name, taken) {
+    const base = name.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '.');
+    let username = base;
+    let n = 2;
+    while (taken.has(username)) { username = base + n; n++; }
+    taken.add(username);
+    return username;
+}
+
+let importRows = [];
+
+function previewCsvImport() {
+    const file = document.getElementById('importCsvFile')?.files[0];
+    const statusEl = document.getElementById('importStatus');
+    const previewSection = document.getElementById('importPreviewSection');
+
+    if (!file) {
+        window.showStatus('importStatus', 'Please select a CSV file first.', 'error');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const { headers, rows } = parseCSV(e.target.result);
+        const colMap = detectColumns(headers);
+
+        if (colMap.name === undefined) {
+            window.showStatus('importStatus', 'Could not find a "name" column. Check your CSV headers.', 'error');
+            previewSection.style.display = 'none';
+            return;
+        }
+
+        const taken = new Set(allStudents.map(s => s.username).filter(Boolean));
+        importRows = rows.map(row => ({
+            name: row[colMap.name] || '',
+            grade: colMap.grade !== undefined ? row[colMap.grade] : '',
+            subjects: colMap.subjects !== undefined ? row[colMap.subjects] : '',
+            phone: colMap.phone !== undefined ? row[colMap.phone] : '',
+            username: generateUsername(row[colMap.name] || 'student', taken),
+            status: 'pending',
+        })).filter(r => r.name);
+
+        if (importRows.length === 0) {
+            window.showStatus('importStatus', 'No valid rows found in the CSV.', 'error');
+            previewSection.style.display = 'none';
+            return;
+        }
+
+        document.getElementById('importPreviewCount').textContent = `${importRows.length} student${importRows.length !== 1 ? 's' : ''} ready to import`;
+        renderImportPreview();
+        previewSection.style.display = 'block';
+        statusEl.style.display = 'none';
+    };
+    reader.readAsText(file);
+}
+
+function renderImportPreview() {
+    const tbody = document.getElementById('importPreviewBody');
+    tbody.innerHTML = importRows.map((r, i) => {
+        const statusBadge = r.status === 'done'
+            ? '<span style="color:var(--success-color,green);font-weight:600;">✓ Done</span>'
+            : r.status === 'error'
+            ? `<span style="color:var(--danger-color,red);font-size:0.8rem;">${window.esc(r.errorMsg || 'Error')}</span>`
+            : '<span style="color:var(--text-muted);">Pending</span>';
+
+        return `<tr>
+            <td class="data-table__td">${i + 1}</td>
+            <td class="data-table__td--main">${window.esc(r.name)}</td>
+            <td class="data-table__td">${window.esc(r.grade)}</td>
+            <td class="data-table__td">${window.esc(r.subjects)}</td>
+            <td class="data-table__td">${window.esc(r.phone)}</td>
+            <td class="data-table__td">
+                <input type="text" value="${window.esc(r.username)}" data-row="${i}"
+                    style="padding:3px 8px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.85rem;width:130px;background:var(--bg-surface);color:var(--text-main);"
+                    ${r.status === 'done' ? 'disabled' : ''}>
+            </td>
+            <td class="data-table__td">${statusBadge}</td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('input[data-row]').forEach(input => {
+        input.addEventListener('change', e => {
+            importRows[parseInt(e.target.dataset.row)].username = e.target.value.trim().toLowerCase();
+        });
+    });
+}
+
+async function importAllStudents() {
+    const defaultPassword = document.getElementById('importDefaultPassword')?.value.trim();
+    if (!defaultPassword || defaultPassword.length < 6) {
+        window.showStatus('importStatus', 'Please set a default password (at least 6 characters).', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btnImportAll');
+    btn.disabled = true;
+    btn.textContent = 'Importing...';
+    document.getElementById('importStatus').style.display = 'none';
+
+    let done = 0, failed = 0;
+
+    for (let i = 0; i < importRows.length; i++) {
+        const r = importRows[i];
+        if (r.status === 'done') { done++; continue; }
+
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const teacherSession = sessionData?.session;
+
+        const email = `${r.username}@msgt.internal`;
+        const meta = { name: r.name, username: r.username, grade: r.grade, subjects: r.subjects, phone: r.phone, role: 'student' };
+
+        const { data, error } = await window.supabaseClient.auth.signUp({ email, password: defaultPassword, options: { data: meta } });
+
+        if (teacherSession) {
+            await window.supabaseClient.auth.setSession({ access_token: teacherSession.access_token, refresh_token: teacherSession.refresh_token });
+        }
+
+        if (error) {
+            importRows[i].status = 'error';
+            importRows[i].errorMsg = error.message;
+            failed++;
+        } else {
+            if (data?.user?.id) {
+                await window.supabaseClient.from('profiles').update(meta).eq('id', data.user.id);
+            }
+            importRows[i].status = 'done';
+            done++;
+        }
+
+        renderImportPreview();
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Import All Students';
+
+    const msg = `Import complete: ${done} succeeded${failed ? `, ${failed} failed` : ''}.`;
+    window.showStatus('importStatus', msg, failed ? 'error' : 'success');
+    document.getElementById('importPreviewCount').textContent = `${importRows.length} students — ${done} imported`;
+    if (!failed) loadStudents();
+}
+
 function renderAttendanceCalendar(attendanceData) {
     const container = document.getElementById('sdAttendanceCalendar');
     if (!container) return;
