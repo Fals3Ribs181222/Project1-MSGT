@@ -1,0 +1,13 @@
+{
+  "name": "Mitesh Sir's Study Circle",
+  "short_name": "TuteFlow",
+  "description": "ISC Accountancy coaching portal — students, marks, schedules & AI tools",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "icons": [
+    { "src": "/logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

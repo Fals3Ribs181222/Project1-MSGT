@@ -70,7 +70,7 @@ Home panel widgets are loaded inline in `student_dashboard.html`.
 -   **Profile Information:** Displays the student's personal details, assigned batches, and subjects.
 -   **Schedule View:** Shows upcoming classes mapped to their enrolled batches.
 -   **Announcements:** A feed of notices from teachers.
--   **Materials Access:** Shows only files tagged `upload_type = 'student'` — AI training uploads are hidden from students.
+-   **Materials Access:** Shows only files tagged `upload_type = 'student'` — AI training uploads are hidden from students. PDF files open in an **inline canvas viewer** (powered by PDF.js) that renders all pages stacked in a scrollable container within the tab. Right-click and browser download UI are suppressed. Non-PDF files open in a new tab. The viewer replaces the file list in-place; a "← Back to Materials" button restores the list.
 -   **Academic Progress:** View test marks and personal attendance records.
 -   **Portal Lock:** If the `student_portal_enabled` feature flag is disabled by the admin, the entire dashboard is replaced with an "unavailable" message — no data is loaded.
 -   The interface is designed to be streamlined, presenting only the data the student is authorized to view based on RLS policies.

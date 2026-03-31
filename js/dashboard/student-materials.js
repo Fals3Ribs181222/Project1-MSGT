@@ -120,41 +120,24 @@ async function openPdfViewer(url, title) {
     document.getElementById('pdfInlineTitle').textContent = title || 'Document';
 
     const canvasWrap = document.getElementById('pdfCanvasWrap');
-    const pageInfo   = document.getElementById('pdfPageInfo');
-    const btnPrev    = document.getElementById('pdfPrev');
-    const btnNext    = document.getElementById('pdfNext');
     const btnBack    = document.getElementById('pdfBackBtn');
 
     canvasWrap.innerHTML = '<div class="pdf-modal__loading">Loading PDF\u2026</div>';
-    btnPrev.disabled = true;
-    btnNext.disabled = true;
 
-    let pdfDoc = null, currentPage = 1, rendering = false;
-
-    function closeViewer() {
+    btnBack.onclick = () => {
         showListView();
-        document.removeEventListener('keydown', onKeyDown);
-        // Clear canvas to free memory
         canvasWrap.innerHTML = '';
-        pdfDoc = null;
-    }
+    };
 
-    btnBack.onclick = closeViewer;
+    try {
+        const pdfDoc = await pdfjsLib.getDocument(url).promise;
+        canvasWrap.innerHTML = '';
 
-    function onKeyDown(e) {
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') advancePage(1);
-        if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   advancePage(-1);
-    }
-    document.addEventListener('keydown', onKeyDown);
+        const availW = canvasWrap.clientWidth - 32;
 
-    async function renderPage(pageNum) {
-        if (rendering) return;
-        rendering = true;
-        canvasWrap.innerHTML = '<div class="pdf-modal__loading">Rendering\u2026</div>';
-        try {
-            const page     = await pdfDoc.getPage(pageNum);
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page     = await pdfDoc.getPage(i);
             const viewport = page.getViewport({ scale: 1 });
-            const availW   = canvasWrap.clientWidth - 32; // 1rem padding each side
             const scale    = Math.min(availW / viewport.width, 2);
             const scaled   = page.getViewport({ scale });
             const canvas   = document.createElement('canvas');
@@ -162,32 +145,8 @@ async function openPdfViewer(url, title) {
             canvas.height  = scaled.height;
             canvas.addEventListener('contextmenu', (e) => e.preventDefault());
             await page.render({ canvasContext: canvas.getContext('2d'), viewport: scaled }).promise;
-            canvasWrap.innerHTML = '';
             canvasWrap.appendChild(canvas);
-            pageInfo.textContent = `${pageNum} / ${pdfDoc.numPages}`;
-            btnPrev.disabled = pageNum <= 1;
-            btnNext.disabled = pageNum >= pdfDoc.numPages;
-        } catch (err) {
-            canvasWrap.innerHTML = `<div class="pdf-modal__loading">Error rendering page ${pageNum}.</div>`;
-            console.error('[PDF viewer]', err);
-        } finally {
-            rendering = false;
         }
-    }
-
-    function advancePage(delta) {
-        const next = currentPage + delta;
-        if (!pdfDoc || next < 1 || next > pdfDoc.numPages) return;
-        currentPage = next;
-        renderPage(currentPage);
-    }
-
-    btnPrev.onclick = () => advancePage(-1);
-    btnNext.onclick = () => advancePage(1);
-
-    try {
-        pdfDoc = await pdfjsLib.getDocument(url).promise;
-        await renderPage(1);
     } catch (err) {
         canvasWrap.innerHTML = '<div class="pdf-modal__loading">Failed to load PDF. Please try again.</div>';
         console.error('[PDF viewer] load error:', err);
