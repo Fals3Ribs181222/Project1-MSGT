@@ -9,32 +9,28 @@ async function loadTestsList() {
 
     btnRefresh.disabled = true;
     btnRefresh.textContent = 'Refreshing...';
-    window.tableLoading('testsListTableBody', 7, 'Loading tests...');
+    window.tableLoading('testsListTableBody', 5, 'Loading tests...');
 
-    const response = await window.api.get('tests', {}, '*, profiles:scheduled_by(name)', { order: 'date', ascending: true });
+    const response = await window.api.get('tests', {}, '*', { order: 'date', ascending: true });
 
     btnRefresh.disabled = false;
     btnRefresh.textContent = 'Refresh List';
 
     if (response.success) {
         if (response.data && response.data.length > 0) {
-            tbody.innerHTML = response.data.map(test => {
-                const teacherName = test.profiles?.name || '-';
-                return `
+            tbody.innerHTML = response.data.map(test => `
                 <tr class="data-table__row">
                     <td class="data-table__td--main">${window.esc(test.title) || '-'}</td>
                     <td class="data-table__td">${test.subject || '-'}</td>
                     <td class="data-table__td">${test.grade || '-'}</td>
                     <td class="data-table__td">${test.date || '-'}</td>
-                    <td class="data-table__td">${test.max_marks || '-'}</td>
-                    <td class="data-table__td">${window.esc(teacherName)}</td>
                     <td class="data-table__td">
                         <a href="manage_marks?testId=${test.id}" class="btn btn--primary btn--sm">Manage Marks</a>
                     </td>
                 </tr>
-            `}).join('');
+            `).join('');
         } else {
-            window.tableLoading('testsListTableBody', 7, 'No tests scheduled yet.');
+            window.tableLoading('testsListTableBody', 5, 'No tests scheduled yet.');
         }
     } else {
         document.getElementById('testsListTableBody').innerHTML = '';

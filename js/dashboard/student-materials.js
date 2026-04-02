@@ -10,7 +10,6 @@ export async function init() {
 
     await loadMaterials();
     document.getElementById('btnRefreshMaterials')?.addEventListener('click', loadMaterials);
-    document.getElementById('matSubjectFilter')?.addEventListener('change', renderFiles);
     document.getElementById('matSearchInput')?.addEventListener('input', renderFiles);
 }
 
@@ -39,18 +38,21 @@ async function loadMaterials() {
         });
     }
 
-    // Populate subject filter
-    const subjects = [...new Set(allFiles.map(f => f.subject).filter(Boolean))];
-    const subjectSel = document.getElementById('matSubjectFilter');
-    if (subjectSel) {
-        const current = subjectSel.value;
-        subjectSel.innerHTML = '<option value="">All Subjects</option>';
-        subjects.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = opt.textContent = s;
-            subjectSel.appendChild(opt);
+    // Build subject pill filters, default to Accounts
+    const pillsEl = document.getElementById('matSubjectPills');
+    if (pillsEl && studentSubjects.length) {
+        const defaultSubject = studentSubjects.find(s => s.toLowerCase() === 'accounts') || studentSubjects[0];
+        pillsEl.innerHTML = studentSubjects.map(s => {
+            const active = s === defaultSubject ? ' pill-toggle__btn--active' : '';
+            return `<button type="button" class="pill-toggle__btn${active}" data-subject="${window.esc(s)}">${window.esc(s)}</button>`;
+        }).join('');
+        pillsEl.querySelectorAll('.pill-toggle__btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                pillsEl.querySelectorAll('.pill-toggle__btn').forEach(b => b.classList.remove('pill-toggle__btn--active'));
+                btn.classList.add('pill-toggle__btn--active');
+                renderFiles();
+            });
         });
-        if (current) subjectSel.value = current;
     }
 
     renderFiles();
@@ -60,7 +62,8 @@ function renderFiles() {
     const list = document.getElementById('materialsList');
     if (!list) return;
 
-    const subj = document.getElementById('matSubjectFilter')?.value || '';
+    const activeBtn = document.querySelector('#matSubjectPills .pill-toggle__btn--active');
+    const subj = activeBtn?.dataset.subject || '';
     const search = (document.getElementById('matSearchInput')?.value || '').toLowerCase();
 
     const filtered = allFiles.filter(f => {

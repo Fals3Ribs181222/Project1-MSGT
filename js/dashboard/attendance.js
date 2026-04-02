@@ -452,7 +452,7 @@ export function init() {
             const subject = classMeta.split('•')[0]?.trim() || className;
             const dateStr = new Date().toISOString().split('T')[0];
 
-            // Fetch profiles for student phone + parent phone
+            // Fetch profiles for student phone + mother/father phone
             const studentIds = records.map(r => r.student_id);
             const { data: profiles } = await window.supabaseClient
                 .from('profiles')

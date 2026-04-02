@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed Batches & Classes</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 700px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            background: #f5f5f5;
+            color: #2d3748;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        p.sub {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: #5B6FA6;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .log {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-size: 0.875rem;
+            line-height: 2;
+            min-height: 100px;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .ok   { color: #2d7a2d; }
+        .err  { color: #c0392b; }
+        .info { color: #5B6FA6; font-weight: 600; }
+
+        #progress {
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .plan {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .plan strong { color: #5B6FA6; }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            color: #2d3748;
+            cursor: pointer;
+        }
+
+        .controls button { margin-bottom: 0; }
+    </style>
+</head>
+
+<body>
+
+    <h1>🗂️ Seed Batches &amp; Classes</h1>
+    <p class="sub">
+        Creates 3 batches (MF, TT, WS) with 5 students each, plus 2 regular classes per batch.<br>
+        <strong>Run seed-students.html first so student accounts exist.</strong><br>
+        <strong>You must be logged in as the teacher before running this.</strong>
+    </p>
+
+    <div class="plan">
+        <strong>What this will create:</strong><br>
+        • Batch <strong>MF</strong> (Mon + Fri) — Aarav, Priya, Rohan, Sneha, Kiran<br>
+        • Batch <strong>TT</strong> (Tue + Thu) — Ananya, Dev, Riya, Arjun, Pooja<br>
+        • Batch <strong>WS</strong> (Wed + Sat) — Vivek, Meera, Sahil, Nisha, Yash<br>
+        Subject: selected via dropdown &nbsp;|&nbsp; Time: 5:00 PM – 6:30 PM<br>
+        <br>
+        <strong>Existing batches for the selected grade will be wiped before seeding.</strong>
+    </div>
+
+    <div class="controls">
+        <select id="gradeSelect">
+            <option value="12th" selected>Grade 12th</option>
+            <option value="11th">Grade 11th</option>
+        </select>
+        <select id="subjectSelect">
+            <option value="Accounts" selected>Accounts</option>
+            <option value="Commerce">Commerce</option>
+        </select>
+        <button id="btnRun" onclick="runSeed()">Seed Batches &amp; Classes</button>
+    </div>
+    <div id="progress"></div>
+    <div class="log" id="log">Waiting to start...</div>
+
+    <script>
+        // ── Config ────────────────────────────────────────────────────────────────────
+        const SUPABASE_URL = 'https://tksruuqtzxflgglnljef.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrc3J1dXF0enhmbGdnbG5samVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzY0OTIsImV4cCI6MjA4Nzk1MjQ5Mn0.eu6LwoP-9O5sG9nHhBza0UgYHCOm7Ni5flk_1Lgl4FU';
+
+        const { createClient } = supabase;
+        const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ── Seed Data ─────────────────────────────────────────────────────────────────
+        // day_of_week: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+        // studentBases must match the pools defined in seed-students.html
+        // Same 15 students, different batch assignments per subject
+        const BATCH_TEMPLATES = {
+            Accounts: [
+                {
+                    name: 'MF',
+                    days: [1, 5], // Mon, Fri
+                    studentBases: ['aarav.mehta', 'priya.sharma', 'rohan.patel', 'sneha.joshi', 'kiran.desai'],
+                },
+                {
+                    name: 'TT',
+                    days: [2, 4], // Tue, Thu
+                    studentBases: ['ananya.verma', 'dev.malhotra', 'riya.shah', 'arjun.nair', 'pooja.gupta'],
+                },
+                {
+                    name: 'WS',
+                    days: [3, 6], // Wed, Sat
+                    studentBases: ['vivek.iyer', 'meera.pillai', 'sahil.kapoor', 'nisha.reddy', 'yash.bhatt'],
+                },
+            ],
+            Commerce: [
+                {
+                    name: 'MF',
+                    days: [1, 5], // Mon, Fri
+                    studentBases: ['vivek.iyer', 'ananya.verma', 'aarav.mehta', 'riya.shah', 'sneha.joshi'],
+                },
+                {
+                    name: 'TT',
+                    days: [2, 4], // Tue, Thu
+                    studentBases: ['priya.sharma', 'meera.pillai', 'kiran.desai', 'dev.malhotra', 'nisha.reddy'],
+                },
+                {
+                    name: 'WS',
+                    days: [3, 6], // Wed, Sat
+                    studentBases: ['rohan.patel', 'arjun.nair', 'pooja.gupta', 'sahil.kapoor', 'yash.bhatt'],
+                },
+            ],
+        };
+
+        const CLASS_START_TIME = '17:00';
+        const CLASS_END_TIME = '18:30';
+
+        // ── Helpers ───────────────────────────────────────────────────────────────────
+        function log(msg, type = '') {
+            const div = document.getElementById('log');
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = msg;
+            div.appendChild(line);
+            div.scrollTop = div.scrollHeight;
+        }
+
+        function setProgress(msg) {
+            document.getElementById('progress').textContent = msg;
+        }
+
+        // ── Main Seed Function ────────────────────────────────────────────────────────
+        async function runSeed() {
+            const btn = document.getElementById('btnRun');
+            btn.disabled = true;
+            document.getElementById('log').innerHTML = '';
+            setProgress('Starting...');
+
+            // 1. Auth check
+            const { data: sessionData } = await client.auth.getSession();
+            const session = sessionData?.session;
+            if (!session) {
+                log('Not logged in. Log into the teacher dashboard first, then reopen this file.', 'err');
+                btn.disabled = false;
+                return;
+            }
+            const teacherId = session.user.id;
+            const selectedGrade = document.getElementById('gradeSelect').value;
+            const selectedSubject = document.getElementById('subjectSelect').value;
+            const gradeSuffix = selectedGrade.replace('th', ''); // '12th' → '12'
+            log(`Logged in as teacher (${session.user.email}). Seeding ${selectedGrade} – ${selectedSubject}...`, 'info');
+
+            // 2. Wipe existing batches and their dependants
+            setProgress('Wiping existing batches...');
+            log('Fetching existing batches...', 'info');
+
+            const { data: existingBatches, error: fetchBatchErr } = await client
+                .from('batches')
+                .select('id, name')
+                .eq('grade', selectedGrade)
+                .eq('subject', selectedSubject);
+
+            if (fetchBatchErr) {
+                log(`Error fetching batches: ${fetchBatchErr.message}`, 'err');
+            } else if (existingBatches && existingBatches.length > 0) {
+                const batchIds = existingBatches.map(b => b.id);
+                log(`Found ${existingBatches.length} existing batch(es). Wiping...`, 'info');
+
+                // Fetch class IDs for these batches so we can wipe attendance
+                const { data: existingClasses } = await client
+                    .from('classes')
+                    .select('id')
+                    .in('batch_id', batchIds);
+
+                if (existingClasses && existingClasses.length > 0) {
+                    const classIds = existingClasses.map(c => c.id);
+                    const { error: delAttErr } = await client
+                        .from('attendance')
+                        .delete()
+                        .in('class_id', classIds);
+                    if (delAttErr) log(`Warning: could not wipe attendance: ${delAttErr.message}`, 'err');
+                    else log(`Cleared attendance for ${classIds.length} class(es).`, 'ok');
+                }
+
+                const { error: delClsErr } = await client.from('classes').delete().in('batch_id', batchIds);
+                if (delClsErr) log(`Warning: could not wipe classes: ${delClsErr.message}`, 'err');
+                else log(`Cleared classes.`, 'ok');
+
+                const { error: delBsErr } = await client.from('batch_students').delete().in('batch_id', batchIds);
+                if (delBsErr) log(`Warning: could not wipe batch_students: ${delBsErr.message}`, 'err');
+                else log(`Cleared batch memberships.`, 'ok');
+
+                const { error: delBatchErr } = await client.from('batches').delete().in('id', batchIds);
+                if (delBatchErr) {
+                    log(`Error deleting batches: ${delBatchErr.message}`, 'err');
+                    btn.disabled = false;
+                    return;
+                }
+                log(`Deleted ${existingBatches.length} batch(es).`, 'ok');
+            } else {
+                log('No existing batches found.', 'info');
+            }
+
+            log('─────────────────────────────────────', 'info');
+
+            // 3. Fetch all student profiles to build username → id map
+            setProgress('Fetching students...');
+            log('Fetching student profiles...', 'info');
+
+            const { data: allStudents, error: stuErr } = await client
+                .from('profiles')
+                .select('id, username')
+                .eq('role', 'student')
+                .eq('grade', selectedGrade);
+
+            if (stuErr || !allStudents || allStudents.length === 0) {
+                log('No students found. Run seed-students.html first.', 'err');
+                btn.disabled = false;
+                return;
+            }
+
+            const usernameToId = {};
+            allStudents.forEach(s => { usernameToId[s.username] = s.id; });
+            log(`Found ${allStudents.length} students.`, 'info');
+            log('─────────────────────────────────────', 'info');
+
+            // 4. Create batches, memberships, and classes
+            const BATCHES = BATCH_TEMPLATES[selectedSubject];
+            for (let bi = 0; bi < BATCHES.length; bi++) {
+                const batchDef = BATCHES[bi];
+                setProgress(`Creating batch ${bi + 1} of ${BATCHES.length}: ${batchDef.name}...`);
+
+                // 4a. Insert batch
+                const { data: batchData, error: batchErr } = await client
+                    .from('batches')
+                    .insert({
+                        name: batchDef.name,
+                        grade: selectedGrade,
+                        subject: selectedSubject,
+                        created_by: teacherId,
+                    })
+                    .select('id')
+                    .single();
+
+                if (batchErr || !batchData) {
+                    log(`✗ Failed to create batch ${batchDef.name}: ${batchErr?.message}`, 'err');
+                    continue;
+                }
+
+                const batchId = batchData.id;
+                log(`✓ Batch "${batchDef.name}" created (${selectedGrade} – ${selectedSubject})`, 'ok');
+
+                // 4b. Resolve student IDs and insert batch_students
+                const studentRows = [];
+                for (const base of batchDef.studentBases) {
+                    const username = `${base}.${gradeSuffix}`;
+                    const studentId = usernameToId[username];
+                    if (!studentId) {
+                        log(`  ⚠ Student not found: ${username}`, 'err');
+                        continue;
+                    }
+                    studentRows.push({ batch_id: batchId, student_id: studentId });
+                }
+
+                if (studentRows.length > 0) {
+                    const { error: bsErr } = await client.from('batch_students').insert(studentRows);
+                    if (bsErr) {
+                        log(`  ✗ Failed to add students to ${batchDef.name}: ${bsErr.message}`, 'err');
+                    } else {
+                        log(`  ✓ ${studentRows.length} students enrolled in ${batchDef.name}`, 'ok');
+                    }
+                }
+
+                // 4c. Create regular classes (one per day, sharing a class_group_id)
+                const classGroupId = crypto.randomUUID();
+                const classTitle = `${selectedGrade} – ${batchDef.name} – ${selectedSubject}`;
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+                const classRows = batchDef.days.map(day => ({
+                    batch_id: batchId,
+                    title: classTitle,
+                    type: 'regular',
+                    day_of_week: day,
+                    start_time: CLASS_START_TIME,
+                    end_time: CLASS_END_TIME,
+                    class_group_id: classGroupId,
+                    created_by: teacherId,
+                    notes: null,
+                }));
+
+                const { error: clsErr } = await client.from('classes').insert(classRows);
+                if (clsErr) {
+                    log(`  ✗ Failed to create classes for ${batchDef.name}: ${clsErr.message}`, 'err');
+                } else {
+                    const dayLabels = batchDef.days.map(d => dayNames[d]).join(' + ');
+                    log(`  ✓ Classes created: ${dayLabels} @ 5:00 PM – 6:30 PM`, 'ok');
+                }
+
+                log('─────────────────────────────────────', 'info');
+                await new Promise(r => setTimeout(r, 200));
+            }
+
+            setProgress('✅ Done — 3 batches, 15 enrollments, 6 classes created.');
+            log('Seed complete! You can now run seed-attendance.html.', 'info');
+
+            btn.disabled = false;
+            btn.textContent = 'Run Again';
+        }
+    </script>
+
+</body>
+
+</html>

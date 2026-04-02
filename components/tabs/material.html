@@ -1,9 +1,9 @@
 <header class="panel__header">
-    <h2>Manage Materials</h2>
+    <h2>Materials</h2>
     <div class="pill-toggle">
         <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewMaterials">Materials
             List</button>
-        <button class="pill-toggle__btn" id="pillAddUpload">+ Upload New</button>
+        <button class="pill-toggle__btn" id="pillAddMaterial">+ Upload New</button>
     </div>
 </header>
 
@@ -18,13 +18,12 @@
                     <th scope="col">Subject</th>
                     <th scope="col">Grade</th>
                     <th scope="col">Date</th>
-                    <th scope="col">Uploaded By</th>
                     <th scope="col">Link</th>
                 </tr>
             </thead>
             <tbody id="materialsTableBody">
                 <tr>
-                    <td colspan="6" class="loading-text">Loading materials...</td>
+                    <td colspan="5" class="loading-text">Loading materials...</td>
                 </tr>
             </tbody>
         </table>
@@ -34,7 +33,7 @@
     </div>
 </div>
 
-<!-- Upload Form Container (loaded via fetch) -->
-<div id="addUploadContainer" class="panel__divider">
+<!-- Add Material Container (loaded via fetch) -->
+<div id="addMaterialContainer" class="panel__divider">
     <div class="loading-text">Loading component...</div>
 </div>

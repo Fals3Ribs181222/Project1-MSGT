@@ -34,7 +34,7 @@ async function renderCalendar() {
     endDate.setDate(startDate.getDate() + 13); // 14 days total
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    header.textContent = `${monthNames[startDate.getMonth()]} ${startDate.getDate()} – ${monthNames[endDate.getMonth()]} ${endDate.getDate()}, ${endDate.getFullYear()}`;
+    header.innerHTML = `<span class="cal-range-start">${monthNames[startDate.getMonth()]} ${startDate.getDate()}</span><span class="cal-range-sep"> – </span><span class="cal-range-end">${monthNames[endDate.getMonth()]} ${endDate.getDate()}</span>`;
 
     const dayCells = grid.querySelectorAll('.calendar__day');
     dayCells.forEach(cell => cell.remove());

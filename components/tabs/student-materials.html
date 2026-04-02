@@ -5,11 +5,9 @@
 
 <p id="materialsStatus" class="status"></p>
 
-<div class="filter-bar" id="matFilterBar" style="margin-bottom:1.25rem;">
-    <select id="matSubjectFilter" class="filter-bar__control">
-        <option value="">All Subjects</option>
-    </select>
-    <input type="search" id="matSearchInput" class="filter-bar__control" placeholder="Search by title...">
+<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+    <div class="pill-toggle" id="matSubjectPills" style="width:fit-content;"></div>
+    <input type="search" id="matSearchInput" class="filter-bar__control" placeholder="Search by title..." style="max-width:220px;">
 </div>
 
 <div class="material-list" id="materialsList">
@@ -18,9 +16,9 @@
 
 <!-- Inline PDF viewer (shown in place of the list) -->
 <div id="pdfInlineViewer" style="display:none;">
-    <div class="pdf-inline__header">
-        <button class="btn btn--outline btn--sm" id="pdfBackBtn">&#8592; Back to Materials</button>
-        <h3 id="pdfInlineTitle"></h3>
+    <div class="pdf-inline__header" style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+        <button class="btn btn--outline btn--sm" id="pdfBackBtn" style="flex-shrink:0;">&#8592; Back to Materials</button>
+        <h3 id="pdfInlineTitle" style="margin:0;font-size:1.1rem;"></h3>
     </div>
     <div class="pdf-inline__canvas-wrap" id="pdfCanvasWrap">
         <div class="pdf-modal__loading">Loading PDF&#8230;</div>

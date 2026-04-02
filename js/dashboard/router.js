@@ -9,16 +9,6 @@ export async function loadTab(targetId) {
     const featureSlug = targetId.replace('panel-', '');
     history.replaceState(null, '', `#${featureSlug}`);
 
-    // Toggle the "Back to Overview" button and welcome banner immediately
-    const backBtn = document.querySelector('.back-to-home-container');
-    if (targetId === 'panel-home') {
-        document.body.classList.add('is-home-active');
-        backBtn.style.display = 'none';
-    } else {
-        document.body.classList.remove('is-home-active');
-        backBtn.style.display = window.innerWidth <= 768 ? 'block' : 'none';
-    }
-
     // Update active sidebar item
     document.querySelectorAll('.dash-sidebar__item').forEach(btn => {
         btn.classList.toggle('dash-sidebar__item--active', btn.dataset.target === targetId);
@@ -31,8 +21,6 @@ export async function loadTab(targetId) {
     if (!targetPanel) {
         // Map targetId to filename (e.g., panel-students -> students)
         const featureName = targetId.replace('panel-', '');
-
-        if (featureName === 'home') return;
 
         try {
             // Show a loading indicator
@@ -73,7 +61,6 @@ export async function loadTab(targetId) {
 
         // If we switch back to a tab, we might want to refresh its data
         const featureName = targetId.replace('panel-', '');
-        if (featureName === 'home') return; // Do not fetch home.js
         try {
             const module = await import(`./${featureName}.js`);
             if (module.refresh) {
@@ -95,27 +82,24 @@ export async function loadTab(targetId) {
 
 }
 
-// Set up global event listeners for navigation pills and back buttons
-document.addEventListener('DOMContentLoaded', () => {
-    // Restore tab from URL hash on page load
-    const initialTab = location.hash.slice(1);
-    if (initialTab) {
-        loadTab(`panel-${initialTab}`);
-    }
+export function initRouter(defaultTab) {
+    const run = () => {
+        const initialTab = location.hash.slice(1);
+        loadTab(initialTab ? `panel-${initialTab}` : defaultTab);
 
-    // Listen for clicks on landing pills
-    document.addEventListener('click', (e) => {
-        const pill = e.target.closest('.landing-pill');
-        if (pill) {
-            const target = pill.getAttribute('data-target');
-            if (target) {
-                loadTab(target);
+        document.addEventListener('click', (e) => {
+            const pill = e.target.closest('.landing-pill');
+            if (pill) {
+                const target = pill.getAttribute('data-target');
+                if (target) loadTab(target);
             }
-        }
+        });
+    };
 
-        // Listen for back to home button
-        if (e.target.closest('#btnBackToHome')) {
-            loadTab('panel-home');
-        }
-    });
-});
+    // ES modules are deferred — DOMContentLoaded may have already fired
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run);
+    } else {
+        run();
+    }
+}

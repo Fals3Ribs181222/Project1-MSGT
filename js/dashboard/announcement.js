@@ -116,7 +116,7 @@ function attachAnnouncementListeners() {
                             }
                         } else {
                             if (waStatus) {
-                                waStatus.textContent = 'No parent phone numbers found.';
+                                waStatus.textContent = 'No mother/father phone numbers found.';
                                 waStatus.className = 'status status--error';
                                 waStatus.style.display = 'block';
                             }

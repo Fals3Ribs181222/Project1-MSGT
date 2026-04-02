@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
 </head>
 
-<body class="is-home-active dash-page">
+<body class="dash-page">
     <nav class="navbar" aria-label="Main navigation">
         <div class="navbar__container" style="padding: 0 2rem;">
             <a href="index" class="navbar__logo"><img src="logo.png" alt="Mitesh Sir's Study Circle" style="height:70px;width:auto;display:block;"><span style="font-size:1rem;font-weight:700;color:var(--text-primary,#1a1a2e);white-space:nowrap;">Mitesh Sir's Study Circle</span></a>
@@ -38,8 +38,8 @@
                 <a href="index"><img src="logo.png" alt="Mitesh Sir's Study Circle" style="height:72px;width:auto;"></a>
             </div>
             <nav class="dash-sidebar__nav">
-                <button class="dash-sidebar__item dash-sidebar__item--active" data-target="panel-home">
-                    <span>⊞</span> Overview
+                <button class="dash-sidebar__item dash-sidebar__item--active" data-target="panel-student-home">
+                    <span>⊞</span> Dashboard
                 </button>
                 <button class="dash-sidebar__item" data-target="panel-student-marks">
                     <span>📝</span> My Marks
@@ -84,108 +84,62 @@
             <button class="dash-menu-toggle" id="dashMenuToggle" aria-label="Open navigation">☰</button>
 
             <div class="panels-container" id="dashboard-content">
-                <div class="back-to-home-container" style="margin-bottom: 2rem; display: none;">
-                    <button class="btn btn--outline btn--sm" id="btnBackToHome">
-                        <span class="back-text-full">← Back to Overview</span>
-                        <span class="back-text-mobile">Overview</span>
-                    </button>
-                </div>
 
-                <!-- HOME PANEL (inline — not lazy loaded) -->
-                <section class="tabs__panel tabs__panel--active" id="panel-home" role="tabpanel" aria-label="Overview">
+                <!-- HOME PANEL (static — widgets populated by loadStudentHomeWidgets) -->
+                <section class="tabs__panel tabs__panel--active" id="panel-student-home" role="tabpanel" aria-label="Home">
                     <div class="dash-widgets">
 
-                        <!-- ATTENDANCE CARD (full width) -->
+                        <!-- Attendance widget -->
                         <div class="dash-widget dash-widget--full">
                             <div class="dash-widget__header">
                                 <div>
                                     <h3>My Attendance</h3>
-                                    <p class="dash-widget__sub" id="homeAttSubtitle">Loading...</p>
+                                    <p class="dash-widget__sub" id="homeAttSubtitle">—</p>
                                 </div>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-attendance')">View Details →</button>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-attendance')">View Full</button>
                             </div>
-                            <div class="home-att-body">
-                                <!-- SVG Ring -->
-                                <div class="att-ring-wrap">
-                                    <svg class="att-ring" viewBox="0 0 120 120" aria-hidden="true">
-                                        <circle class="att-ring__bg" cx="60" cy="60" r="50"/>
-                                        <circle class="att-ring__fill" id="attRingFill" cx="60" cy="60" r="50"/>
-                                    </svg>
-                                    <div class="att-ring__label">
-                                        <span class="att-ring__pct" id="homeAttRingPct">—</span>
-                                        <span class="att-ring__sub">attendance</span>
-                                    </div>
-                                </div>
-                                <!-- Right side: stats + dot strip -->
-                                <div style="flex:1;display:flex;flex-direction:column;gap:1rem;min-width:0;">
-                                    <div class="att-stats-row">
-                                        <div class="student-detail__stat">
-                                            <p class="student-detail__stat-value" id="homeAttTotal">—</p>
-                                            <p class="student-detail__stat-label">Total</p>
-                                        </div>
-                                        <div class="student-detail__stat">
-                                            <p class="student-detail__stat-value student-detail__stat-value--green" id="homeAttPresent">—</p>
-                                            <p class="student-detail__stat-label">Present</p>
-                                        </div>
-                                        <div class="student-detail__stat">
-                                            <p class="student-detail__stat-value student-detail__stat-value--red" id="homeAttAbsent">—</p>
-                                            <p class="student-detail__stat-label">Absent</p>
-                                        </div>
-                                        <div class="student-detail__stat">
-                                            <p class="student-detail__stat-value student-detail__stat-value--amber" id="homeAttLate">—</p>
-                                            <p class="student-detail__stat-label">Late</p>
-                                        </div>
-                                    </div>
-                                    <!-- Dot calendar strip -->
-                                    <div id="homeAttDots" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;"></div>
-                                    <!-- Legend -->
-                                    <div style="display:flex;gap:1rem;font-size:0.78rem;color:var(--text-muted);">
-                                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#1D9E75;margin-right:3px;vertical-align:middle;"></span>Present</span>
-                                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#E24B4A;margin-right:3px;vertical-align:middle;"></span>Absent</span>
-                                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#BA7517;margin-right:3px;vertical-align:middle;"></span>Late</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <div id="homeAttSubjects" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;"></div>
                         </div>
 
-                        <!-- UPCOMING TESTS -->
-                        <div class="dash-widget dash-widget--tests">
+                        <!-- Tests widget -->
+                        <div class="dash-widget">
                             <div class="dash-widget__header">
-                                <h3>Upcoming Tests</h3>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-marks')">All Marks</button>
+                                <h3>Tests</h3>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-marks')">My Marks</button>
                             </div>
-                            <div class="tests-preview-list" id="homeUpcomingTests">
+                            <div id="homeUpcomingTests" class="tests-preview-list">
                                 <p class="loading-text">Loading...</p>
                             </div>
                         </div>
 
-                        <!-- ASK AI QUICK-WIDGET -->
+                        <!-- Mini leaderboard widget -->
                         <div class="dash-widget">
-                            <div class="dash-widget__header">
-                                <h3>🧠 Ask AI</h3>
-                                <span class="dash-widget__badge">QUICK ASK</span>
-                            </div>
-                            <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">Ask a subject question — answered from your study materials.</p>
-                            <select id="homeAiSubject" class="form__select" style="width:100%;">
-                                <option value="Accounts">Accounts</option>
-                                <option value="Commerce">Commerce</option>
-                            </select>
-                            <input type="text" id="homeAiQuestion" class="form__input" placeholder="Type your question..." style="width:100%;">
-                            <button class="btn btn--primary btn--sm" id="btnHomeAsk" style="align-self:flex-start;">✨ Ask AI</button>
-                        </div>
-
-                        <!-- MINI LEADERBOARD -->
-                        <div class="dash-widget dash-widget--leaderboard">
                             <div class="dash-widget__header">
                                 <div>
                                     <h3>🏆 Leaderboard</h3>
-                                    <span class="dash-widget__badge" id="homeLBBadge">GRADE RANK</span>
+                                    <span class="dash-widget__badge" id="homeLBBadge">GRADE</span>
                                 </div>
                                 <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-leaderboard')">Full Board</button>
                             </div>
                             <div class="mini-leaderboard" id="homeMiniLeaderboard">
                                 <p class="loading-text">Loading...</p>
                             </div>
+                        </div>
+
+                        <!-- Ask AI widget -->
+                        <div class="dash-widget">
+                            <div class="dash-widget__header">
+                                <h3>🧠 Ask AI</h3>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-ask-ai')">Open AI</button>
+                            </div>
+                            <select id="homeAiSubject" class="form__select">
+                                <option>Accounts</option>
+                                <option>Economics</option>
+                                <option>Commerce</option>
+                                <option>Maths</option>
+                            </select>
+                            <textarea id="homeAiQuestion" class="form__textarea" rows="3" placeholder="Ask a question about your subject..."></textarea>
+                            <button class="btn btn--primary btn--sm" id="btnHomeAsk">Ask</button>
                         </div>
 
                     </div>
@@ -212,8 +166,9 @@
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
     <script type="module">
-        import { loadTab } from "./js/dashboard/router.js";
+        import { loadTab, initRouter } from "./js/dashboard/router.js";
         window.loadTab = loadTab;
+        initRouter('panel-student-home');
     </script>
 
     <!-- Auth guard -->
@@ -288,55 +243,87 @@
 
             // Fetch all data in parallel
             const [attRes, testsRes, marksRes, lbRes] = await Promise.all([
-                window.api.get('attendance', { student_id: user.id }, 'status, date'),
+                window.api.get('attendance', { student_id: user.id }, 'status, date, classes:class_id(batches:batch_id(subject))'),
                 window.api.get('tests', { grade: user.grade }, '*', { order: 'date', ascending: true }),
                 window.api.get('marks', { student_id: user.id }),
                 window.api.get('student_rankings', { grade: user.grade }, '*', { order: 'rank', ascending: true })
             ]);
 
-            // ── Attendance ring ───────────────────────────────────────
+            // ── Attendance rings (per subject) ────────────────────────
             const attRecords = attRes.data || [];
-            const total   = attRecords.length;
-            const present = attRecords.filter(r => r.status === 'present').length;
-            const absent  = attRecords.filter(r => r.status === 'absent').length;
-            const late    = attRecords.filter(r => r.status === 'late').length;
-            const pct     = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
-
-            document.getElementById('homeAttTotal').textContent   = total   || '—';
-            document.getElementById('homeAttPresent').textContent = present || '—';
-            document.getElementById('homeAttAbsent').textContent  = absent  || '—';
-            document.getElementById('homeAttLate').textContent    = late    || '—';
-            document.getElementById('homeAttRingPct').textContent = total > 0 ? pct + '%' : '—';
-
-            // Animate ring: stroke-dashoffset = circumference × (1 - pct/100)
-            // circumference = 2π × r=50 ≈ 314.16
-            const circumference = 2 * Math.PI * 50;
-            const ringFill = document.getElementById('attRingFill');
-            if (ringFill && total > 0) {
-                // Colour ring: green ≥80%, amber 60-79%, red <60%
-                const ringColor = pct >= 80 ? '#1D9E75' : pct >= 60 ? '#BA7517' : '#E24B4A';
-                ringFill.style.stroke = ringColor;
-                // Use requestAnimationFrame so CSS transition fires after initial paint
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        ringFill.style.strokeDashoffset = circumference * (1 - pct / 100);
-                    });
-                });
-            }
-
-            // Dot strip — one square per dated record (same pattern as teacher student-detail)
             const colorMap = { present: '#1D9E75', late: '#BA7517', absent: '#E24B4A' };
-            const datedRecords = attRecords.filter(r => r.date).sort((a, b) => a.date.localeCompare(b.date));
-            const dotsEl = document.getElementById('homeAttDots');
-            if (dotsEl && datedRecords.length > 0) {
-                dotsEl.innerHTML = datedRecords.map(r => {
-                    const label = r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : r.date;
-                    const bg = colorMap[r.status] || '#ccc';
-                    return `<div title="${label} · ${r.status}" style="width:14px;height:14px;border-radius:3px;background:${bg};cursor:default;flex-shrink:0;"></div>`;
-                }).join('');
-            } else if (dotsEl) {
-                dotsEl.innerHTML = '<span style="font-size:0.8rem;color:var(--text-muted);">No records yet.</span>';
-            }
+            const circumference = 2 * Math.PI * 50;
+
+            // Group records by subject; fall back to 'Overall' if no subject info
+            const subjectMap = {};
+            attRecords.forEach(r => {
+                const subj = r.classes?.batches?.subject || 'Overall';
+                if (!subjectMap[subj]) subjectMap[subj] = [];
+                subjectMap[subj].push(r);
+            });
+
+            // If no subject breakdown available, show single overall ring
+            const subjects = Object.keys(subjectMap);
+            if (subjects.length === 0) subjectMap['Overall'] = [];
+
+            const subjectsEl = document.getElementById('homeAttSubjects');
+            subjectsEl.innerHTML = '';
+            // Adjust columns to number of subjects
+            subjectsEl.style.gridTemplateColumns = `repeat(${Math.min(subjects.length || 1, 3)}, 1fr)`;
+
+            (subjects.length ? subjects : ['Overall']).forEach((subj, idx) => {
+                const recs   = subjectMap[subj] || [];
+                const total   = recs.length;
+                const present = recs.filter(r => r.status === 'present').length;
+                const absent  = recs.filter(r => r.status === 'absent').length;
+                const late    = recs.filter(r => r.status === 'late').length;
+                const pct     = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+                const ringColor = pct >= 80 ? '#1D9E75' : pct >= 60 ? '#BA7517' : '#E24B4A';
+                const ringId  = `attRingFill_${idx}`;
+
+                const datedSubjRecs = recs.filter(r => r.date).sort((a, b) => a.date.localeCompare(b.date));
+                const dotsHtml = datedSubjRecs.length
+                    ? datedSubjRecs.map(r => {
+                        const label = new Date(r.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                        const bg = colorMap[r.status] || '#ccc';
+                        return `<div title="${label} · ${r.status}" style="width:12px;height:12px;border-radius:3px;background:${bg};cursor:default;flex-shrink:0;"></div>`;
+                    }).join('')
+                    : '<span style="font-size:0.75rem;color:var(--text-muted);">No records yet.</span>';
+
+                subjectsEl.insertAdjacentHTML('beforeend', `
+                    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                        <div style="display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap;">
+                            <div class="att-ring-wrap">
+                                <svg class="att-ring" viewBox="0 0 120 120">
+                                    <circle class="att-ring__bg" cx="60" cy="60" r="50"/>
+                                    <circle class="att-ring__fill" id="${ringId}" cx="60" cy="60" r="50"
+                                        style="stroke:${ringColor};stroke-dasharray:${circumference};stroke-dashoffset:${circumference};transition:stroke-dashoffset 1s ease;"/>
+                                </svg>
+                                <div class="att-ring__label">
+                                    <span class="att-ring__pct">${total > 0 ? pct + '%' : '—'}</span>
+                                    <span class="att-ring__sub">${window.esc(subj)}</span>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                                <div><p style="font-size:2.25rem;font-weight:700;color:var(--primary);margin:0">${total || '—'}</p><p style="font-size:1rem;color:var(--text-muted);margin:0">Total</p></div>
+                                <div><p style="font-size:2.25rem;font-weight:700;color:#1D9E75;margin:0">${present || '—'}</p><p style="font-size:1rem;color:var(--text-muted);margin:0">Present</p></div>
+                                <div><p style="font-size:2.25rem;font-weight:700;color:#E24B4A;margin:0">${absent || '—'}</p><p style="font-size:1rem;color:var(--text-muted);margin:0">Absent</p></div>
+                                <div><p style="font-size:2.25rem;font-weight:700;color:#BA7517;margin:0">${late || '—'}</p><p style="font-size:1rem;color:var(--text-muted);margin:0">Late</p></div>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:4px;">${dotsHtml}</div>
+                    </div>`);
+
+                if (total > 0) {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            const el = document.getElementById(ringId);
+                            if (el) el.style.strokeDashoffset = circumference * (1 - pct / 100);
+                        });
+                    });
+                }
+            });
+
 
             // ── Upcoming tests ────────────────────────────────────────
             const allTests = testsRes.data || [];

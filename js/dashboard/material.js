@@ -12,15 +12,10 @@ async function loadMaterials() {
     btnRefresh.textContent = 'Refreshing...';
     window.tableLoading('materialsTableBody', 6, 'Loading materials...');
 
-    const [response, profilesRes] = await Promise.all([
-        window.api.get('files'),
-        window.api.get('profiles', {}, 'id, name')
-    ]);
+    const response = await window.api.get('files');
 
     btnRefresh.disabled = false;
     btnRefresh.textContent = 'Refresh List';
-
-    const nameMap = Object.fromEntries((profilesRes.data || []).map(p => [p.id, p.name]));
 
     const teacherGrade = user.grade;
     let files = response.data || [];
@@ -35,7 +30,6 @@ async function loadMaterials() {
             <td class="data-table__td">${file.subject || '-'}</td>
             <td class="data-table__td">${file.grade || 'All'}</td>
             <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
-            <td class="data-table__td">${window.esc(nameMap[file.uploaded_by]) || '-'}</td>
             <td class="data-table__td"><a href="${window.safeUrl(file.file_url)}" target="_blank" class="navbar__link">View</a></td>
         </tr>
     `).join('');
@@ -45,11 +39,11 @@ async function loadMaterials() {
 
 }
 
-async function loadUploadComponent() {
-    await window.loadComponent('add_upload', 'addUploadContainer', attachUploadListeners);
+async function loadMaterialComponent() {
+    await window.loadComponent('add_material', 'addMaterialContainer', attachMaterialListeners);
 }
 
-function attachUploadListeners() {
+function attachMaterialListeners() {
     const form = document.getElementById('uploadForm');
     if (!form) return;
 
@@ -153,16 +147,16 @@ function attachUploadListeners() {
 
 export function init() {
     loadMaterials();
-    loadUploadComponent();
+    loadMaterialComponent();
 
     const btnRefresh = document.getElementById('btnRefreshMaterials');
     if (btnRefresh) btnRefresh.addEventListener('click', loadMaterials);
 
-    // Pill Toggle Logic for Upload Tab
+    // Pill Toggle Logic
     const pillView = document.getElementById('pillViewMaterials');
-    const pillAdd = document.getElementById('pillAddUpload');
+    const pillAdd = document.getElementById('pillAddMaterial');
     const listContainer = document.getElementById('materialsListContainer');
-    const addContainer = document.getElementById('addUploadContainer');
+    const addContainer = document.getElementById('addMaterialContainer');
 
     if (pillView && pillAdd) {
         pillView.addEventListener('click', () => {

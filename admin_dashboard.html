@@ -38,12 +38,6 @@
         </header>
 
         <div class="panels-container" id="dashboard-content">
-            <div class="back-to-home-container" style="margin-bottom: 2rem; display: none;">
-                <button class="btn btn--outline btn--sm" id="btnBackToHome">
-                    <span class="back-text-full">← Back to Overview</span>
-                    <span class="back-text-mobile">Overview</span>
-                </button>
-            </div>
 
             <!-- Home Panel -->
             <section class="panel tabs__panel tabs__panel--active" id="panel-home" role="tabpanel" aria-label="Home">
@@ -91,8 +85,9 @@
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
     <script type="module">
-        import { loadTab } from "./js/dashboard/router.js";
+        import { loadTab, initRouter } from "./js/dashboard/router.js";
         window.loadTab = loadTab;
+        initRouter('panel-admin-overview');
     </script>
     <script>
         (async () => {

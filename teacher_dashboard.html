@@ -45,7 +45,7 @@
                 <button class="dash-sidebar__item" data-target="panel-students">
                     <span>🎓</span> Students
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-upload">
+                <button class="dash-sidebar__item" data-target="panel-material">
                     <span>📚</span> Materials
                 </button>
                 <button class="dash-sidebar__item" data-target="panel-test">
@@ -88,12 +88,6 @@
             <button class="dash-menu-toggle" id="dashMenuToggle" aria-label="Open navigation">☰</button>
 
             <div class="panels-container" id="dashboard-content">
-                <div class="back-to-home-container" style="margin-bottom: 2rem; display: none;">
-                    <button class="btn btn--outline btn--sm" id="btnBackToHome">
-                        <span class="back-text-full">← Back to Overview</span>
-                        <span class="back-text-mobile">Overview</span>
-                    </button>
-                </div>
 
                 <!-- HOME PANEL -->
                 <section class="tabs__panel tabs__panel--active" id="panel-home" role="tabpanel" aria-label="Home">
@@ -214,8 +208,9 @@
     <script src="js/app.js"></script>
     <script src="js/whatsapp.js"></script>
     <script type="module">
-        import { loadTab } from "./js/dashboard/router.js";
+        import { loadTab, initRouter } from "./js/dashboard/router.js";
         window.loadTab = loadTab;
+        initRouter('panel-home');
     </script>
 
     <!-- Remove logout from navbar — sidebar handles it -->
@@ -248,7 +243,7 @@
             };
             if (!flags.students_enabled)      hideSidebarItem('panel-students');
             if (!flags.attendance_enabled)    hideSidebarItem('panel-attendance');
-            if (!flags.materials_enabled)     hideSidebarItem('panel-upload');
+            if (!flags.materials_enabled)     hideSidebarItem('panel-material');
             if (!flags.tests_enabled)         hideSidebarItem('panel-test');
             if (!flags.announcements_enabled) hideSidebarItem('panel-announcement');
             if (!flags.batches_enabled)       hideSidebarItem('panel-batches');

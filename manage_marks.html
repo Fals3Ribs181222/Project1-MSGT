@@ -16,98 +16,155 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
 </head>
 
-<body>
-    <nav class="navbar" aria-label="Main navigation">
-        <div class="navbar__container" style="padding: 0 2rem;">
-            <a href="index" class="navbar__logo">Mitesh Sir's Study Circle</a>
-            <ul class="navbar__links" style="background:none;border:none;padding:0;gap:0.25rem;">
-                <li><a href="teacher_dashboard" class="navbar__link">Dashboard</a></li>
-                <li><a href="index" class="navbar__link">Home</a></li>
-            </ul>
-        </div>
-    </nav>
+<body class="dash-page">
+    <div class="dash-layout">
 
-    <main class="container section">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-            <a href="teacher_dashboard" class="breadcrumb__link">← Back to Dashboard</a>
-            <h1 id="testTitle" class="breadcrumb__title">Loading Test...</h1>
-            <p id="testMeta" class="breadcrumb__meta">Fetching test details...</p>
-        </nav>
-
-        <!-- Performance Summary Cards -->
-        <div class="stat-grid" id="performanceGrid" aria-label="Performance summary">
-            <article class="stat-card">
-                <p class="stat-card__value" id="statAverage">-</p>
-                <p class="stat-card__label">Class Average</p>
-            </article>
-            <article class="stat-card">
-                <p class="stat-card__value" id="statHighest">-</p>
-                <p class="stat-card__label">Highest Score</p>
-            </article>
-            <article class="stat-card">
-                <p class="stat-card__value" id="statLowest">-</p>
-                <p class="stat-card__label">Lowest Score</p>
-            </article>
-            <article class="stat-card">
-                <p class="stat-card__value" id="statAvgPercent">-</p>
-                <p class="stat-card__label">Avg Percentage</p>
-            </article>
-        </div>
-
-        <section class="panel" aria-label="Enter marks">
-            <header class="panel__header">
-                <h2>Enter Marks</h2>
-                <span id="studentCount" class="breadcrumb__meta">0 Students found</span>
-            </header>
-
-            <div id="marksStatus" class="status"></div>
-
-            <div id="marksTableContainer" class="table-wrap" hidden>
-                <form id="marksForm">
-                    <table aria-label="Student marks entry">
-                        <thead>
-                            <tr>
-                                <th scope="col">Name</th>
-                                <th scope="col">Username</th>
-                                <th scope="col">Marks Obtained</th>
-                                <th scope="col">Percentage</th>
-                            </tr>
-                        </thead>
-                        <tbody id="marksTableBody">
-                            <!-- Rows injected by JS -->
-                        </tbody>
-                    </table>
-                    <div class="text-right" style="display:flex; gap:0.75rem; justify-content:flex-end; align-items:center; flex-wrap:wrap;">
-                        <button type="submit" class="btn btn--primary" id="btnSaveMarks">Save All Marks</button>
-                        <button type="button" class="btn btn--outline" id="btnSendScores" style="display:none; background:rgba(37,211,102,0.1); border-color:#25D366; color:#25D366;">
-                            <i class="ri-whatsapp-line"></i> Send Scores via WhatsApp
-                        </button>
+        <!-- SIDEBAR -->
+        <aside class="dash-sidebar" id="dashSidebar">
+            <div class="dash-sidebar__top">
+                <a href="index"><img src="logo.png" alt="Mitesh Sir's Study Circle" style="height:72px;width:auto;"></a>
+            </div>
+            <nav class="dash-sidebar__nav">
+                <a class="dash-sidebar__item" href="teacher_dashboard#home"><span>⊞</span> Dashboard</a>
+                <a class="dash-sidebar__item" href="teacher_dashboard#students"><span>🎓</span> Students</a>
+                <a class="dash-sidebar__item" href="teacher_dashboard#material"><span>📚</span> Materials</a>
+                <a class="dash-sidebar__item dash-sidebar__item--active" href="teacher_dashboard#test"><span>📝</span> Tests</a>
+                <a class="dash-sidebar__item" href="teacher_dashboard#announcement"><span>📢</span> Announcements</a>
+                <a class="dash-sidebar__item" href="teacher_dashboard#batches"><span>🧑‍🤝‍🧑</span> Batches</a>
+                <a class="dash-sidebar__item" href="teacher_dashboard#schedule"><span>📅</span> Schedule</a>
+                <a class="dash-sidebar__item" href="teacher_dashboard#messages"><span>💬</span> Messages</a>
+                <a class="dash-sidebar__item" href="teacher_dashboard#ai-tools"><span>🧠</span> AI Tools</a>
+                <a class="dash-sidebar__item" href="teacher_dashboard#leaderboard"><span>🏅</span> Leaderboard</a>
+            </nav>
+            <div class="dash-sidebar__bottom">
+                <button class="dash-sidebar__logout" id="btnSidebarLogout">⏻ Logout</button>
+                <div class="dash-sidebar__profile">
+                    <div class="dash-sidebar__avatar" id="sidebarAvatar">T</div>
+                    <div>
+                        <div class="dash-sidebar__name" id="sidebarName">Teacher</div>
+                        <div class="dash-sidebar__role">Teacher</div>
                     </div>
-                    <div id="sendScoresStatus" class="status" style="display:none; margin-top:0.75rem;"></div>
-                </form>
+                </div>
             </div>
+        </aside>
 
-            <div id="loadingState" class="loading-text">
-                Loading students and existing marks...
-            </div>
-        </section>
-    </main>
+        <!-- MAIN CONTENT -->
+        <main class="dash-main">
+            <!-- Hamburger toggle (mobile only) -->
+            <button class="dash-menu-toggle" id="dashMenuToggle" aria-label="Open navigation">☰</button>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer__bottom">
-                <p>&copy; 2026 Mitesh Sir's Study Circle. All rights reserved.</p>
+            <div class="panels-container">
+
+                <section class="tabs__panel tabs__panel--active">
+
+                    <header class="panel__header">
+                        <div>
+                            <h2 id="testTitle">Loading Test...</h2>
+                            <p id="testMeta" class="breadcrumb__meta" style="margin-top:0.25rem;">Fetching test details...</p>
+                        </div>
+                        <a href="teacher_dashboard#test" class="btn btn--outline btn--sm">← Back to Tests</a>
+                    </header>
+
+                    <!-- Performance Summary Cards -->
+                    <div class="stat-grid" id="performanceGrid" aria-label="Performance summary" style="margin-top:1.5rem;">
+                        <article class="stat-card">
+                            <p class="stat-card__value" id="statAverage">-</p>
+                            <p class="stat-card__label">Class Average</p>
+                        </article>
+                        <article class="stat-card">
+                            <p class="stat-card__value" id="statHighest">-</p>
+                            <p class="stat-card__label">Highest Score</p>
+                        </article>
+                        <article class="stat-card">
+                            <p class="stat-card__value" id="statLowest">-</p>
+                            <p class="stat-card__label">Lowest Score</p>
+                        </article>
+                        <article class="stat-card">
+                            <p class="stat-card__value" id="statAvgPercent">-</p>
+                            <p class="stat-card__label">Avg Percentage</p>
+                        </article>
+                    </div>
+
+                    <div class="panel" style="margin-top:1.5rem;" aria-label="Enter marks">
+                        <header class="panel__header">
+                            <h3>Enter Marks</h3>
+                            <span id="studentCount" class="breadcrumb__meta">0 Students found</span>
+                        </header>
+
+                        <div id="marksStatus" class="status"></div>
+
+                        <div id="marksTableContainer" class="table-wrap" hidden>
+                            <form id="marksForm">
+                                <table aria-label="Student marks entry">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Name</th>
+                                            <th scope="col">Username</th>
+                                            <th scope="col">Marks Obtained</th>
+                                            <th scope="col">Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="marksTableBody">
+                                        <!-- Rows injected by JS -->
+                                    </tbody>
+                                </table>
+                                <div class="text-right" style="display:flex; gap:0.75rem; justify-content:flex-end; align-items:center; flex-wrap:wrap; margin-top:1rem;">
+                                    <button type="submit" class="btn btn--primary" id="btnSaveMarks">Save All Marks</button>
+                                    <button type="button" class="btn btn--outline" id="btnSendScores" style="display:none; background:rgba(37,211,102,0.1); border-color:#25D366; color:#25D366;">
+                                        <i class="ri-whatsapp-line"></i> Send Scores via WhatsApp
+                                    </button>
+                                </div>
+                                <div id="sendScoresStatus" class="status" style="display:none; margin-top:0.75rem;"></div>
+                            </form>
+                        </div>
+
+                        <div id="loadingState" class="loading-text">
+                            Loading students and existing marks...
+                        </div>
+                    </div>
+
+                </section>
+
             </div>
-        </div>
-    </footer>
+        </main>
+    </div>
+
+    <!-- Sidebar backdrop (mobile) -->
+    <div class="dash-sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
     <script src="js/whatsapp.js"></script>
     <script src="js/manage_marks.js"></script>
+
+    <!-- Auth guard + sidebar wiring -->
+    <script>
+        (async () => {
+            const user = await window.auth.requireRole("teacher");
+            if (!user) return;
+            document.getElementById("sidebarName").textContent = user.name || 'Teacher';
+            document.getElementById("sidebarAvatar").textContent = user.name?.[0]?.toUpperCase() || 'T';
+        })();
+
+        const sidebar = document.getElementById('dashSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+
+        document.getElementById('dashMenuToggle').addEventListener('click', () => {
+            sidebar.classList.add('dash-sidebar--open');
+            backdrop.classList.add('dash-sidebar-backdrop--visible');
+        });
+        backdrop.addEventListener('click', () => {
+            sidebar.classList.remove('dash-sidebar--open');
+            backdrop.classList.remove('dash-sidebar-backdrop--visible');
+        });
+
+        document.getElementById('btnSidebarLogout').addEventListener('click', () => window.auth.logout());
+    </script>
+
 </body>
 
 </html>

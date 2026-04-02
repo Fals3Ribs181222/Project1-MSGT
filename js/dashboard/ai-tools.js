@@ -292,13 +292,23 @@ function attachAIToolListeners() {
         renderSectionPanel();
         secPanel.style.display = 'flex';
 
-        // Position under the clicked column (3 columns with 1rem gap)
-        if (key === 'A')      secPanel.style.marginLeft = '0';
-        else if (key === 'B') secPanel.style.marginLeft = 'calc(33.333% + 0.33rem)';
-        else                  secPanel.style.marginLeft = 'calc(66.666% + 0.67rem)';
+        const display = document.getElementById(`sec${key}Display`);
+
+        if (window.innerWidth <= 768) {
+            // On mobile: move panel into DOM right after the clicked section
+            const wrapper = display?.closest('.form__row-item');
+            if (wrapper) wrapper.after(secPanel);
+            secPanel.style.marginLeft = '0';
+            secPanel.style.width = '100%';
+        } else {
+            // On desktop: position under the clicked column
+            if (key === 'A')      secPanel.style.marginLeft = '0';
+            else if (key === 'B') secPanel.style.marginLeft = 'calc(33.333% + 0.33rem)';
+            else                  secPanel.style.marginLeft = 'calc(66.666% + 0.67rem)';
+            secPanel.style.width = 'calc(33.333% - 0.67rem)';
+        }
 
         resetDisplayBorders();
-        const display = document.getElementById(`sec${key}Display`);
         if (display) display.style.borderColor = 'var(--primary)';
     }
 

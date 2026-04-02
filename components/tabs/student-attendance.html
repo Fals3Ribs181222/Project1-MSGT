@@ -5,42 +5,13 @@
 
 <p id="attendanceStatus" class="status"></p>
 
-<!-- Stats strip -->
-<div class="student-detail__stats" id="attendanceStats" style="margin-bottom:1.5rem;">
-    <div class="student-detail__stat">
-        <p class="student-detail__stat-value" id="attStatTotal">—</p>
-        <p class="student-detail__stat-label">Total Classes</p>
-    </div>
-    <div class="student-detail__stat">
-        <p class="student-detail__stat-value student-detail__stat-value--green" id="attStatPresent">—</p>
-        <p class="student-detail__stat-label">Present</p>
-    </div>
-    <div class="student-detail__stat">
-        <p class="student-detail__stat-value student-detail__stat-value--red" id="attStatAbsent">—</p>
-        <p class="student-detail__stat-label">Absent</p>
-    </div>
-    <div class="student-detail__stat">
-        <p class="student-detail__stat-value student-detail__stat-value--amber" id="attStatLate">—</p>
-        <p class="student-detail__stat-label">Late</p>
-    </div>
-    <div class="student-detail__stat">
-        <p class="student-detail__stat-value" id="attStatPct">—</p>
-        <p class="student-detail__stat-label">Attendance %</p>
-    </div>
-</div>
+<!-- Stats + Calendar split by subject -->
+<div id="attendanceSubjectSections" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;"></div>
 
 <!-- Filters -->
-<div class="filter-bar" style="margin-bottom:1.25rem;">
-    <select id="attBatchFilter" class="filter-bar__control">
-        <option value="">All Batches</option>
-    </select>
-    <select id="attMonthFilter" class="filter-bar__control">
-        <option value="">All Time</option>
-    </select>
+<div style="margin-bottom:1.25rem;">
+    <div class="pill-toggle" id="attBatchPills" style="width:fit-content;"></div>
 </div>
-
-<!-- Calendar heatmap -->
-<div id="attendanceCalendar" style="margin-bottom:1.5rem;"></div>
 
 <!-- Detail table -->
 <div class="table-wrap">

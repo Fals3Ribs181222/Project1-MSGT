@@ -58,7 +58,6 @@ function renderStudentsTable(students) {
         <tr class="data-table__row" data-student-id="${student.id}">
             <td class="data-table__td--main">${window.esc(student.name) || '-'}</td>
             <td class="data-table__td">${window.esc(student.username) || '-'}</td>
-            <td class="data-table__td">${window.esc(student.grade) || '-'}</td>
             <td class="data-table__td">${window.esc(student.subjects) || '-'}</td>
             <td class="data-table__td">
                 <button class="btn btn--primary btn--sm" data-action="detail" data-id="${student.id}">Manage Student</button>
@@ -157,20 +156,6 @@ async function showStudentDetail(studentId) {
         sdStudentWaLink.style.display = 'none';
     }
 
-    // Parent phone (father_phone as primary parent contact)
-    const sdParentPhone = document.getElementById('sdParentPhone');
-    const sdParentWaLink = document.getElementById('sdParentWaLink');
-    const parentPhone = student.father_phone || student.mother_phone;
-    if (parentPhone) {
-        sdParentPhone.textContent = parentPhone;
-        sdParentWaLink.href = `https://wa.me/91${parentPhone}`;
-        sdParentWaLink.style.display = 'inline-block';
-    } else {
-        sdParentPhone.textContent = 'Not set';
-        sdParentWaLink.style.display = 'none';
-    }
-    setupParentPhoneEdit(student.id, student.father_phone || '');
-
     // Email
     const sdEmail = document.getElementById('sdEmail');
     if (sdEmail) sdEmail.textContent = student.email || 'Not set';
@@ -191,6 +176,7 @@ async function showStudentDetail(studentId) {
             }
         }
     }
+    setupFatherPhoneEdit(student.id, student.father_phone || '');
 
     // Mother
     const sdMotherName = document.getElementById('sdMotherName');
@@ -208,6 +194,7 @@ async function showStudentDetail(studentId) {
             }
         }
     }
+    setupMotherPhoneEdit(student.id, student.mother_phone || '');
 
     // Teacher notes + WA history
     loadTeacherNotes(student.id, student.teacher_notes || '');
@@ -501,7 +488,7 @@ async function sendWhatsAppReport() {
     // Resolve recipients — prefer parent, fallback to student
     const recipients = window.whatsapp.resolveRecipients(student, 'parent');
     if (recipients.length === 0) {
-        // Fallback to student phone if no parent phone
+        // Fallback to student phone if no mother/father phone
         const fallback = window.whatsapp.resolveRecipients(student, 'student');
         if (fallback.length === 0) {
             alert("This student doesn't have a phone number registered. Please update their profile.");
@@ -1253,32 +1240,30 @@ async function loadWhatsappLog(studentId) {
     }
 }
 
-// ── Parent Phone Edit ─────────────────────────────────────────
+// ── Father Phone Edit ─────────────────────────────────────────
 
-function setupParentPhoneEdit(studentId, currentParentPhone) {
-    const editBtn = document.getElementById('btnEditParentPhone');
-    const editForm = document.getElementById('sdParentPhoneEdit');
-    const input = document.getElementById('sdParentPhoneInput');
-    const saveBtn = document.getElementById('btnSaveParentPhone');
-    const cancelBtn = document.getElementById('btnCancelParentPhone');
-    const display = document.getElementById('sdParentPhone');
-    const waLink = document.getElementById('sdParentWaLink');
+function setupFatherPhoneEdit(studentId, currentPhone) {
+    const editBtn = document.getElementById('btnEditFatherPhone');
+    const editForm = document.getElementById('sdFatherPhoneEdit');
+    const input = document.getElementById('sdFatherPhoneInput');
+    const saveBtn = document.getElementById('btnSaveFatherPhone');
+    const cancelBtn = document.getElementById('btnCancelFatherPhone');
+    const display = document.getElementById('sdFatherPhone');
+    const waLink = document.getElementById('sdFatherWaLink');
 
     if (!editBtn || !editForm || !saveBtn) return;
 
-    // Pre-fill
-    input.value = currentParentPhone || '';
+    input.value = currentPhone || '';
 
-    // Clone to remove stale listeners from previous student
     [editBtn, saveBtn, cancelBtn].forEach(btn => {
         const clone = btn.cloneNode(true);
         btn.parentNode.replaceChild(clone, btn);
     });
 
-    const freshEdit = document.getElementById('btnEditParentPhone');
-    const freshSave = document.getElementById('btnSaveParentPhone');
-    const freshCancel = document.getElementById('btnCancelParentPhone');
-    const freshInput = document.getElementById('sdParentPhoneInput');
+    const freshEdit = document.getElementById('btnEditFatherPhone');
+    const freshSave = document.getElementById('btnSaveFatherPhone');
+    const freshCancel = document.getElementById('btnCancelFatherPhone');
+    const freshInput = document.getElementById('sdFatherPhoneInput');
 
     freshEdit.addEventListener('click', () => {
         editForm.style.display = 'block';
@@ -1316,9 +1301,81 @@ function setupParentPhoneEdit(studentId, currentParentPhone) {
             editForm.style.display = 'none';
             freshEdit.style.display = 'inline-block';
 
-            // Sync local cache
             const cached = allStudents.find(s => s.id === studentId);
             if (cached) cached.father_phone = phone;
+
+        } catch (err) {
+            alert('Failed to save: ' + (err.message || 'Unknown error'));
+        } finally {
+            freshSave.disabled = false;
+            freshSave.textContent = 'Save';
+        }
+    });
+}
+
+// ── Mother Phone Edit ─────────────────────────────────────────
+
+function setupMotherPhoneEdit(studentId, currentPhone) {
+    const editBtn = document.getElementById('btnEditMotherPhone');
+    const editForm = document.getElementById('sdMotherPhoneEdit');
+    const input = document.getElementById('sdMotherPhoneInput');
+    const saveBtn = document.getElementById('btnSaveMotherPhone');
+    const cancelBtn = document.getElementById('btnCancelMotherPhone');
+    const display = document.getElementById('sdMotherPhone');
+    const waLink = document.getElementById('sdMotherWaLink');
+
+    if (!editBtn || !editForm || !saveBtn) return;
+
+    input.value = currentPhone || '';
+
+    [editBtn, saveBtn, cancelBtn].forEach(btn => {
+        const clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+    });
+
+    const freshEdit = document.getElementById('btnEditMotherPhone');
+    const freshSave = document.getElementById('btnSaveMotherPhone');
+    const freshCancel = document.getElementById('btnCancelMotherPhone');
+    const freshInput = document.getElementById('sdMotherPhoneInput');
+
+    freshEdit.addEventListener('click', () => {
+        editForm.style.display = 'block';
+        freshEdit.style.display = 'none';
+        freshInput.focus();
+    });
+
+    freshCancel.addEventListener('click', () => {
+        editForm.style.display = 'none';
+        freshEdit.style.display = 'inline-block';
+    });
+
+    freshSave.addEventListener('click', async () => {
+        const phone = (freshInput.value || '').trim().replace(/\D/g, '');
+        if (phone && phone.length !== 10) {
+            alert('Please enter a valid 10-digit number (without country code)');
+            return;
+        }
+        freshSave.disabled = true;
+        freshSave.textContent = 'Saving...';
+        try {
+            const { error } = await window.supabaseClient
+                .from('profiles')
+                .update({ mother_phone: phone || null })
+                .eq('id', studentId);
+            if (error) throw error;
+
+            display.textContent = phone || 'Not set';
+            if (phone) {
+                waLink.href = `https://wa.me/91${phone}`;
+                waLink.style.display = 'inline-block';
+            } else {
+                waLink.style.display = 'none';
+            }
+            editForm.style.display = 'none';
+            freshEdit.style.display = 'inline-block';
+
+            const cached = allStudents.find(s => s.id === studentId);
+            if (cached) cached.mother_phone = phone;
 
         } catch (err) {
             alert('Failed to save: ' + (err.message || 'Unknown error'));

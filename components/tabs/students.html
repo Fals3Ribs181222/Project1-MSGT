@@ -31,14 +31,13 @@
                 <tr>
                     <th scope="col">Name</th>
                     <th scope="col">Username</th>
-                    <th scope="col">Grade</th>
                     <th scope="col">Subjects</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
             <tbody id="studentsTableBody">
                 <tr>
-                    <td colspan="5" class="loading-text">Loading students...</td>
+                    <td colspan="4" class="loading-text">Loading students...</td>
                 </tr>
             </tbody>
         </table>
@@ -166,30 +165,6 @@
             </div>
         </div>
 
-        <!-- Parent Phone (legacy) -->
-        <div>
-            <p class="stat-card__label" style="margin-bottom:0.25rem;">Parent Phone</p>
-            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.25rem;">
-                <p class="stat-card__value" id="sdParentPhone" style="font-size:1rem;margin:0;">Not set</p>
-                <a id="sdParentWaLink" href="#" target="_blank" rel="noopener"
-                    style="display:none;background:#25D366;color:#fff;padding:3px 10px;border-radius:6px;font-size:0.78rem;text-decoration:none;font-weight:600;line-height:1.6;">
-                    WhatsApp
-                </a>
-                <button id="btnEditParentPhone" class="btn btn--outline btn--sm"
-                    style="padding:3px 10px;font-size:0.78rem;">Edit</button>
-            </div>
-            <!-- Inline edit form — hidden by default -->
-            <div id="sdParentPhoneEdit" style="display:none;margin-top:0.6rem;">
-                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-                    <input type="tel" id="sdParentPhoneInput" placeholder="10-digit number"
-                        maxlength="10"
-                        style="max-width:160px;padding:5px 10px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-surface);color:var(--text-main);">
-                    <button id="btnSaveParentPhone" class="btn btn--primary btn--sm">Save</button>
-                    <button id="btnCancelParentPhone" class="btn btn--outline btn--sm">Cancel</button>
-                </div>
-            </div>
-        </div>
-
         <!-- Email -->
         <div>
             <p class="stat-card__label" style="margin-bottom:0.25rem;">Email</p>
@@ -209,6 +184,17 @@
                     style="display:none;background:#25D366;color:#fff;padding:3px 10px;border-radius:6px;font-size:0.78rem;text-decoration:none;font-weight:600;line-height:1.6;">
                     WhatsApp
                 </a>
+                <button id="btnEditFatherPhone" class="btn btn--outline btn--sm"
+                    style="padding:3px 10px;font-size:0.78rem;">Edit</button>
+            </div>
+            <div id="sdFatherPhoneEdit" style="display:none;margin-top:0.6rem;">
+                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                    <input type="tel" id="sdFatherPhoneInput" placeholder="10-digit number"
+                        maxlength="10"
+                        style="max-width:160px;padding:5px 10px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-surface);color:var(--text-main);">
+                    <button id="btnSaveFatherPhone" class="btn btn--primary btn--sm">Save</button>
+                    <button id="btnCancelFatherPhone" class="btn btn--outline btn--sm">Cancel</button>
+                </div>
             </div>
         </div>
 
@@ -225,6 +211,17 @@
                     style="display:none;background:#25D366;color:#fff;padding:3px 10px;border-radius:6px;font-size:0.78rem;text-decoration:none;font-weight:600;line-height:1.6;">
                     WhatsApp
                 </a>
+                <button id="btnEditMotherPhone" class="btn btn--outline btn--sm"
+                    style="padding:3px 10px;font-size:0.78rem;">Edit</button>
+            </div>
+            <div id="sdMotherPhoneEdit" style="display:none;margin-top:0.6rem;">
+                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                    <input type="tel" id="sdMotherPhoneInput" placeholder="10-digit number"
+                        maxlength="10"
+                        style="max-width:160px;padding:5px 10px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-surface);color:var(--text-main);">
+                    <button id="btnSaveMotherPhone" class="btn btn--primary btn--sm">Save</button>
+                    <button id="btnCancelMotherPhone" class="btn btn--outline btn--sm">Cancel</button>
+                </div>
             </div>
         </div>
     </div>

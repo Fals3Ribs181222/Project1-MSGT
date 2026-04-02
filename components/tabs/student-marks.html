@@ -3,36 +3,9 @@
     <button class="btn btn--outline btn--sm" id="btnRefreshMarks">Refresh</button>
 </header>
 
-<div id="marksPerfCard" class="perf-card" style="margin-bottom:1.5rem; display:none;">
-    <div class="perf-card__stat">
-        <p class="perf-card__value" id="marksStatTests">0</p>
-        <p class="perf-card__label">Tests Taken</p>
-    </div>
-    <div class="perf-card__stat">
-        <p class="perf-card__value" id="marksStatAvg">—</p>
-        <p class="perf-card__label">Avg. Score</p>
-    </div>
-    <div class="perf-card__stat">
-        <p class="perf-card__value" id="marksStatBest">—</p>
-        <p class="perf-card__label">Best Score</p>
-    </div>
-    <div class="perf-card__stat">
-        <p class="perf-card__value" id="marksStatPending">0</p>
-        <p class="perf-card__label">Pending Grades</p>
-    </div>
-</div>
+<div id="marksPerfCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;"></div>
 
-<div class="filter-bar" style="margin-bottom:1.25rem;">
-    <select id="marksSubjectFilter" class="filter-bar__control">
-        <option value="">All Subjects</option>
-    </select>
-    <select id="marksDateFilter" class="filter-bar__control">
-        <option value="">All Time</option>
-        <option value="month">This Month</option>
-        <option value="3months">Last 3 Months</option>
-        <option value="6months">Last 6 Months</option>
-    </select>
-</div>
+<div class="pill-toggle" id="marksSubjectPills" style="margin-bottom:1.25rem;width:fit-content;"></div>
 
 <p id="marksStatus" class="status"></p>
 
@@ -41,15 +14,13 @@
         <thead>
             <tr>
                 <th scope="col">Date</th>
-                <th scope="col">Subject</th>
                 <th scope="col">Test Title</th>
-                <th scope="col">Max</th>
                 <th scope="col">Earned</th>
                 <th scope="col">%</th>
             </tr>
         </thead>
         <tbody id="marksTableBody">
-            <tr><td colspan="6" class="loading-text">Loading...</td></tr>
+            <tr><td colspan="4" class="loading-text">Loading...</td></tr>
         </tbody>
     </table>
 </div>

@@ -4,8 +4,6 @@ export async function init() {
     user = window.auth.getUser();
     await loadAttendance();
     document.getElementById('btnRefreshAttendance')?.addEventListener('click', loadAttendance);
-    document.getElementById('attBatchFilter')?.addEventListener('change', renderAttendance);
-    document.getElementById('attMonthFilter')?.addEventListener('change', renderAttendance);
 }
 
 export async function refresh() {
@@ -29,75 +27,80 @@ async function loadAttendance() {
     allAttendance = (attRes.data || []).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     studentBatches = batchRes.data || [];
 
-    populateBatchFilter();
-    populateMonthFilter();
+    populateBatchPills();
     renderStats(allAttendance);
-    renderCalendar(allAttendance);
     renderAttendance();
 }
 
-function populateBatchFilter() {
-    const sel = document.getElementById('attBatchFilter');
-    if (!sel) return;
-    const current = sel.value;
-    sel.innerHTML = '<option value="">All Batches</option>';
+function populateBatchPills() {
+    const pillsEl = document.getElementById('attBatchPills');
+    if (!pillsEl) return;
+
+    const accountsBatch = studentBatches.find(bs => (bs.batches?.subject || '').toLowerCase() === 'accounts');
+    const defaultBatchId = accountsBatch?.batch_id || studentBatches[0]?.batch_id || '';
+
+    pillsEl.innerHTML = '';
     studentBatches.forEach(bs => {
         const b = bs.batches || {};
-        const opt = document.createElement('option');
-        opt.value = bs.batch_id;
-        opt.textContent = `${b.name || 'Batch'} (${b.subject || ''})`;
-        sel.appendChild(opt);
+        const isDefault = bs.batch_id === defaultBatchId;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pill-toggle__btn' + (isDefault ? ' pill-toggle__btn--active' : '');
+        btn.dataset.batch = bs.batch_id;
+        btn.textContent = b.name || 'Batch';
+        pillsEl.appendChild(btn);
     });
-    if (current) sel.value = current;
-}
-
-function populateMonthFilter() {
-    const sel = document.getElementById('attMonthFilter');
-    if (!sel) return;
-    const current = sel.value;
-
-    // Get unique months from attendance data
-    const months = [...new Set(
-        allAttendance
-            .filter(a => a.date)
-            .map(a => a.date.slice(0, 7))
-    )].sort().reverse();
-
-    sel.innerHTML = '<option value="">All Time</option>';
-    months.forEach(m => {
-        const [year, month] = m.split('-');
-        const label = new Date(Number(year), Number(month) - 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
-        const opt = document.createElement('option');
-        opt.value = m;
-        opt.textContent = label;
-        sel.appendChild(opt);
+    pillsEl.querySelectorAll('.pill-toggle__btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            pillsEl.querySelectorAll('.pill-toggle__btn').forEach(b => b.classList.remove('pill-toggle__btn--active'));
+            btn.classList.add('pill-toggle__btn--active');
+            renderAttendance();
+        });
     });
-    if (current) sel.value = current;
 }
 
 function renderStats(records) {
-    const total   = records.length;
-    const present = records.filter(r => r.status === 'present').length;
-    const absent  = records.filter(r => r.status === 'absent').length;
-    const late    = records.filter(r => r.status === 'late').length;
-    const pct     = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+    const container = document.getElementById('attendanceSubjectSections');
+    if (!container) return;
 
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    set('attStatTotal',   total);
-    set('attStatPresent', present);
-    set('attStatAbsent',  absent);
-    set('attStatLate',    late);
-    set('attStatPct',     total > 0 ? pct + '%' : '—');
+    const studentSubjects = (user.subjects || '').split(',').map(s => s.trim()).filter(Boolean);
+    const subjects = studentSubjects.length ? studentSubjects : ['Overall'];
+
+    container.innerHTML = subjects.map(subj => {
+        const recs    = subj === 'Overall' ? records : records.filter(r => (r.classes?.batches?.subject || '') === subj);
+        const total   = recs.length;
+        const present = recs.filter(r => r.status === 'present').length;
+        const absent  = recs.filter(r => r.status === 'absent').length;
+        const late    = recs.filter(r => r.status === 'late').length;
+        const pct     = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+        const calHtml = buildCalendarHtml(recs);
+
+        const statBox = (val, label, color) =>
+            `<div style="background:var(--bg-surface,#fff);border:1px solid var(--border-color);border-radius:var(--radius-lg,12px);padding:1.25rem;text-align:center;">
+                <p style="font-size:1.75rem;font-weight:700;color:${color};margin:0 0 0.25rem;">${val}</p>
+                <p style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:0;">${label}</p>
+            </div>`;
+
+        return `<div style="margin-bottom:0.5rem;">
+            <p style="font-size:0.8rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 0.6rem;">${window.esc(subj)}</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                ${statBox(total, 'Total Classes', 'var(--primary)')}
+                ${statBox(present, 'Present', '#1D9E75')}
+                ${statBox(absent, 'Absent', '#E24B4A')}
+                ${statBox(late, 'Late', '#BA7517')}
+                <div style="grid-column:1/-1;background:var(--bg-surface,#fff);border:1px solid var(--border-color);border-radius:var(--radius-lg,12px);padding:1.25rem;text-align:center;">
+                    <p style="font-size:1.75rem;font-weight:700;color:${pct>=80?'#1D9E75':pct>=60?'#BA7517':'#E24B4A'};margin:0 0 0.25rem;">${total > 0 ? pct + '%' : '—'}</p>
+                    <p style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:0;">Attendance %</p>
+                </div>
+            </div>
+            ${calHtml}
+        </div>`;
+    }).join('');
 }
 
-function renderCalendar(records) {
-    const container = document.getElementById('attendanceCalendar');
-    if (!container || records.length === 0) {
-        if (container) container.innerHTML = '';
-        return;
-    }
+function buildCalendarHtml(records) {
+    if (!records.length) return '';
 
-    // Build date → status map (prefer 'absent' > 'late' > 'present' if multiple)
     const priority = { absent: 3, late: 2, present: 1 };
     const dateMap = {};
     records.forEach(r => {
@@ -108,53 +111,33 @@ function renderCalendar(records) {
         }
     });
 
-    // Get the range of months to display
     const dates = Object.keys(dateMap).sort();
-    if (dates.length === 0) { container.innerHTML = ''; return; }
-
-    const firstDate = new Date(dates[0]);
-    const lastDate  = new Date(dates[dates.length - 1]);
-
-    // Iterate month by month
-    let html = '<div style="display:flex;flex-wrap:wrap;gap:1.5rem;">';
-
-    let cur = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
-    const end = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, 1);
+    if (dates.length === 0) return '';
 
     const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const now = new Date();
+    let html = '<div style="display:flex;flex-wrap:wrap;gap:1.5rem;">';
+    let cur = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     while (cur < end) {
         const year  = cur.getFullYear();
         const month = cur.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const firstDow = new Date(year, month, 1).getDay(); // 0=Sun
+        const firstDow = new Date(year, month, 1).getDay();
 
         html += `<div style="min-width:200px;">`;
         html += `<p style="font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin:0 0 0.5rem;">${monthNames[month]} ${year}</p>`;
         html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:0.7rem;text-align:center;">`;
-
-        // Day headers
-        ['S','M','T','W','T','F','S'].forEach(d => {
-            html += `<div style="color:var(--text-muted);padding-bottom:2px;">${d}</div>`;
-        });
-
-        // Empty cells before first day
-        for (let i = 0; i < firstDow; i++) {
-            html += '<div></div>';
-        }
-
+        ['S','M','T','W','T','F','S'].forEach(d => { html += `<div style="color:var(--text-muted);padding-bottom:2px;">${d}</div>`; });
+        for (let i = 0; i < firstDow; i++) html += '<div></div>';
         for (let d = 1; d <= daysInMonth; d++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const status  = dateMap[dateStr];
-            let bg = 'transparent';
-            let title = '';
-            if (status === 'present') { bg = 'var(--success, #22c55e)'; title = 'Present'; }
-            else if (status === 'absent') { bg = 'var(--danger, #ef4444)'; title = 'Absent'; }
-            else if (status === 'late')   { bg = 'var(--warning, #f59e0b)'; title = 'Late'; }
-
-            html += `<div title="${dateStr}${title ? ' — ' + title : ''}" style="border-radius:3px;background:${bg};color:${status ? 'white' : 'var(--text-secondary)'};padding:2px 0;font-size:0.68rem;">${d}</div>`;
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const status = dateMap[dateStr];
+            const bg = status === 'present' ? 'var(--success,#22c55e)' : status === 'absent' ? 'var(--danger,#ef4444)' : status === 'late' ? 'var(--warning,#f59e0b)' : 'transparent';
+            const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : '';
+            html += `<div title="${dateStr}${label ? ' — ' + label : ''}" style="border-radius:3px;background:${bg};color:${status ? 'white' : 'var(--text-secondary)'};padding:2px 0;font-size:0.68rem;">${d}</div>`;
         }
-
         html += '</div></div>';
         cur.setMonth(cur.getMonth() + 1);
     }
@@ -165,24 +148,19 @@ function renderCalendar(records) {
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--danger,#ef4444);margin-right:3px;"></span>Absent</span>
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--warning,#f59e0b);margin-right:3px;"></span>Late</span>
     </div>`;
-
-    container.innerHTML = html;
+    return html;
 }
 
 function renderAttendance() {
-    const batchFilter = document.getElementById('attBatchFilter')?.value || '';
-    const monthFilter = document.getElementById('attMonthFilter')?.value || '';
+    const activeBtn = document.querySelector('#attBatchPills .pill-toggle__btn--active');
+    const batchFilter = activeBtn?.dataset.batch || '';
     const tbody = document.getElementById('attendanceTableBody');
 
     const filtered = allAttendance.filter(r => {
         if (batchFilter && r.classes?.batch_id !== batchFilter) return false;
-        if (monthFilter && r.date && !r.date.startsWith(monthFilter)) return false;
         return true;
     });
 
-    // Update stats for filtered view
-    renderStats(filtered);
-    renderCalendar(filtered);
 
     if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="loading-text">No attendance records found.</td></tr>';

@@ -682,18 +682,6 @@ button:disabled {
 }
 
 /* ============================================================
-   PANEL STATE VISIBILITY LOGIC
-   ============================================================ */
-body.is-home-active .tabs {
-    display: none;
-}
-
-body:not(.is-home-active) .welcome {
-    display: none;
-}
-
-
-/* ============================================================
    WELCOME BANNER
    ============================================================ */
 .welcome {
@@ -1165,6 +1153,25 @@ body:not(.is-home-active) .welcome {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+}
+
+@media (max-width: 480px) {
+    .stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-card__value {
+        font-size: 1.5rem;
+    }
+
+    .breadcrumb__title {
+        font-size: 1.75rem;
+    }
 }
 
 .stat-card {
@@ -1773,6 +1780,56 @@ body:not(.is-home-active) .welcome {
     max-width: 100%;
     opacity: 0.85;
     font-size: 0.7rem;
+}
+
+/* ── Calendar mobile: transposed grid (days as rows, weeks as cols) ── */
+@media (max-width: 768px) {
+    .calendar__grid {
+        grid-template-columns: 44px 1fr 1fr;
+        grid-template-rows: repeat(7, auto);
+    }
+
+    /* Day headers → column 1, rows 1–7 */
+    .calendar__grid > .calendar__day-header:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .calendar__grid > .calendar__day-header:nth-child(2) { grid-column: 1; grid-row: 2; }
+    .calendar__grid > .calendar__day-header:nth-child(3) { grid-column: 1; grid-row: 3; }
+    .calendar__grid > .calendar__day-header:nth-child(4) { grid-column: 1; grid-row: 4; }
+    .calendar__grid > .calendar__day-header:nth-child(5) { grid-column: 1; grid-row: 5; }
+    .calendar__grid > .calendar__day-header:nth-child(6) { grid-column: 1; grid-row: 6; }
+    .calendar__grid > .calendar__day-header:nth-child(7) { grid-column: 1; grid-row: 7; }
+
+    /* Week 1 → column 2, rows 1–7 */
+    .calendar__grid > .calendar__day:nth-child(8)  { grid-column: 2; grid-row: 1; }
+    .calendar__grid > .calendar__day:nth-child(9)  { grid-column: 2; grid-row: 2; }
+    .calendar__grid > .calendar__day:nth-child(10) { grid-column: 2; grid-row: 3; }
+    .calendar__grid > .calendar__day:nth-child(11) { grid-column: 2; grid-row: 4; }
+    .calendar__grid > .calendar__day:nth-child(12) { grid-column: 2; grid-row: 5; }
+    .calendar__grid > .calendar__day:nth-child(13) { grid-column: 2; grid-row: 6; }
+    .calendar__grid > .calendar__day:nth-child(14) { grid-column: 2; grid-row: 7; }
+
+    /* Week 2 → column 3, rows 1–7 */
+    .calendar__grid > .calendar__day:nth-child(15) { grid-column: 3; grid-row: 1; }
+    .calendar__grid > .calendar__day:nth-child(16) { grid-column: 3; grid-row: 2; }
+    .calendar__grid > .calendar__day:nth-child(17) { grid-column: 3; grid-row: 3; }
+    .calendar__grid > .calendar__day:nth-child(18) { grid-column: 3; grid-row: 4; }
+    .calendar__grid > .calendar__day:nth-child(19) { grid-column: 3; grid-row: 5; }
+    .calendar__grid > .calendar__day:nth-child(20) { grid-column: 3; grid-row: 6; }
+    .calendar__grid > .calendar__day:nth-child(21) { grid-column: 3; grid-row: 7; }
+
+    .calendar__day {
+        min-height: 60px;
+    }
+
+    .calendar__day-header {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.75rem;
+    }
+
+    /* Header date range on 2 lines */
+    .cal-range-sep { display: none; }
+    .cal-range-start,
+    .cal-range-end { display: block; line-height: 1.4; }
+    .calendar__title { font-size: 1rem; text-align: center; }
 }
 
 /* ============================================================
@@ -2682,13 +2739,6 @@ tr.editing-row {
 }
 
 /* ============================================================
-   BACK TO OVERVIEW — responsive text
-   ============================================================ */
-.back-text-mobile {
-    display: none;
-}
-
-/* ============================================================
    HAMBURGER MENU — hidden on desktop by default
    ============================================================ */
 .navbar__toggle {
@@ -2856,23 +2906,6 @@ tr.editing-row {
     }
 
     /* Back to Overview: full-width centered on mobile */
-    .back-to-home-container {
-        text-align: center;
-    }
-
-    .back-to-home-container .btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .back-text-full {
-        display: none;
-    }
-
-    .back-text-mobile {
-        display: inline;
-    }
-
     /* Leaderboard: stack to 1 column on tablets/phones */
     .leaderboard-grid {
         grid-template-columns: 1fr;
@@ -3094,6 +3127,10 @@ tr.editing-row {
 .dash-sidebar__item:hover {
     background: var(--bg-surface-hover);
     color: var(--text-main);
+}
+
+a.dash-sidebar__item {
+    text-decoration: none;
 }
 
 .dash-sidebar__item--active {
@@ -4155,5 +4192,62 @@ tr.editing-row {
 
     .msg-bubble {
         max-width: 85%;
+    }
+}
+
+/* ── Materials table: hide grade & date on mobile ──────────── */
+@media (max-width: 768px) {
+    #materialsTable th:nth-child(3),
+    #materialsTable td:nth-child(3),
+    #materialsTable th:nth-child(4),
+    #materialsTable td:nth-child(4) {
+        display: none;
+    }
+}
+
+/* ── Batches table: hide subject, grade & schedule on mobile ── */
+@media (max-width: 768px) {
+    #batchesTable th:nth-child(2),
+    #batchesTable td:nth-child(2),
+    #batchesTable th:nth-child(3),
+    #batchesTable td:nth-child(3),
+    #batchesTable th:nth-child(4),
+    #batchesTable td:nth-child(4) {
+        display: none;
+    }
+
+    #batchesTable th:last-child,
+    #batchesTable td:last-child:not(.loading-text) {
+        text-align: right;
+    }
+}
+
+/* ── Tests table: hide grade & date on mobile ──────────────── */
+@media (max-width: 768px) {
+    #testsListTable th:nth-child(3),
+    #testsListTable td:nth-child(3),
+    #testsListTable th:nth-child(4),
+    #testsListTable td:nth-child(4) {
+        display: none;
+    }
+
+    #testsListTable th:last-child,
+    #testsListTable td:last-child:not(.loading-text) {
+        text-align: right;
+    }
+}
+
+/* ── Students table: hide username & subjects on mobile ─────── */
+@media (max-width: 768px) {
+    #studentsTable th:nth-child(2),
+    #studentsTable td:nth-child(2),
+    #studentsTable th:nth-child(3),
+    #studentsTable td:nth-child(3) {
+        display: none;
+    }
+
+    #studentsTable th:last-child,
+    #studentsTable td:last-child:not(.loading-text) {
+        text-align: right;
     }
 }
