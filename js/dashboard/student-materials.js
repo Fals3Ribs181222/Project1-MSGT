@@ -31,6 +31,14 @@ async function loadMaterials() {
 
     allFiles = res.data || [];
 
+    const studentSubjects = (user.subjects || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (studentSubjects.length > 0) {
+        allFiles = allFiles.filter(f => {
+            if (!f.subject) return true;
+            return f.subject.split(',').map(s => s.trim()).some(s => studentSubjects.includes(s));
+        });
+    }
+
     // Populate subject filter
     const subjects = [...new Set(allFiles.map(f => f.subject).filter(Boolean))];
     const subjectSel = document.getElementById('matSubjectFilter');

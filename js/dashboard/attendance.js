@@ -452,11 +452,11 @@ export function init() {
             const subject = classMeta.split('•')[0]?.trim() || className;
             const dateStr = new Date().toISOString().split('T')[0];
 
-            // Fetch profiles for student phone + parent_phone
+            // Fetch profiles for student phone + parent phone
             const studentIds = records.map(r => r.student_id);
             const { data: profiles } = await window.supabaseClient
                 .from('profiles')
-                .select('id, name, phone, parent_phone')
+                .select('id, name, phone, father_phone, mother_phone')
                 .in('id', studentIds);
 
             if (!profiles || profiles.length === 0) {

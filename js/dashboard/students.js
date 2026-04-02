@@ -157,18 +157,19 @@ async function showStudentDetail(studentId) {
         sdStudentWaLink.style.display = 'none';
     }
 
-    // Parent phone (legacy generic field)
+    // Parent phone (father_phone as primary parent contact)
     const sdParentPhone = document.getElementById('sdParentPhone');
     const sdParentWaLink = document.getElementById('sdParentWaLink');
-    if (student.parent_phone) {
-        sdParentPhone.textContent = student.parent_phone;
-        sdParentWaLink.href = `https://wa.me/91${student.parent_phone}`;
+    const parentPhone = student.father_phone || student.mother_phone;
+    if (parentPhone) {
+        sdParentPhone.textContent = parentPhone;
+        sdParentWaLink.href = `https://wa.me/91${parentPhone}`;
         sdParentWaLink.style.display = 'inline-block';
     } else {
         sdParentPhone.textContent = 'Not set';
         sdParentWaLink.style.display = 'none';
     }
-    setupParentPhoneEdit(student.id, student.parent_phone || '');
+    setupParentPhoneEdit(student.id, student.father_phone || '');
 
     // Email
     const sdEmail = document.getElementById('sdEmail');
@@ -1301,7 +1302,7 @@ function setupParentPhoneEdit(studentId, currentParentPhone) {
         try {
             const { error } = await window.supabaseClient
                 .from('profiles')
-                .update({ parent_phone: phone || null })
+                .update({ father_phone: phone || null })
                 .eq('id', studentId);
             if (error) throw error;
 
@@ -1317,7 +1318,7 @@ function setupParentPhoneEdit(studentId, currentParentPhone) {
 
             // Sync local cache
             const cached = allStudents.find(s => s.id === studentId);
-            if (cached) cached.parent_phone = phone;
+            if (cached) cached.father_phone = phone;
 
         } catch (err) {
             alert('Failed to save: ' + (err.message || 'Unknown error'));

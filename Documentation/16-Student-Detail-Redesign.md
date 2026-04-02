@@ -21,7 +21,8 @@ Phone numbers for both the student and their parent are now stored on the `profi
 
 | Column | Type | Notes |
 |---|---|---|
-| `parent_phone` | `TEXT` | New column — student phone (`phone`) already existed |
+| `father_phone` | `TEXT` | Father's phone number |
+| `mother_phone` | `TEXT` | Mother's phone number |
 
 **UI behaviour:**
 - Phone buttons are shown by default as read-only pills.
@@ -115,7 +116,7 @@ The marks table now includes a **Rank** column showing where this student placed
 |---|---|
 | `components/tabs/students.html` | Full replacement — new card-based layout with all six new sections |
 | `js/dashboard/students.js` | Extended — 9 new/modified functions; no existing logic removed |
-| `supabase_schema.sql` | Two new tables (`student_notes`, `whatsapp_log`), one new column (`parent_phone`) |
+| `supabase_schema.sql` | Two new tables (`student_notes`, `whatsapp_log`), two new columns (`father_phone`, `mother_phone`) |
 
 ---
 
@@ -124,8 +125,9 @@ The marks table now includes a **Rank** column showing where this student placed
 Run the following in **Supabase Dashboard → SQL Editor** before deploying the updated frontend:
 
 ```sql
--- Add parent phone to profiles
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS parent_phone TEXT;
+-- Add parent phones to profiles
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS father_phone TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mother_phone TEXT;
 
 -- Teacher notes (private, one per student)
 CREATE TABLE IF NOT EXISTS student_notes (
