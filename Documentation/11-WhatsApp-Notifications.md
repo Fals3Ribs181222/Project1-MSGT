@@ -52,7 +52,8 @@ Integration points in existing files:
 
 ### `profiles` table
 - `phone` (TEXT) — Student's 10-digit Indian mobile number (without `+91` prefix)
-- `parent_phone` (TEXT) — Parent's phone number
+- `father_phone` (TEXT) — Father's phone number
+- `mother_phone` (TEXT) — Mother's phone number
 
 The edge function normalises numbers to E.164 format (prepends `91`) before sending.
 

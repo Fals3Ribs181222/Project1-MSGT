@@ -1,6 +1,7 @@
 const user = window.auth.getUser();
 let currentBatchId = null;
 let currentBatchGrade = null;
+let currentBatchSubject = null;
 
 async function loadBatches() {
     const tbody = document.getElementById('batchesTableBody');
@@ -144,6 +145,7 @@ window.openBatchDetail = async function (batchId, batchName) {
     if (batchRes.success && batchRes.data && batchRes.data.length > 0) {
         const b = batchRes.data[0];
         currentBatchGrade = b.grade || null;
+        currentBatchSubject = b.subject || null;
 
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         let scheduleStr = '';
@@ -223,6 +225,14 @@ async function loadStudentPicker(batchId) {
                 allStudents = allStudents.filter(s => s.grade === teacherGrade);
             }
         }
+        if (currentBatchSubject) {
+            const batchSubjects = currentBatchSubject.split(',').map(s => s.trim()).filter(Boolean);
+            allStudents = allStudents.filter(s => {
+                if (!s.subjects) return false;
+                return s.subjects.split(',').map(s => s.trim()).some(s => batchSubjects.includes(s));
+            });
+        }
+
         const available = allStudents.filter(s => !memberIds.has(s.id));
 
         if (available.length > 0) {
@@ -331,6 +341,7 @@ export function init() {
             if (pillView) pillView.classList.add('pill-toggle__btn--active');
             currentBatchId = null;
             currentBatchGrade = null;
+            currentBatchSubject = null;
             loadBatches();
         });
     }
@@ -392,6 +403,7 @@ export function init() {
                 if (pillView) pillView.classList.add('pill-toggle__btn--active');
                 currentBatchId = null;
                 currentBatchGrade = null;
+                currentBatchSubject = null;
                 loadBatches();
             }
         });
@@ -415,5 +427,6 @@ export function refresh() {
 
     currentBatchId = null;
     currentBatchGrade = null;
+    currentBatchSubject = null;
     loadBatches();
 }

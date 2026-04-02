@@ -27,6 +27,15 @@ async function loadMarks() {
     }
 
     allTests = testsRes.data || [];
+
+    const studentSubjects = (user.subjects || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (studentSubjects.length > 0) {
+        allTests = allTests.filter(t => {
+            if (!t.subject) return true;
+            return t.subject.split(',').map(s => s.trim()).some(s => studentSubjects.includes(s));
+        });
+    }
+
     marksMap = {};
     (marksRes.data || []).forEach(m => { marksMap[m.test_id] = m; });
 
