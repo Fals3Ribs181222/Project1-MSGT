@@ -1,264 +1,434 @@
-// js/dashboard/messages.js — Messages tab logic
+// js/dashboard/messages.js — Conversation-centric Messages tab
 
 const user = window.auth.getUser();
 
 let allStudentsCache = [];
+let conversations = [];
+let activePhone = null;
 
-// ── Load students into the picker ────────────────────────────
-async function loadStudentPicker() {
-    const select = document.getElementById('msgStudentSelect');
-    if (!select) return;
-
-    const res = await window.api.get('profiles', { role: 'student' }, 'id, name, grade, phone, parent_phone');
+// ── Load student profiles ────────────────────────────────────
+async function loadProfiles() {
+    const res = await window.api.get('profiles', { role: 'student' }, 'id, name, grade, phone, father_phone, mother_phone');
     if (res.success && res.data) {
         let students = res.data;
-        const teacherGrade = window.auth.getUser()?.grade;
+        const teacherGrade = user?.grade;
         if (teacherGrade && teacherGrade !== 'All Grades') {
             students = students.filter(s => s.grade === teacherGrade);
         }
         allStudentsCache = students;
-        select.innerHTML = '<option value="">Select a student...</option>' +
-            students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    } else {
-        select.innerHTML = '<option value="">Failed to load students</option>';
+    }
+    return allStudentsCache;
+}
+
+// ── Load & render conversations ──────────────────────────────
+async function loadConversations() {
+    const list = document.getElementById('msgContactList');
+    if (list) list.innerHTML = '<p style="padding:2rem 1rem;text-align:center;color:var(--text-muted);">Loading...</p>';
+
+    try {
+        conversations = await window.whatsapp.getConversations(allStudentsCache);
+        renderContactList(conversations);
+    } catch (err) {
+        if (list) list.innerHTML = `<p style="padding:2rem 1rem;text-align:center;color:var(--text-muted);">Error: ${window.esc(err.message)}</p>`;
     }
 }
 
-// ── Show phone info when student is selected ─────────────────
-function updatePhoneInfo() {
-    const studentId = document.getElementById('msgStudentSelect')?.value;
-    const recipient = document.getElementById('msgRecipient')?.value;
-    const infoEl = document.getElementById('msgPhoneInfo');
-    const detailsEl = document.getElementById('msgPhoneDetails');
-    if (!infoEl || !detailsEl) return;
-
-    if (!studentId) {
-        infoEl.style.display = 'none';
-        return;
-    }
-
-    const student = allStudentsCache.find(s => s.id === studentId);
-    if (!student) {
-        infoEl.style.display = 'none';
-        return;
-    }
-
-    const parts = [];
-    if (recipient === 'student' || recipient === 'both') {
-        parts.push(`Student: ${student.phone || '⚠ No phone'}`);
-    }
-    if (recipient === 'parent' || recipient === 'both') {
-        parts.push(`Parent: ${student.parent_phone || '⚠ No phone'}`);
-    }
-
-    detailsEl.textContent = parts.join(' • ');
-    infoEl.style.display = 'block';
+// ── 24h window dot helper ────────────────────────────────────
+function windowAvatarColor(ts) {
+    if (!ts) return 'var(--primary)';
+    const hoursLeft = (ts.getTime() + 24 * 3600 * 1000 - Date.now()) / 3600000;
+    if (hoursLeft > 10) return 'var(--secondary)';
+    if (hoursLeft > 2)  return 'var(--amber)';
+    if (hoursLeft > 0)  return 'var(--cadmium-red)';
+    return 'var(--text-main)';
 }
 
-// ── Send custom message ──────────────────────────────────────
-async function sendCustomMessage() {
-    const studentId = document.getElementById('msgStudentSelect')?.value;
-    const recipient = document.getElementById('msgRecipient')?.value;
-    const messageText = document.getElementById('msgText')?.value?.trim();
-    const btn = document.getElementById('btnSendCustomMsg');
-    const statusEl = document.getElementById('msgSendStatus');
+// ── Render contact list ──────────────────────────────────────
+function renderContactList(convos) {
+    const list = document.getElementById('msgContactList');
+    if (!list) return;
 
-    if (!studentId || !messageText) {
-        window.showStatus('msgSendStatus', 'Please select a student and type a message.', 'error');
+    if (convos.length === 0) {
+        list.innerHTML = '<p style="padding:2rem 1rem;text-align:center;color:var(--text-muted);">No conversations yet</p>';
         return;
     }
 
-    const student = allStudentsCache.find(s => s.id === studentId);
-    if (!student) return;
+    list.innerHTML = convos.map(c => {
+        const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length - 1] : null;
+        const preview = lastMsg
+            ? (lastMsg.direction === 'out' ? 'You: ' : '') + (lastMsg.text || '').substring(0, 45)
+            : '';
+        const time = c.lastTimestamp ? formatRelativeTime(c.lastTimestamp) : '';
+        const isActive = c.phone === activePhone ? ' msg-contact-card--active' : '';
 
-    const recipients = window.whatsapp.resolveRecipients(student, recipient);
-    if (recipients.length === 0) {
-        window.showStatus('msgSendStatus', 'No phone number available for the selected recipient.', 'error');
-        return;
+        return `
+            <div class="msg-contact-card${isActive}" data-phone="${window.esc(c.phone)}">
+                <div class="msg-contact-card__avatar" style="background:${windowAvatarColor(c.lastIncomingTimestamp)};"></div>
+                <div class="msg-contact-card__body">
+                    <div class="msg-contact-card__name">${window.esc(c.displayName)}</div>
+                    <div class="msg-contact-card__preview">${window.esc(preview)}</div>
+                </div>
+                <div class="msg-contact-card__meta">
+                    <div class="msg-contact-card__time">${time}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Click handlers
+    list.querySelectorAll('.msg-contact-card').forEach(card => {
+        card.addEventListener('click', () => {
+            openThread(card.dataset.phone);
+        });
+    });
+}
+
+// ── Open a conversation thread ───────────────────────────────
+function openThread(phone) {
+    activePhone = phone;
+    const convo = conversations.find(c => c.phone === phone);
+    if (!convo) return;
+
+    // Update active card styling
+    document.querySelectorAll('.msg-contact-card').forEach(c => {
+        c.classList.toggle('msg-contact-card--active', c.dataset.phone === phone);
+    });
+
+    // Mobile: show thread, hide contacts
+    document.getElementById('msgLayout')?.classList.add('msg-layout--thread-open');
+
+    renderThread(convo);
+}
+
+// ── Render thread ────────────────────────────────────────────
+function renderThread(convo) {
+    const threadEl = document.getElementById('msgThread');
+    if (!threadEl) return;
+
+    const windowBadge = convo.hasRecentIncoming
+        ? '<span class="msg-window-badge msg-window-badge--open">24h window open</span>'
+        : '<span class="msg-window-badge msg-window-badge--closed">24h window closed</span>';
+
+    let messagesHtml = '';
+    let lastDateStr = '';
+
+    for (const msg of convo.messages) {
+        const dateStr = msg.timestamp.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        if (dateStr !== lastDateStr) {
+            messagesHtml += `<div class="msg-date-divider">${dateStr}</div>`;
+            lastDateStr = dateStr;
+        }
+
+        const timeStr = msg.timestamp.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        const dirClass = msg.direction === 'in' ? 'msg-bubble--in' : 'msg-bubble--out';
+        const typeLabel = msg.type && msg.type !== 'custom'
+            ? `<div class="msg-bubble__type">${window.esc(msg.type)}</div>`
+            : '';
+
+        messagesHtml += `<div class="msg-bubble ${dirClass}">${typeLabel}${DOMPurify.sanitize(msg.text || '')}</div>`;
     }
+
+    if (convo.messages.length === 0) {
+        messagesHtml = '<p style="text-align:center;color:var(--text-muted);padding:2rem;">No messages yet</p>';
+    }
+
+    threadEl.innerHTML = `
+        <div class="msg-thread__header">
+            <button class="msg-thread__back" id="msgThreadBack">
+                <i class="ri-arrow-left-line"></i>
+            </button>
+            <div class="msg-thread__header-info">
+                <div class="msg-thread__header-name">${window.esc(convo.displayName)}</div>
+                <div class="msg-thread__header-phone">+91 ${window.esc(convo.phone)} ${convo.label ? `&middot; ${window.esc(convo.label)}` : ''}</div>
+            </div>
+            ${windowBadge}
+        </div>
+        <div class="msg-thread__messages" id="msgThreadMessages">
+            ${messagesHtml}
+        </div>
+        <div class="msg-reply">
+            <textarea class="msg-reply__input" id="msgReplyInput"
+                      placeholder="Type a message..." rows="1" maxlength="1000"></textarea>
+            <button class="msg-reply__send" id="msgReplySend" title="Send">
+                <i class="ri-send-plane-fill"></i>
+            </button>
+        </div>
+        <div id="msgReplyStatus" style="display:none;"></div>
+    `;
+
+    // Scroll to bottom
+    const msgContainer = document.getElementById('msgThreadMessages');
+    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+
+    // Event listeners
+    document.getElementById('msgThreadBack')?.addEventListener('click', closeThread);
+    document.getElementById('msgReplySend')?.addEventListener('click', handleSendReply);
+
+    const replyInput = document.getElementById('msgReplyInput');
+    replyInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendReply();
+        }
+    });
+
+    // Auto-resize textarea
+    replyInput?.addEventListener('input', () => {
+        replyInput.style.height = 'auto';
+        replyInput.style.height = Math.min(replyInput.scrollHeight, 120) + 'px';
+    });
+}
+
+// ── Close thread (mobile back) ───────────────────────────────
+function closeThread() {
+    activePhone = null;
+    document.getElementById('msgLayout')?.classList.remove('msg-layout--thread-open');
+
+    const threadEl = document.getElementById('msgThread');
+    if (threadEl) {
+        threadEl.innerHTML = '<div class="msg-thread__empty"><p>Select a conversation<br>or start a new message</p></div>';
+    }
+
+    document.querySelectorAll('.msg-contact-card').forEach(c => {
+        c.classList.remove('msg-contact-card--active');
+    });
+}
+
+// ── Send reply from thread ───────────────────────────────────
+async function handleSendReply() {
+    const input = document.getElementById('msgReplyInput');
+    const btn = document.getElementById('msgReplySend');
+    const text = input?.value?.trim();
+    if (!btn || !text || !activePhone) return;
+
+    const convo = conversations.find(c => c.phone === activePhone);
+    if (!convo) return;
 
     btn.disabled = true;
-    btn.textContent = 'Sending...';
-    statusEl.style.display = 'none';
 
     try {
-        const result = await window.whatsapp.send({
-            type: 'custom',
-            recipients,
-            payload: { message: messageText },
-            sentBy: user.id,
-        });
-
-        window.showStatus('msgSendStatus',
-            `✓ Sent to ${result.sent} recipient(s)${result.failed > 0 ? `, ${result.failed} failed` : ''}`,
-            result.failed > 0 ? 'error' : 'success'
-        );
-
-        if (result.sent > 0) {
-            document.getElementById('msgText').value = '';
-            document.getElementById('msgCharCount').textContent = '0';
-        }
-    } catch (err) {
-        window.showStatus('msgSendStatus', 'Failed: ' + err.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="ri-whatsapp-line"></i> Send WhatsApp';
-    }
-}
-
-// ── Phone → name matcher ─────────────────────────────────────
-function resolveCallerName(fromNumber) {
-    const last10 = String(fromNumber).slice(-10);
-    for (const s of allStudentsCache) {
-        if (s.phone?.slice(-10) === last10) return `${s.name} (student)`;
-        if (s.parent_phone?.slice(-10) === last10) return `${s.name}'s parent`;
-    }
-    return fromNumber;
-}
-
-// ── Inbox (received messages) ─────────────────────────────────
-async function loadInbox() {
-    const tbody = document.getElementById('msgInboxBody');
-    if (!tbody) return;
-
-    tbody.innerHTML = '<tr><td colspan="3" class="loading-text">Loading...</td></tr>';
-
-    try {
-        const { data, error } = await window.supabaseClient
-            .from('whatsapp_incoming')
-            .select('*')
-            .eq('event_type', 'message')
-            .order('created_at', { ascending: false })
-            .limit(100);
-
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="loading-text">No incoming messages yet.</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = data.map(row => {
-            const from = window.esc(resolveCallerName(row.from_number));
-            const msg = DOMPurify.sanitize(row.message_text || '—');
-            const date = new Date(row.created_at).toLocaleString('en-IN', {
-                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
-            });
-            return `
-                <tr class="data-table__row">
-                    <td class="data-table__td" style="white-space:nowrap;">${from}</td>
-                    <td class="data-table__td"><div class="text-truncate" style="max-width:340px;" title="${window.esc(row.message_text || '')}">${msg}</div></td>
-                    <td class="data-table__td" style="white-space:nowrap;">${date}</td>
-                </tr>
-            `;
-        }).join('');
-    } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="3" class="loading-text">Error: ${window.esc(err.message)}</td></tr>`;
-    }
-}
-
-// ── Message History ──────────────────────────────────────────
-async function loadHistory() {
-    const tbody = document.getElementById('msgHistoryBody');
-    if (!tbody) return;
-
-    tbody.innerHTML = '<tr><td colspan="4" class="loading-text">Loading history...</td></tr>';
-
-    const typeFilter = document.getElementById('msgHistoryFilter')?.value || '';
-
-    try {
-        const logs = await window.whatsapp.getAllLogs({
-            type: typeFilter || undefined,
-            limit: 100,
-        });
-
-        if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="loading-text">No messages sent yet.</td></tr>';
-            return;
-        }
-
-        const typeLabels = {
-            report: '📊 Report',
-            attendance: '✅ Attendance',
-            score: '📝 Score',
-            announcement: '📢 Announcement',
-            custom: '💬 Custom',
+        const recipient = {
+            phone: activePhone,
+            name: convo.displayName,
+            role: convo.label === 'Student' ? 'student' : convo.label === 'Parent' ? 'parent' : 'other',
+            student_id: convo.studentId || null,
         };
 
-        tbody.innerHTML = logs.map(log => {
-            const date = new Date(log.sent_at).toLocaleString('en-IN', {
-                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
-            });
-            const typeLabel = typeLabels[log.message_type] || log.message_type || '—';
-            const recipientName = log.recipient_name || '—';
-            const recipientType = log.recipient_type ? ` (${log.recipient_type})` : '';
-            const preview = log.preview || '—';
+        await window.whatsapp.send({
+            type: 'custom',
+            recipients: [recipient],
+            payload: { message: text },
+            sentBy: user?.id,
+        });
 
-            return `
-                <tr class="data-table__row">
-                    <td class="data-table__td" style="white-space:nowrap;">${typeLabel}</td>
-                    <td class="data-table__td">${window.esc(recipientName)}${window.esc(recipientType)}</td>
-                    <td class="data-table__td"><div class="text-truncate" style="max-width:300px;" title="${window.esc(preview)}">${DOMPurify.sanitize(preview)}</div></td>
-                    <td class="data-table__td" style="white-space:nowrap;">${date}</td>
-                </tr>
-            `;
-        }).join('');
+        // Append to in-memory conversation
+        const now = new Date();
+        convo.messages.push({ direction: 'out', text, timestamp: now, type: 'custom' });
+        convo.lastTimestamp = now;
+
+        // Append bubble to thread
+        const msgContainer = document.getElementById('msgThreadMessages');
+        if (msgContainer) {
+            const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble msg-bubble--out';
+            bubble.innerHTML = window.esc(text);
+            msgContainer.appendChild(bubble);
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        }
+
+        // Clear input
+        input.value = '';
+        input.style.height = 'auto';
+
+        // Update contact list preview
+        renderContactList(conversations);
+
     } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="4" class="loading-text">Error: ${err.message}</td></tr>`;
+        const statusEl = document.getElementById('msgReplyStatus');
+        if (statusEl) {
+            statusEl.className = 'msg-reply-status msg-reply-status--error';
+            statusEl.textContent = 'Failed: ' + err.message;
+            statusEl.style.display = 'block';
+            setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+        }
+    } finally {
+        btn.disabled = false;
     }
+}
+
+// ── New message modal ────────────────────────────────────────
+function openNewMessageModal() {
+    const overlay = document.getElementById('newMsgOverlay');
+    if (!overlay) return;
+
+    // Populate student dropdown
+    const select = document.getElementById('newMsgStudentSelect');
+    if (select) {
+        select.innerHTML = '<option value="">Select a student...</option>' +
+            allStudentsCache.map(s => `<option value="${s.id}">${window.esc(s.name)}</option>`).join('');
+    }
+
+    // Reset fields
+    const textEl = document.getElementById('newMsgText');
+    if (textEl) textEl.value = '';
+    const phoneEl = document.getElementById('newMsgPhoneInput');
+    if (phoneEl) phoneEl.value = '';
+    const statusEl = document.getElementById('newMsgStatus');
+    if (statusEl) statusEl.style.display = 'none';
+
+    switchNewMsgTab('student');
+    overlay.style.display = 'flex';
+}
+
+function closeNewMessageModal() {
+    const overlay = document.getElementById('newMsgOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function switchNewMsgTab(mode) {
+    const tabStudent = document.getElementById('newMsgTabStudent');
+    const tabPhone = document.getElementById('newMsgTabPhone');
+    const studentMode = document.getElementById('newMsgStudentMode');
+    const phoneMode = document.getElementById('newMsgPhoneMode');
+
+    if (mode === 'student') {
+        tabStudent?.classList.add('msg-new-modal__tab--active');
+        tabPhone?.classList.remove('msg-new-modal__tab--active');
+        if (studentMode) studentMode.style.display = 'block';
+        if (phoneMode) phoneMode.style.display = 'none';
+    } else {
+        tabPhone?.classList.add('msg-new-modal__tab--active');
+        tabStudent?.classList.remove('msg-new-modal__tab--active');
+        if (studentMode) studentMode.style.display = 'none';
+        if (phoneMode) phoneMode.style.display = 'block';
+    }
+}
+
+async function handleNewMessageSend() {
+    const tabIsStudent = document.getElementById('newMsgTabStudent')?.classList.contains('msg-new-modal__tab--active');
+    const text = document.getElementById('newMsgText')?.value?.trim();
+    const sendBtn = document.getElementById('newMsgSend');
+    if (!sendBtn) return;
+
+    if (!text) {
+        window.showStatus('newMsgStatus', 'Please type a message.', 'error');
+        return;
+    }
+
+    let recipients = [];
+
+    if (tabIsStudent) {
+        const studentId = document.getElementById('newMsgStudentSelect')?.value;
+        if (!studentId) {
+            window.showStatus('newMsgStatus', 'Please select a student.', 'error');
+            return;
+        }
+        const student = allStudentsCache.find(s => s.id === studentId);
+        if (!student) return;
+
+        const target = document.querySelector('input[name="newMsgRecipientRadio"]:checked')?.value || 'parent';
+        recipients = window.whatsapp.resolveRecipients(student, target);
+
+        if (recipients.length === 0) {
+            window.showStatus('newMsgStatus', 'No phone number available for the selected recipient.', 'error');
+            return;
+        }
+    } else {
+        const phone = document.getElementById('newMsgPhoneInput')?.value?.trim();
+        if (!phone || phone.length < 10) {
+            window.showStatus('newMsgStatus', 'Please enter a valid 10-digit phone number.', 'error');
+            return;
+        }
+        recipients = [{
+            phone: phone,
+            name: `+91 ${phone}`,
+            role: 'other',
+            student_id: null,
+        }];
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
+
+    try {
+        await window.whatsapp.send({
+            type: 'custom',
+            recipients,
+            payload: { message: text },
+            sentBy: user?.id,
+        });
+
+        closeNewMessageModal();
+
+        // Refresh conversations and open the thread for the first recipient
+        await loadConversations();
+        const sentPhone = recipients[0].phone.slice(-10);
+        openThread(sentPhone);
+
+    } catch (err) {
+        window.showStatus('newMsgStatus', 'Failed: ' + err.message, 'error');
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="ri-send-plane-fill"></i> Send';
+    }
+}
+
+// ── Contact search filter ────────────────────────────────────
+function filterContacts(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) {
+        renderContactList(conversations);
+        return;
+    }
+    const filtered = conversations.filter(c =>
+        c.displayName.toLowerCase().includes(q) ||
+        c.phone.includes(q)
+    );
+    renderContactList(filtered);
+}
+
+// ── Relative time formatting ─────────────────────────────────
+function formatRelativeTime(date) {
+    const now = new Date();
+    const diff = now - date;
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (mins < 1) return 'now';
+    if (mins < 60) return `${mins}m`;
+    if (hours < 24) return `${hours}h`;
+    if (days < 7) return `${days}d`;
+
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
 // ── Init & Refresh ───────────────────────────────────────────
-export function init() {
-    loadStudentPicker();
+export async function init() {
+    await loadProfiles();
+    await loadConversations();
 
-    // Pill toggle (3-way: Compose / History / Inbox)
-    const pillCompose = document.getElementById('pillCompose');
-    const pillHistory = document.getElementById('pillHistory');
-    const pillInbox   = document.getElementById('pillInbox');
-    const composeContainer = document.getElementById('messagesComposeContainer');
-    const historyContainer = document.getElementById('messagesHistoryContainer');
-    const inboxContainer   = document.getElementById('messagesInboxContainer');
-
-    function setActiveTab(tab) {
-        const pills = [pillCompose, pillHistory, pillInbox];
-        const containers = [composeContainer, historyContainer, inboxContainer];
-        pills.forEach(p => p?.classList.remove('pill-toggle__btn--active'));
-        containers.forEach(c => { if (c) c.style.display = 'none'; });
-        tab.pill?.classList.add('pill-toggle__btn--active');
-        if (tab.container) tab.container.style.display = 'block';
-        tab.onShow?.();
-    }
-
-    pillCompose?.addEventListener('click', () =>
-        setActiveTab({ pill: pillCompose, container: composeContainer }));
-
-    pillHistory?.addEventListener('click', () =>
-        setActiveTab({ pill: pillHistory, container: historyContainer, onShow: loadHistory }));
-
-    pillInbox?.addEventListener('click', () =>
-        setActiveTab({ pill: pillInbox, container: inboxContainer, onShow: loadInbox }));
-
-    document.getElementById('btnRefreshInbox')?.addEventListener('click', loadInbox);
-
-    // Student selection → show phone info
-    document.getElementById('msgStudentSelect')?.addEventListener('change', updatePhoneInfo);
-    document.getElementById('msgRecipient')?.addEventListener('change', updatePhoneInfo);
-
-    // Character counter
-    document.getElementById('msgText')?.addEventListener('input', (e) => {
-        const count = document.getElementById('msgCharCount');
-        if (count) count.textContent = e.target.value.length;
+    // Search
+    document.getElementById('msgContactSearch')?.addEventListener('input', (e) => {
+        filterContacts(e.target.value);
     });
 
-    // Send button
-    document.getElementById('btnSendCustomMsg')?.addEventListener('click', sendCustomMessage);
+    // New message button
+    document.getElementById('btnNewMessage')?.addEventListener('click', openNewMessageModal);
 
-    // History filter + refresh
-    document.getElementById('msgHistoryFilter')?.addEventListener('change', loadHistory);
-    document.getElementById('btnRefreshHistory')?.addEventListener('click', loadHistory);
+    // New message modal events
+    document.getElementById('newMsgTabStudent')?.addEventListener('click', () => switchNewMsgTab('student'));
+    document.getElementById('newMsgTabPhone')?.addEventListener('click', () => switchNewMsgTab('phone'));
+    document.getElementById('newMsgCancel')?.addEventListener('click', closeNewMessageModal);
+    document.getElementById('newMsgSend')?.addEventListener('click', handleNewMessageSend);
+
+    // Close modal on overlay click
+    document.getElementById('newMsgOverlay')?.addEventListener('click', (e) => {
+        if (e.target.id === 'newMsgOverlay') closeNewMessageModal();
+    });
 }
 
 export function refresh() {
-    loadStudentPicker();
+    loadProfiles().then(() => loadConversations());
 }

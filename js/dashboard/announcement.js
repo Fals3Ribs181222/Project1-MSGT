@@ -84,7 +84,7 @@ function attachAnnouncementListeners() {
                     // Fetch student profiles for the grade
                     let query = window.supabaseClient
                         .from('profiles')
-                        .select('id, name, phone, parent_phone')
+                        .select('id, name, phone, father_phone, mother_phone')
                         .eq('role', 'student');
 
                     if (grade) {

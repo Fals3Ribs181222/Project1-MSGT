@@ -245,7 +245,7 @@ document.getElementById('btnSendScores')?.addEventListener('click', async () => 
         const studentIds = marksData.map(m => m.studentId);
         const { data: profiles } = await window.supabaseClient
             .from('profiles')
-            .select('id, name, phone, parent_phone')
+            .select('id, name, phone, father_phone, mother_phone')
             .in('id', studentIds);
 
         if (!profiles || profiles.length === 0) {
