@@ -1,115 +1,100 @@
 <header class="panel__header">
     <h2>Messages</h2>
-    <div class="pill-toggle">
-        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillCompose">Compose</button>
-        <button class="pill-toggle__btn" id="pillHistory">History</button>
-        <button class="pill-toggle__btn" id="pillInbox">Inbox</button>
+    <div class="msg-window-legend">
+        <span class="msg-window-legend__dot" style="background:var(--secondary);"></span><span>10–24h</span>
+        <span class="msg-window-legend__dot" style="background:var(--amber);"></span><span>2–10h</span>
+        <span class="msg-window-legend__dot" style="background:var(--cadmium-red);"></span><span>0–2h</span>
+        <span class="msg-window-legend__dot" style="background:var(--text-main);"></span><span>Closed</span>
     </div>
+    <button class="btn btn--primary btn--sm" id="btnNewMessage">
+        <i class="ri-add-line"></i> New Message
+    </button>
 </header>
 
-<!-- ── Compose View ────────────────────────────────────────── -->
-<div id="messagesComposeContainer">
-    <p class="text-muted" style="margin-bottom: 1.5rem;">
-        Send a custom WhatsApp message to a student or their parent.
-    </p>
+<div class="msg-layout" id="msgLayout">
+    <!-- ── Left: Contact list ──────────────────────────────────── -->
+    <div class="msg-contacts">
+        <div class="msg-contacts__search">
+            <input type="text" class="form__input" id="msgContactSearch"
+                   placeholder="Search contacts...">
+        </div>
+        <div class="msg-contact-list" id="msgContactList">
+            <p style="padding:2rem 1rem; text-align:center; color:var(--text-muted);">
+                Loading conversations...
+            </p>
+        </div>
+    </div>
 
-    <div class="form-grid" style="display:grid; gap:1rem; max-width:550px;">
-        <!-- Student Picker -->
-        <div>
-            <label class="form__label" for="msgStudentSelect">Student</label>
-            <select class="form__input" id="msgStudentSelect">
-                <option value="">Loading students...</option>
-            </select>
+    <!-- ── Right: Thread view ──────────────────────────────────── -->
+    <div class="msg-thread" id="msgThread">
+        <div class="msg-thread__empty">
+            <p>Select a conversation<br>or start a new message</p>
+        </div>
+    </div>
+</div>
+
+<!-- ── New Message Overlay ─────────────────────────────────────── -->
+<div class="confirm-overlay" id="newMsgOverlay" style="display:none;">
+    <div class="msg-new-modal">
+        <h3>New Message</h3>
+
+        <!-- Mode tabs -->
+        <div class="msg-new-modal__tabs">
+            <button class="msg-new-modal__tab msg-new-modal__tab--active"
+                    id="newMsgTabStudent">Select Student</button>
+            <button class="msg-new-modal__tab"
+                    id="newMsgTabPhone">Enter Phone</button>
         </div>
 
-        <!-- Recipient -->
-        <div>
-            <label class="form__label" for="msgRecipient">Send To</label>
-            <select class="form__input" id="msgRecipient">
-                <option value="parent">Parent</option>
-                <option value="student">Student</option>
-                <option value="both">Both</option>
-            </select>
+        <!-- Student mode -->
+        <div id="newMsgStudentMode">
+            <div style="margin-bottom:0.75rem;">
+                <label class="form__label" for="newMsgStudentSelect">Student</label>
+                <select class="form__input" id="newMsgStudentSelect">
+                    <option value="">Select a student...</option>
+                </select>
+            </div>
+            <div>
+                <label class="form__label">Send To</label>
+                <div class="subject-pills" id="newMsgRecipient">
+                    <label class="subject-pill">
+                        <input type="radio" name="newMsgRecipientRadio" value="parent" checked>
+                        <span class="subject-pill__label">Parent</span>
+                    </label>
+                    <label class="subject-pill">
+                        <input type="radio" name="newMsgRecipientRadio" value="student">
+                        <span class="subject-pill__label">Student</span>
+                    </label>
+                    <label class="subject-pill">
+                        <input type="radio" name="newMsgRecipientRadio" value="both">
+                        <span class="subject-pill__label">Both</span>
+                    </label>
+                </div>
+            </div>
         </div>
 
-        <!-- Phone info display -->
-        <div id="msgPhoneInfo" style="font-size:0.85rem; color:var(--text-muted); display:none;">
-            <span id="msgPhoneDetails"></span>
+        <!-- Phone mode (hidden by default) -->
+        <div id="newMsgPhoneMode" style="display:none;">
+            <label class="form__label" for="newMsgPhoneInput">Phone Number (10 digits)</label>
+            <input type="tel" class="form__input" id="newMsgPhoneInput"
+                   placeholder="e.g. 9876543210" maxlength="10">
         </div>
 
         <!-- Message -->
         <div>
-            <label class="form__label" for="msgText">Message</label>
-            <textarea class="form__input" id="msgText" rows="5" maxlength="1000"
-                placeholder="Type your message here..."></textarea>
-            <div style="text-align:right; font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">
-                <span id="msgCharCount">0</span> / 1000
-            </div>
+            <label class="form__label" for="newMsgText">Message</label>
+            <textarea class="form__input" id="newMsgText" rows="4" maxlength="1000"
+                      placeholder="Type your message..."></textarea>
         </div>
 
-        <!-- Send -->
-        <div style="display:flex; gap:0.75rem; align-items:center;">
-            <button class="btn btn--primary" id="btnSendCustomMsg">
-                <i class="ri-whatsapp-line"></i> Send WhatsApp
+        <!-- Actions -->
+        <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+            <button class="btn btn--outline btn--sm" id="newMsgCancel">Cancel</button>
+            <button class="btn btn--primary btn--sm" id="newMsgSend">
+                <i class="ri-send-plane-fill"></i> Send
             </button>
-            <div id="msgSendStatus" class="status" style="display:none;"></div>
         </div>
-    </div>
-</div>
 
-<!-- ── Inbox View ─────────────────────────────────────────── -->
-<div id="messagesInboxContainer" style="display:none;">
-    <p class="text-muted" style="margin-bottom:1.25rem;">
-        Messages received from students and parents on WhatsApp.
-    </p>
-    <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1.25rem;">
-        <button class="btn btn--outline btn--sm" id="btnRefreshInbox">Refresh</button>
-    </div>
-    <div class="table-wrap">
-        <table aria-label="Inbox">
-            <thead>
-                <tr>
-                    <th scope="col">From</th>
-                    <th scope="col">Message</th>
-                    <th scope="col">Received</th>
-                </tr>
-            </thead>
-            <tbody id="msgInboxBody">
-                <tr><td colspan="3" class="loading-text">Select Inbox to load.</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- ── History View ────────────────────────────────────────── -->
-<div id="messagesHistoryContainer" style="display:none;">
-    <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap;">
-        <select class="form__input" id="msgHistoryFilter" style="max-width:200px;">
-            <option value="">All Types</option>
-            <option value="custom">Custom</option>
-            <option value="report">Report</option>
-            <option value="attendance">Attendance</option>
-            <option value="score">Test Score</option>
-            <option value="announcement">Announcement</option>
-        </select>
-        <button class="btn btn--outline btn--sm" id="btnRefreshHistory">Refresh</button>
-    </div>
-
-    <div class="table-wrap">
-        <table aria-label="Message history">
-            <thead>
-                <tr>
-                    <th scope="col">Type</th>
-                    <th scope="col">Recipient</th>
-                    <th scope="col">Preview</th>
-                    <th scope="col">Sent</th>
-                </tr>
-            </thead>
-            <tbody id="msgHistoryBody">
-                <tr>
-                    <td colspan="4" class="loading-text">Loading history...</td>
-                </tr>
-            </tbody>
-        </table>
+        <div id="newMsgStatus" class="status" style="display:none;"></div>
     </div>
 </div>
