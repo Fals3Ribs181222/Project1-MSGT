@@ -77,19 +77,13 @@
     </div>
 
     <!-- Step 2 -->
-    <div style="margin-bottom:1.5rem;max-width:480px;">
-        <p style="font-weight:600;margin-bottom:0.5rem;">Step 2 — Set Default Password</p>
-        <input type="text" id="importDefaultPassword" class="form__control" placeholder="e.g. msgt2025" style="max-width:280px;">
-        <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.4rem;">All imported students get this password. They can change it later.</p>
-    </div>
-
-    <!-- Step 3 -->
     <div style="margin-bottom:1.5rem;">
-        <p style="font-weight:600;margin-bottom:0.5rem;">Step 3 — Upload CSV File</p>
+        <p style="font-weight:600;margin-bottom:0.5rem;">Step 2 — Upload CSV File</p>
         <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
             <input type="file" id="importCsvFile" accept=".csv" style="font-size:0.9rem;">
             <button id="btnPreviewCsv" class="btn btn--primary btn--sm">Preview Import</button>
         </div>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.4rem;">Each student's password will be set to their username.</p>
     </div>
 
     <!-- Preview -->
