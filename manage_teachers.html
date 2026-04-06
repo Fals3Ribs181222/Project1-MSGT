@@ -15,6 +15,78 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .create-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+        .create-form-grid .span-full {
+            grid-column: 1 / -1;
+        }
+        @media (max-width: 600px) {
+            .create-form-grid { grid-template-columns: 1fr; }
+        }
+        .step-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .creating-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 1.5rem 0;
+        }
+        .info-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-full);
+            background: rgba(115,147,179,0.1);
+            color: var(--primary);
+            font-weight: 600;
+            border: 1px solid rgba(115,147,179,0.2);
+        }
+        .warning-chip {
+            background: rgba(255,191,0,0.1);
+            color: #b8860b;
+            border-color: rgba(255,191,0,0.3);
+        }
+        .notice-bar {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.9rem 1.1rem;
+            background: rgba(255,191,0,0.08);
+            border: 1px solid rgba(255,191,0,0.3);
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            color: #7a5c00;
+            margin-bottom: 1.25rem;
+        }
+        .notice-bar svg { flex-shrink: 0; margin-top: 1px; }
+    </style>
 </head>
 
 <body>
@@ -27,14 +99,99 @@
     </nav>
 
     <main class="container" style="max-width: 860px; margin: 2rem auto; padding: 0 1rem;">
+
+        <!-- ══════════════════════════════════════════
+             CREATE TEACHER ACCOUNT PANEL
+        ══════════════════════════════════════════ -->
+        <div class="panel" style="padding: 2rem; margin-bottom: 1.5rem;">
+            <div class="panel__header" style="margin-bottom: 0;">
+                <div>
+                    <h2 style="font-size:1.5rem; margin-bottom:0.2rem;">Create Teacher Account</h2>
+                    <p style="color: var(--text-muted); font-size: 0.88rem; margin:0;">
+                        Provision a new teacher login. The account is created immediately — no email confirmation needed.
+                    </p>
+                </div>
+                <button class="btn btn--primary btn--sm" id="btnToggleCreate" style="flex-shrink:0;">
+                    + New Teacher
+                </button>
+            </div>
+
+            <!-- Collapsible form -->
+            <div id="createSection" style="display:none;">
+                <hr class="divider">
+
+                <div class="notice-bar" id="noticeEmailConf">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                    </svg>
+                    <span>
+                        <strong>One-time setup required:</strong> In Supabase → Authentication → Providers → Email, 
+                        make sure <strong>"Confirm email"</strong> is <strong>OFF</strong>. 
+                        Otherwise account creation will return a "confirmation pending" state and login will fail.
+                    </span>
+                </div>
+
+                <div class="create-form-grid">
+                    <div class="form__group" style="margin-bottom:0;">
+                        <label class="form__label" for="newTeacherName">Full Name</label>
+                        <input type="text" id="newTeacherName" class="form__control"
+                            placeholder="e.g. Rahul Sharma" autocomplete="off">
+                    </div>
+                    <div class="form__group" style="margin-bottom:0;">
+                        <label class="form__label" for="newTeacherUsername">
+                            Username
+                            <span class="info-chip" style="margin-left:0.4rem; font-size:0.72rem;">used for login</span>
+                        </label>
+                        <input type="text" id="newTeacherUsername" class="form__control"
+                            placeholder="e.g. Grade11" autocomplete="off">
+                    </div>
+                    <div class="form__group" style="margin-bottom:0;">
+                        <label class="form__label" for="newTeacherPassword">Password</label>
+                        <input type="password" id="newTeacherPassword" class="form__control"
+                            placeholder="Minimum 8 characters" autocomplete="new-password">
+                    </div>
+                    <div class="form__group" style="margin-bottom:0;">
+                        <label class="form__label" for="newTeacherGrade">Assigned Grade</label>
+                        <select id="newTeacherGrade" class="form__control">
+                            <option value="">All Grades (unrestricted)</option>
+                            <option value="11th">11th only</option>
+                            <option value="12th">12th only</option>
+                        </select>
+                    </div>
+                    <div class="form__group span-full" style="margin-bottom:0;">
+                        <label class="form__label" for="newTeacherSubjects">Subjects
+                            <span style="color:var(--text-muted); font-weight:400;">(optional)</span>
+                        </label>
+                        <input type="text" id="newTeacherSubjects" class="form__control"
+                            placeholder="e.g. Maths, Physics" autocomplete="off">
+                    </div>
+                </div>
+
+                <div id="createStatus" class="status" style="display:none; margin-top:1rem;"></div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
+                    <button class="btn btn--primary" id="btnCreateTeacher">
+                        Create Account
+                    </button>
+                    <button class="btn btn--outline" id="btnCancelCreate">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             EXISTING TEACHERS LIST
+        ══════════════════════════════════════════ -->
         <div class="panel" style="padding: 2rem;">
             <div class="panel__header" style="margin-bottom: 1.5rem;">
-                <h2>Manage Teachers</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
-                    Assign each teacher to a specific grade. A teacher assigned to a grade can only upload and access
-                    materials for that grade.
-                </p>
+                <h2 style="font-size:1.4rem;">Manage Teachers</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; display:none"></p>
             </div>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin: -0.75rem 0 1.25rem;">
+                Assign each teacher to a specific grade. A grade-restricted teacher can only access data for that grade.
+            </p>
 
             <div id="pageStatus" class="status" style="display:none;"></div>
 
@@ -58,12 +215,14 @@
             </div>
 
             <div style="text-align: right; margin-top: 0.75rem;">
-                <button class="btn btn--primary btn--sm" id="btnRefreshTeachers">Refresh</button>
+                <button class="btn btn--outline btn--sm" id="btnRefreshTeachers">↻ Refresh</button>
             </div>
         </div>
     </main>
 
-    <!-- Grade Assignment Modal -->
+    <!-- ══════════════════════════════════════════
+         GRADE ASSIGNMENT MODAL
+    ══════════════════════════════════════════ -->
     <div id="gradeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; align-items:center; justify-content:center;">
         <div style="background:var(--bg-surface,#fff); border-radius:var(--radius-lg); padding:2rem; min-width:320px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
             <h3 style="margin:0 0 0.25rem;">Assign Grade</h3>
@@ -88,9 +247,20 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/app.js"></script>
     <script>
+        // ── State ────────────────────────────────────────────────
         let allTeachers = [];
         let editingTeacherId = null;
 
+        // ── Dedicated signup client (won't touch admin session) ───
+        // We create a separate client with its own storage key so signUp()
+        // does not overwrite the currently logged-in admin's session.
+        const signupClient = supabase.createClient(
+            window.CONFIG.SUPABASE_URL,
+            window.CONFIG.SUPABASE_ANON_KEY,
+            { auth: { storageKey: 'mt_signup_tmp', autoRefreshToken: false, persistSession: false } }
+        );
+
+        // ── Status helpers ────────────────────────────────────────
         function showPageStatus(msg, type = 'error') {
             const el = document.getElementById('pageStatus');
             el.textContent = msg;
@@ -98,8 +268,144 @@
             el.style.display = 'block';
         }
 
+        function showCreateStatus(msg, type = 'error') {
+            const el = document.getElementById('createStatus');
+            el.textContent = msg;
+            el.className = `status status--${type}`;
+            el.style.display = 'block';
+        }
+
+        function clearCreateStatus() {
+            const el = document.getElementById('createStatus');
+            el.style.display = 'none';
+        }
+
+        // ── Toggle create form ────────────────────────────────────
+        document.getElementById('btnToggleCreate').addEventListener('click', () => {
+            const section = document.getElementById('createSection');
+            const isOpen = section.style.display !== 'none';
+            section.style.display = isOpen ? 'none' : 'block';
+            document.getElementById('btnToggleCreate').textContent = isOpen ? '+ New Teacher' : '✕ Close';
+            clearCreateStatus();
+        });
+
+        document.getElementById('btnCancelCreate').addEventListener('click', () => {
+            document.getElementById('createSection').style.display = 'none';
+            document.getElementById('btnToggleCreate').textContent = '+ New Teacher';
+            clearCreateStatus();
+            ['newTeacherName','newTeacherUsername','newTeacherPassword','newTeacherSubjects'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('newTeacherGrade').value = '';
+        });
+
+        // ── Create teacher account ────────────────────────────────
+        async function createTeacher() {
+            clearCreateStatus();
+
+            const name     = document.getElementById('newTeacherName').value.trim();
+            const username = document.getElementById('newTeacherUsername').value.trim();
+            const password = document.getElementById('newTeacherPassword').value;
+            const grade    = document.getElementById('newTeacherGrade').value;
+            const subjects = document.getElementById('newTeacherSubjects').value.trim();
+
+            // Validation
+            if (!name)              return showCreateStatus('Please enter the teacher\'s full name.');
+            if (!username)          return showCreateStatus('Please enter a username.');
+            if (/\s/.test(username)) return showCreateStatus('Username must not contain spaces.');
+            if (password.length < 8) return showCreateStatus('Password must be at least 8 characters.');
+
+            const btn = document.getElementById('btnCreateTeacher');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="creating-spinner"></span> Creating…';
+
+            const email = `${username.toLowerCase()}@msgt.internal`;
+
+            // ── Step 1: Create auth user via signUp ───────────────
+            const { data: signUpData, error: signUpError } = await signupClient.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        name,
+                        username,
+                        role: 'teacher',
+                        grade:    grade    || null,
+                        subjects: subjects || null
+                    }
+                }
+            });
+
+            if (signUpError) {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+                // Friendly error messages
+                if (signUpError.message.includes('already registered')) {
+                    return showCreateStatus(`Username "${username}" is already taken. Choose a different one.`);
+                }
+                if (signUpError.message.includes('confirmation')) {
+                    return showCreateStatus(
+                        'Email confirmation is ON in Supabase. Please go to Supabase → Authentication → Providers → Email and turn "Confirm email" OFF, then try again.'
+                    );
+                }
+                return showCreateStatus(`Signup failed: ${signUpError.message}`);
+            }
+
+            const newUserId = signUpData?.user?.id;
+            if (!newUserId) {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+                return showCreateStatus(
+                    'Account created but email confirmation is required. ' +
+                    'Disable "Confirm email" in Supabase → Auth → Providers → Email, then delete this user and retry.'
+                );
+            }
+
+            // ── Step 2: Verify profile was auto-created by trigger ───
+            // The handle_new_user trigger (SECURITY DEFINER) fires on signUp
+            // and inserts the profile using raw_user_meta_data — no manual write needed.
+            // We just wait briefly and confirm the row exists.
+            await new Promise(r => setTimeout(r, 800));
+
+            const { data: profileCheck } = await window.supabaseClient
+                .from('profiles')
+                .select('id, username, role')
+                .eq('id', newUserId)
+                .single();
+
+            btn.disabled = false;
+            btn.textContent = 'Create Account';
+
+            // ── Step 3: Success ───────────────────────────────────
+            if (profileCheck) {
+                showCreateStatus(
+                    `✓ Teacher "${name}" created successfully! They can now log in with username "${username}".`,
+                    'success'
+                );
+            } else {
+                // Auth user exists but trigger didn't fire — show warning
+                showCreateStatus(
+                    `✓ Auth account created for "${username}" but profile setup may be incomplete. ` +
+                    'Check the profiles table in Supabase and ensure the handle_new_user trigger is active.',
+                    'success'
+                );
+            }
+
+            // Clear form inputs
+            ['newTeacherName','newTeacherUsername','newTeacherPassword','newTeacherSubjects'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('newTeacherGrade').value = '';
+
+            // Reload the teachers table
+            loadTeachers();
+        }
+
+        document.getElementById('btnCreateTeacher').addEventListener('click', createTeacher);
+
+        // ── Load & render teachers table ──────────────────────────
         async function loadTeachers() {
-            window.tableLoading('teachersTableBody', 5, 'Loading teachers...');
+            window.tableLoading('teachersTableBody', 5, 'Loading teachers…');
             const response = await window.api.get('profiles', { role: 'teacher' });
             if (response.success) {
                 allTeachers = response.data || [];
@@ -114,7 +420,7 @@
             if (!tbody) return;
 
             if (allTeachers.length === 0) {
-                window.tableLoading('teachersTableBody', 5, 'No teachers found.');
+                window.tableLoading('teachersTableBody', 5, 'No teachers found. Create one above!');
                 return;
             }
 
@@ -138,15 +444,14 @@
                     </td>
                 </tr>`;
             }).join('');
-
         }
 
+        // ── Grade assignment modal ────────────────────────────────
         function openModal(teacherId, teacherName, currentGrade) {
             editingTeacherId = teacherId;
             document.getElementById('modalTeacherName').textContent = teacherName;
             document.getElementById('modalGradeSelect').value = currentGrade || '';
-            const modalStatus = document.getElementById('modalStatus');
-            modalStatus.style.display = 'none';
+            document.getElementById('modalStatus').style.display = 'none';
             document.getElementById('gradeModal').style.display = 'flex';
         }
 
@@ -157,13 +462,12 @@
 
         async function saveGrade() {
             if (!editingTeacherId) return;
-
             const btn = document.getElementById('btnSaveGrade');
             const newGrade = document.getElementById('modalGradeSelect').value;
             const modalStatus = document.getElementById('modalStatus');
 
             btn.disabled = true;
-            btn.textContent = 'Saving...';
+            btn.textContent = 'Saving…';
             modalStatus.style.display = 'none';
 
             const response = await window.api.patch('profiles', editingTeacherId, { grade: newGrade || null });
@@ -183,7 +487,7 @@
             }
         }
 
-        // Event listeners
+        // ── Event listeners ───────────────────────────────────────
         document.getElementById('btnRefreshTeachers').addEventListener('click', loadTeachers);
         document.getElementById('btnSaveGrade').addEventListener('click', saveGrade);
         document.getElementById('btnCancelModal').addEventListener('click', closeModal);
@@ -195,9 +499,9 @@
             if (btn) openModal(btn.dataset.id, btn.dataset.name, btn.dataset.grade);
         });
 
-        // Auth guard: teacher-only
+        // ── Auth guard: admin-only ────────────────────────────────
         (async () => {
-            const user = await window.auth.requireRole('teacher');
+            const user = await window.auth.requireRole('admin');
             if (user) loadTeachers();
         })();
     </script>
