@@ -44,13 +44,6 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     const callerRole = await getCallerRole(authHeader);
 
-    if (callerRole !== 'admin') {
-        return new Response(JSON.stringify({ error: 'Forbidden: admin role required' }), {
-            status: 403,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-    }
-
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     let body: Record<string, unknown>;
@@ -65,7 +58,36 @@ Deno.serve(async (req) => {
 
     const { action } = body as { action: string };
 
-    // delete_student is allowed for both teacher and admin roles
+    // ── create_student (teacher or admin) ────────────────────────────────────
+    if (action === 'create_student') {
+        if (callerRole !== 'admin' && callerRole !== 'teacher') {
+            return new Response(JSON.stringify({ error: 'Forbidden: teacher or admin role required' }), {
+                status: 403,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+        }
+        const { email, password, meta } = body as { email: string; password: string; meta: Record<string, unknown> };
+        const { data, error } = await db.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: meta,
+        });
+        if (error) {
+            return new Response(JSON.stringify({ error: error.message }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+        }
+        if (data?.user?.id) {
+            await db.from('profiles').update(meta).eq('id', data.user.id);
+        }
+        return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+    }
+
+    // ── delete_student (teacher or admin) ────────────────────────────────────
     if (action === 'delete_student') {
         if (callerRole !== 'admin' && callerRole !== 'teacher') {
             return new Response(JSON.stringify({ error: 'Forbidden: teacher or admin role required' }), {
@@ -95,6 +117,14 @@ Deno.serve(async (req) => {
         const { error } = await db.auth.admin.deleteUser(user_id);
         if (error) throw new Error(error.message);
         return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+    }
+
+    // All remaining actions require admin role
+    if (callerRole !== 'admin') {
+        return new Response(JSON.stringify({ error: 'Forbidden: admin role required' }), {
+            status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
     }

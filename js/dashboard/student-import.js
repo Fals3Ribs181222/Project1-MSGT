@@ -48,6 +48,13 @@ function parseCSV(text) {
     return { headers, rows };
 }
 
+function normalizeGrade(raw) {
+    const s = (raw || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    if (s === '11' || s === '11th' || s === 'standard 11' || s === 'std 11' || s === 'class 11' || s === 'grade 11') return window._Grade11;
+    if (s === '12' || s === '12th' || s === 'standard 12' || s === 'std 12' || s === 'class 12' || s === 'grade 12') return window._Grade12;
+    return raw; // pass through unknown values as-is
+}
+
 function detectColumns(headers) {
     const map = {};
     headers.forEach((h, i) => {
@@ -104,7 +111,7 @@ function previewCsvImport(getAllStudents) {
         importRows = rows.map(row => ({
             name: row[colMap.name] || '',
             email: colMap.email !== undefined ? row[colMap.email] : '',
-            grade: colMap.grade !== undefined ? row[colMap.grade] : '',
+            grade: normalizeGrade(colMap.grade !== undefined ? row[colMap.grade] : ''),
             subjects: colMap.subjects !== undefined ? row[colMap.subjects] : '',
             phone: colMap.phone !== undefined ? row[colMap.phone] : '',
             father_name: colMap.father_name !== undefined ? row[colMap.father_name] : '',
@@ -169,12 +176,12 @@ async function importAllStudents(getAllStudents, onImportComplete) {
 
     let done = 0, failed = 0;
 
+    const { data: sessionData } = await window.supabaseClient.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
     for (let i = 0; i < importRows.length; i++) {
         const r = importRows[i];
         if (r.status === 'done') { done++; continue; }
-
-        const { data: sessionData } = await window.supabaseClient.auth.getSession();
-        const teacherSession = sessionData?.session;
 
         const email = r.email || `${r.username}@msgt.internal`;
         const meta = {
@@ -185,20 +192,22 @@ async function importAllStudents(getAllStudents, onImportComplete) {
             role: 'student',
         };
 
-        const { data, error } = await window.supabaseClient.auth.signUp({ email, password: r.username, options: { data: meta } });
+        const res = await fetch(`${window.CONFIG.SUPABASE_URL}/functions/v1/admin-api`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'apikey': window.CONFIG.SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ action: 'create_student', email, password: r.username, meta }),
+        });
+        const result = await res.json();
 
-        if (teacherSession) {
-            await window.supabaseClient.auth.setSession({ access_token: teacherSession.access_token, refresh_token: teacherSession.refresh_token });
-        }
-
-        if (error) {
+        if (!res.ok || result.error) {
             importRows[i].status = 'error';
-            importRows[i].errorMsg = error.message;
+            importRows[i].errorMsg = result.error || 'Unknown error';
             failed++;
         } else {
-            if (data?.user?.id) {
-                await window.supabaseClient.from('profiles').update(meta).eq('id', data.user.id);
-            }
             importRows[i].status = 'done';
             done++;
         }
