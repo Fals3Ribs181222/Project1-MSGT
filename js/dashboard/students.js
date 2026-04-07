@@ -7,6 +7,7 @@ import { openStudentDetail } from './student-detail.js';
 import { initImportSection } from './student-import.js';
 
 let allStudents = [];
+let studentBatchMap = {}; // studentId → [batchId, ...]
 const user = window.auth.getUser();
 
 const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://tksruuqtzxflgglnljef.supabase.co';
@@ -38,6 +39,25 @@ export async function loadStudents() {
             students = students.filter(s => s.grade === teacherGrade);
         }
         allStudents = students;
+
+        // Load batches + memberships in parallel, then populate filter
+        const [batchesRes, membershipsRes] = await Promise.all([
+            window.api.get('batches', {}, 'id, name'),
+            window.api.get('batch_students', {}, 'student_id, batch_id'),
+        ]);
+        const batches = batchesRes.data || [];
+        const memberships = membershipsRes.data || [];
+        studentBatchMap = {};
+        memberships.forEach(m => {
+            if (!studentBatchMap[m.student_id]) studentBatchMap[m.student_id] = [];
+            studentBatchMap[m.student_id].push(m.batch_id);
+        });
+        const batchFilter = document.getElementById('studentBatchFilter');
+        if (batchFilter) {
+            batchFilter.innerHTML = '<option value="">All Batches</option>' +
+                batches.map(b => `<option value="${window.esc(b.id)}">${window.esc(b.name)}</option>`).join('');
+        }
+
         filterStudents();
     } else {
         tbody.innerHTML = '';
@@ -73,6 +93,7 @@ function filterStudents() {
     const searchVal = (document.getElementById('studentSearchInput')?.value || '').toLowerCase();
     const gradeVal = document.getElementById('studentGradeFilter')?.value || '';
     const subjectVal = document.getElementById('studentSubjectFilter')?.value || '';
+    const batchVal = document.getElementById('studentBatchFilter')?.value || '';
 
     let filtered = allStudents;
     if (searchVal) filtered = filtered.filter(s =>
@@ -81,6 +102,7 @@ function filterStudents() {
     );
     if (gradeVal) filtered = filtered.filter(s => s.grade === gradeVal);
     if (subjectVal) filtered = filtered.filter(s => (s.subjects || '').includes(subjectVal));
+    if (batchVal) filtered = filtered.filter(s => (studentBatchMap[s.id] || []).includes(batchVal));
 
     renderStudentsTable(filtered);
 }
@@ -268,9 +290,12 @@ export function init() {
 
     window.populateGradeSelect('studentGradeFilter');
 
+    const studentBatchFilter = document.getElementById('studentBatchFilter');
+
     if (studentSearchInput) studentSearchInput.addEventListener('input', filterStudents);
     if (studentGradeFilter) studentGradeFilter.addEventListener('change', filterStudents);
     if (studentSubjectFilter) studentSubjectFilter.addEventListener('change', filterStudents);
+    if (studentBatchFilter) studentBatchFilter.addEventListener('change', filterStudents);
 
     const teacherGrade = window.auth.getUser()?.grade;
     if (teacherGrade && teacherGrade !== 'All Grades' && studentGradeFilter) {
