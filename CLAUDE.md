@@ -38,7 +38,7 @@ vercel --prod
 - **Backend:** Supabase (PostgreSQL + Auth + Storage + Realtime)
 - **Edge Functions:** Deno + TypeScript (hosted on Supabase)
 - **AI:** Voyage AI (embeddings: `voyage-3-lite`) + Claude API (generation)
-- **Messaging:** Twilio WhatsApp API
+- **Messaging:** Meta Cloud API (WhatsApp Business)
 - **Hosting:** Vercel (`cleanUrls: true` — `.html` extension omitted in URLs)
 
 ### Frontend Architecture
@@ -104,7 +104,7 @@ Teacher asks question / requests test via ai-tools.html
 Edge functions:
 - [supabase/functions/index-material/index.ts](supabase/functions/index-material/index.ts) — chunking + embedding
 - [supabase/functions/rag-query/index.ts](supabase/functions/rag-query/index.ts) — RAG doubt solver + test generator
-- [supabase/functions/send-whatsapp/index.ts](supabase/functions/send-whatsapp/) — Twilio delivery
+- [supabase/functions/send-whatsapp/index.ts](supabase/functions/send-whatsapp/) — Meta Cloud API delivery (free-form + approved templates)
 - [supabase/functions/generate-report/index.ts](supabase/functions/generate-report/) — legacy report generation
 - [supabase/functions/admin-api/index.ts](supabase/functions/admin-api/) — privileged admin operations (bypasses RLS via service role key)
 
@@ -129,7 +129,7 @@ Detailed documentation in [Documentation/](Documentation/) (22 markdown files):
 - `08-Public-Features.md` — public landing page, testimonials, board results
 - `09-Dashboard-Modularization.md` — router & module loading patterns
 - `10-NBLM-Implementation-Plan.md` — NBLM planning notes
-- `11-WhatsApp-Notifications.md` — Twilio integration
+- `11-WhatsApp-Notifications.md` — WhatsApp integration (Meta Cloud API)
 - `12-URL-Routing.md` — Vercel clean URL routing
 - `13-AI-Report-Card-Generator.md` — AI report card feature
 - `14-Seed-Functions.md` — seed data pages
@@ -148,5 +148,5 @@ Detailed documentation in [Documentation/](Documentation/) (22 markdown files):
 Edge functions require these secrets (set via `supabase secrets set`):
 - `VOYAGE_API_KEY` — Voyage AI embeddings
 - `ANTHROPIC_API_KEY` — Claude API
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_NUMBER` — WhatsApp
+- `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN` — Meta Cloud API (WhatsApp Business)
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase access from edge functions

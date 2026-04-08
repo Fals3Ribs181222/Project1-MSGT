@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { extractText as extractPdfText } from "https://esm.sh/unpdf";
 
 const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -48,6 +49,16 @@ async function embedChunks(chunks: string[]): Promise<number[][]> {
 async function extractText(url: string): Promise<string> {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to fetch file: ${res.status}`);
+
+    // Detect PDF by URL extension (strip query params — Supabase URLs include token params)
+    const urlWithoutParams = url.split("?")[0].toLowerCase();
+    if (urlWithoutParams.endsWith(".pdf")) {
+        const buffer = await res.arrayBuffer();
+        const { text } = await extractPdfText(new Uint8Array(buffer), { mergePages: true });
+        return text;
+    }
+
+    // Plain text fallback for .txt, .md, and other text-based files
     return await res.text();
 }
 
