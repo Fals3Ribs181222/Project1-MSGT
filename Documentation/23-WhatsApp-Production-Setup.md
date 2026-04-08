@@ -91,23 +91,25 @@ Set via: Supabase Dashboard → Settings → Edge Functions → Secrets
 
 > **Why needed:** Free-form text messages only work if the recipient messaged the business number first (within 24 hours). For outbound-only notifications (attendance, scores), Meta-approved templates are required.
 
-| Template | Category | Status | Notes |
-|----------|----------|--------|-------|
-| Attendance alert (absent/late) | UTILITY | ❌ Not Created | |
-| Test score notification | UTILITY | ❌ Not Created | |
-| Announcement | UTILITY or MARKETING | ❌ Not Created | |
+| Template name | Category | Status | Variables | Notes |
+|---------------|----------|--------|-----------|-------|
+| `mssc_attendance_absent` | UTILITY | ⏳ Active – Quality pending | parent_name, student_name, day_date, class_time, batch_name | Header: "Absence Alert" |
+| `mssc_attendance_late` | UTILITY | ⏳ Active – Quality pending | parent_name, student_name, day_date, batch_name, class_time, punch_in, mins_late, student_name | Header: "Late Arrival" |
+| `mssc_attendance_present` | UTILITY | ⏳ Active – Quality pending | parent_name, student_name, day_date, batch_name, class_time, punch_in, punch_out, student_name | Header: "Marked Present" — punch times show "Not recorded" until biometric connected |
+| Test score notification | UTILITY | ❌ Not Created | | |
+| Announcement | UTILITY | ❌ Not Created | | |
 
-Steps:
-1. Create templates in Meta Business Manager → WhatsApp → Message Templates
-2. Submit for Meta approval (typically 24–48 hours)
-3. Once approved, update `send-whatsapp/index.ts` to send `type: "template"` payloads for these message types
+> **Punch-in/out times:** All attendance templates include punch-in and punch-out fields. These show "Not recorded" until the biometric machine is connected. The grace period logic (≤10 min late = present, >10 min = late) is already built into `send-whatsapp/index.ts` and will activate automatically once biometric data flows in.
 
 ---
 
 ## 9. Code Changes Required After Templates Are Approved
 
-- [ ] Update `send-whatsapp/index.ts` — switch attendance, score, announcement message types from free-form `type: "text"` to `type: "template"` with the approved template names and parameter mappings
-- [ ] Redeploy `send-whatsapp` after changes
+- [x] Updated `send-whatsapp/index.ts` — attendance type now uses `type: "template"` with `sendTemplateViaMetaAPI()`, per-recipient parent name personalisation, and grace period logic
+- [x] Updated `attendance.js` — fetches `father_name`, `mother_name`; sends to both parents separately; "Notify via WhatsApp" button always shows after saving
+- [x] Updated `whatsapp.js` — `resolveRecipients` now sends to father AND mother separately using real names
+- [ ] Redeploy `send-whatsapp` after templates are fully approved
+- [ ] Create score and announcement templates
 
 ---
 
@@ -117,9 +119,11 @@ Steps:
 |------|--------|-------|
 | Send test message to Mitesh Sir's own number | ✅ | |
 | Receive a reply — confirm it appears in the dashboard Inbox tab | ✅ | Replies from students visible in Inbox tab |
-| Test attendance message type | ✅ | Absence alert delivered to Ribhhu Misraa |
-| Test score message type | ❌ | |
-| Test announcement message type | ❌ | |
+| Test attendance absent template | ✅ | Absence alert delivered to Ribhhu Misraa |
+| Test attendance late template | ❌ | Template active – quality pending |
+| Test attendance present template | ❌ | Template active – quality pending; punch times show "Not recorded" until biometric |
+| Test score message type | ❌ | Template not created yet |
+| Test announcement message type | ❌ | Template not created yet |
 | Test custom message type | ✅ | |
 | Confirm `whatsapp_log` rows are being written in Supabase | ❌ | |
 | Confirm `whatsapp_incoming` rows are written on reply | ✅ | Confirmed via Inbox tab |

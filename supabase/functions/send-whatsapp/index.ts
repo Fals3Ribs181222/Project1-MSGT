@@ -189,19 +189,42 @@ function resolveAttendanceTemplate(payload: Record<string, string>, recipientNam
         minsLate = String(diff);
     }
 
+    const parentName = payload.parent_name || 'Parent';
+    const isParent = (payload.recipient_role || 'parent') === 'parent';
+
+    if (status === 'present') {
+        return isParent ? {
+            name: 'mssc_attendance_present_parent',
+            // {{1}} parent_name  {{2}} student_name  {{3}} day_date  {{4}} batch_name  {{5}} class_time  {{6}} punch_in
+            params: [parentName, studentName, dayDate, batchName, classTimeDisplay, punchDisplay],
+        } : {
+            name: 'mssc_attendance_present_student',
+            // {{1}} student_name  {{2}} day_date  {{3}} batch_name  {{4}} class_time  {{5}} punch_in
+            params: [studentName, dayDate, batchName, classTimeDisplay, punchDisplay],
+        };
+    }
+
     if (status === 'absent') {
-        return {
-            name: 'mssc_attendance_absent',
-            // {{1}} parent_name  {{2}} student_name  {{3}} day_date  {{4}} class_time  {{5}} batch_name
-            params: [payload.parent_name || 'Parent', studentName, dayDate, classTimeDisplay, batchName],
+        return isParent ? {
+            name: 'mssc_attendance_absent_parent',
+            // {{1}} parent_name  {{2}} student_name  {{3}} day_date  {{4}} batch_name  {{5}} class_time  {{6}} student_name
+            params: [parentName, studentName, dayDate, batchName, classTimeDisplay, studentName],
+        } : {
+            name: 'mssc_attendance_absent_student',
+            // {{1}} student_name  {{2}} day_date  {{3}} batch_name  {{4}} class_time
+            params: [studentName, dayDate, batchName, classTimeDisplay],
         };
     }
 
     // late
-    return {
-        name: 'mssc_attendance_late',
-        // {{1}} parent_name  {{2}} student_name  {{3}} day_date  {{4}} batch_name  {{5}} class_time  {{6}} punch_in  {{7}} mins_late
-        params: [payload.parent_name || 'Parent', studentName, dayDate, batchName, classTimeDisplay, punchDisplay, minsLate],
+    return isParent ? {
+        name: 'mssc_attendance_late_parent',
+        // {{1}} parent_name  {{2}} student_name  {{3}} day_date  {{4}} batch_name  {{5}} class_time  {{6}} punch_in  {{7}} student_name
+        params: [parentName, studentName, dayDate, batchName, classTimeDisplay, punchDisplay, studentName],
+    } : {
+        name: 'mssc_attendance_late_student',
+        // {{1}} student_name  {{2}} day_date  {{3}} batch_name  {{4}} class_time  {{5}} punch_in
+        params: [studentName, dayDate, batchName, classTimeDisplay, punchDisplay],
     };
 }
 
@@ -241,14 +264,34 @@ Deno.serve(async (req: Request) => {
 
             try {
                 if (type === 'attendance') {
-                    // Resolve per-recipient so parent_name is personalised (father vs mother)
-                    const attendanceTemplate = resolveAttendanceTemplate(payload || {}, recipient.name);
+                    // Resolve per-recipient: inject role + name so correct template is chosen
+                    const attendanceTemplate = resolveAttendanceTemplate(
+                        { ...(payload || {}), recipient_role: recipient.role || 'parent' },
+                        recipient.name,
+                    );
                     // Empty name = within grace period → no notification
                     if (!attendanceTemplate.name) {
                         results.push({ phone, success: true });
                         continue;
                     }
                     await sendTemplateViaMetaAPI(phone, attendanceTemplate.name, attendanceTemplate.params);
+                } else if (type === 'score') {
+                    const p = payload || {};
+                    const isParent = (recipient.role || 'parent') === 'parent';
+                    const studentName = p.student_name || 'Student';
+                    const testTitle  = p.test_title   || 'Test';
+                    const subject    = p.subject       || '';
+                    const score      = p.score         || '0';
+                    const total      = p.total         || '100';
+                    const average    = p.class_average || 'N/A';
+                    if (isParent) {
+                        const parentName = recipient.name || 'Parent';
+                        // mssc_test_result_parent: {{1}} parent {{2}} student {{3}} test {{4}} subject {{5}} score {{6}} total {{7}} average {{8}} student
+                        await sendTemplateViaMetaAPI(phone, 'mssc_test_result_parent', [parentName, studentName, testTitle, subject, score, total, average, studentName]);
+                    } else {
+                        // mssc_test_result_student: {{1}} student {{2}} test {{3}} subject {{4}} score {{5}} total {{6}} average
+                        await sendTemplateViaMetaAPI(phone, 'mssc_test_result_student', [studentName, testTitle, subject, score, total, average]);
+                    }
                 } else {
                     await sendViaMetaAPI(phone, message);
                 }

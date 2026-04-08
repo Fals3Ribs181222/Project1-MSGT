@@ -241,11 +241,18 @@ document.getElementById('btnSendScores')?.addEventListener('click', async () => 
             return;
         }
 
+        // Compute class average from all filled inputs
+        const allInputs = document.querySelectorAll('.student-mark-input');
+        const allValues = Array.from(allInputs).map(i => i.value.trim()).filter(v => v !== '').map(Number);
+        const classAverage = allValues.length > 0
+            ? (allValues.reduce((a, b) => a + b, 0) / allValues.length).toFixed(1)
+            : 'N/A';
+
         // Fetch profiles with phone numbers
         const studentIds = marksData.map(m => m.studentId);
         const { data: profiles } = await window.supabaseClient
             .from('profiles')
-            .select('id, name, phone, father_phone, mother_phone')
+            .select('id, name, phone, father_name, father_phone, mother_name, mother_phone')
             .in('id', studentIds);
 
         if (!profiles || profiles.length === 0) {
@@ -277,8 +284,10 @@ document.getElementById('btnSendScores')?.addEventListener('click', async () => 
                     payload: {
                         student_name: profile.name,
                         test_title: currentTest.title,
-                        score: `${mark.marks}/${currentTest.max_marks}`,
+                        score: String(mark.marks),
+                        total: String(currentTest.max_marks),
                         subject: currentTest.subject,
+                        class_average: classAverage,
                     },
                     sentBy: user.id,
                 });

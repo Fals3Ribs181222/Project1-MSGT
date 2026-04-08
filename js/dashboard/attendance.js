@@ -415,16 +415,13 @@ export function init() {
                 statusText.className = 'status status--success';
                 statusText.style.display = 'block';
 
-                // Show Notify button if there are absent/late students
-                const absentLateCount = records.filter(r => r.status === 'absent' || r.status === 'late').length;
+                // Always show Notify button after saving — notifies all students
                 const btnNotify = document.getElementById('btnNotifyAbsentLate');
-                if (btnNotify && absentLateCount > 0) {
+                if (btnNotify) {
                     btnNotify.style.display = 'inline-flex';
-                    btnNotify.innerHTML = `<i class="ri-whatsapp-line"></i> Notify Absent/Late (${absentLateCount})`;
-                    // Store records for the notify handler
-                    btnNotify._absentLateRecords = records.filter(r => r.status === 'absent' || r.status === 'late');
-                } else if (btnNotify) {
-                    btnNotify.style.display = 'none';
+                    btnNotify.disabled = false;
+                    btnNotify.innerHTML = `<i class="ri-whatsapp-line"></i> Notify via WhatsApp (${records.length})`;
+                    btnNotify._absentLateRecords = records;
                 }
 
                 setTimeout(() => {

@@ -59,6 +59,17 @@ function attachMaterialListeners() {
         if (fileInput.files.length === 0) return;
         const file = fileInput.files[0];
 
+        const uploadType = document.querySelector('input[name="uploadType"]:checked')?.value || 'student';
+
+        if (uploadType === 'ai') {
+            const allowedExtensions = ['.pdf', '.txt', '.md'];
+            const isAllowed = allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+            if (!isAllowed) {
+                window.showStatus('uploadStatus', 'AI Training only supports PDF, TXT, or MD files. Please choose a supported file.', 'error');
+                return;
+            }
+        }
+
         btn.disabled = true;
         btn.textContent = 'Uploading...';
         status.className = 'status';
@@ -82,8 +93,6 @@ function attachMaterialListeners() {
             // 3. Insert into files table
             const subjectCheckboxes = document.querySelectorAll('input[name="fileSubjects"]:checked');
             const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
-
-            const uploadType = document.querySelector('input[name="uploadType"]:checked')?.value || 'student';
 
             const payload = {
                 title: document.getElementById('fileTitle').value,
