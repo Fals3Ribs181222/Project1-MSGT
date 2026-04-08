@@ -1,6 +1,26 @@
-# Supabase CLI binary
+# Supabase
 supabase.exe
 supabase/.temp/
+
+# Vercel
 .vercel
+
+# Environment variables
+.env
+.env.local
 .env*.local
+
+# Claude Code local settings (machine-specific permissions)
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Google Drive temp uploads
 .tmp.driveupload/
+
+# Logs
+*.log

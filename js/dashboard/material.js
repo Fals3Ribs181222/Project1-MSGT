@@ -39,6 +39,41 @@ async function loadMaterials() {
 
 }
 
+async function loadTests() {
+    const tbody = document.getElementById('testsTableBody');
+    const status = document.getElementById('testsListStatus');
+    const btnRefresh = document.getElementById('btnRefreshTests');
+
+    if (!tbody) return;
+
+    if (btnRefresh) { btnRefresh.disabled = true; btnRefresh.textContent = 'Refreshing...'; }
+    window.tableLoading('testsTableBody', 5, 'Loading tests...');
+
+    const response = await window.api.get('files', { upload_type: 'test' });
+
+    if (btnRefresh) { btnRefresh.disabled = false; btnRefresh.textContent = 'Refresh List'; }
+
+    const teacherGrade = user.grade;
+    let files = response.data || [];
+    if (teacherGrade && teacherGrade !== 'All Grades') {
+        files = files.filter(f => !f.grade || f.grade === '' || f.grade === teacherGrade);
+    }
+
+    if (files.length > 0) {
+        tbody.innerHTML = files.map(file => `
+        <tr class="data-table__row">
+            <td class="data-table__td--main">${window.esc(file.title) || '-'}</td>
+            <td class="data-table__td">${file.subject || '-'}</td>
+            <td class="data-table__td">${file.grade || 'All'}</td>
+            <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
+            <td class="data-table__td"><a href="${window.safeUrl(file.file_url)}" target="_blank" class="navbar__link">View</a></td>
+        </tr>
+    `).join('');
+    } else {
+        window.tableLoading('testsTableBody', 5, 'No tests saved yet. Generate a test in AI Tools and click "Save to Materials".');
+    }
+}
+
 async function loadMaterialComponent() {
     await window.loadComponent('add_material', 'addMaterialContainer', attachMaterialListeners);
 }
@@ -77,7 +112,7 @@ function attachMaterialListeners() {
         try {
             // 1. Upload to Supabase Storage
             const filePath = `materials/${Date.now()}_${file.name}`;
-            const { data: storageData, error: storageError } = await window.supabaseClient
+            const { error: storageError } = await window.supabaseClient
                 .storage
                 .from('materials')
                 .upload(filePath, file);
@@ -161,29 +196,29 @@ export function init() {
     const btnRefresh = document.getElementById('btnRefreshMaterials');
     if (btnRefresh) btnRefresh.addEventListener('click', loadMaterials);
 
+    const btnRefreshTests = document.getElementById('btnRefreshTests');
+    if (btnRefreshTests) btnRefreshTests.addEventListener('click', loadTests);
+
     // Pill Toggle Logic
-    const pillView = document.getElementById('pillViewMaterials');
-    const pillAdd = document.getElementById('pillAddMaterial');
-    const listContainer = document.getElementById('materialsListContainer');
-    const addContainer = document.getElementById('addMaterialContainer');
+    const pillView  = document.getElementById('pillViewMaterials');
+    const pillTests = document.getElementById('pillViewTests');
+    const pillAdd   = document.getElementById('pillAddMaterial');
+    const listContainer  = document.getElementById('materialsListContainer');
+    const testsContainer = document.getElementById('testsListContainer');
+    const addContainer   = document.getElementById('addMaterialContainer');
 
-    if (pillView && pillAdd) {
-        pillView.addEventListener('click', () => {
-            pillView.classList.add('pill-toggle__btn--active');
-            pillAdd.classList.remove('pill-toggle__btn--active');
-            if (listContainer) listContainer.style.display = 'block';
-            if (addContainer) addContainer.style.display = 'none';
-            if (btnRefresh) btnRefresh.style.display = 'inline-block';
+    function showOnly(active, containers) {
+        [pillView, pillTests, pillAdd].forEach(p => p?.classList.remove('pill-toggle__btn--active'));
+        active?.classList.add('pill-toggle__btn--active');
+        [listContainer, testsContainer, addContainer].forEach((c, i) => {
+            if (c) c.style.display = containers[i] ? 'block' : 'none';
         });
-
-        pillAdd.addEventListener('click', () => {
-            pillAdd.classList.add('pill-toggle__btn--active');
-            pillView.classList.remove('pill-toggle__btn--active');
-            if (addContainer) addContainer.style.display = 'block';
-            if (listContainer) listContainer.style.display = 'none';
-            if (btnRefresh) btnRefresh.style.display = 'none';
-        });
+        if (btnRefresh) btnRefresh.style.display = containers[0] ? 'inline-block' : 'none';
     }
+
+    pillView?.addEventListener('click',  () => showOnly(pillView,  [true,  false, false]));
+    pillTests?.addEventListener('click', () => { showOnly(pillTests, [false, true,  false]); loadTests(); });
+    pillAdd?.addEventListener('click',   () => showOnly(pillAdd,   [false, false, true]));
 }
 
 export function refresh() {

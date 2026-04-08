@@ -4,6 +4,7 @@ const user = window.auth.getUser();
 let conversationHistory = [];
 let lastQuestion = '';
 let lastAnswer = '';
+let sessionChunks = null;  // context chunks from last response, reused for follow-ups
 
 function attachAIToolListeners() {
 
@@ -54,7 +55,8 @@ function attachAIToolListeners() {
             },
             body: JSON.stringify({
                 query, subject, grade, mode: 'doubt',
-                conversation_history: conversationHistory.slice(-3)
+                conversation_history: conversationHistory.slice(-3),
+                ...(sessionChunks && conversationHistory.length > 0 ? { session_chunks: sessionChunks } : {})
             })
         });
 
@@ -98,6 +100,7 @@ function attachAIToolListeners() {
                         onChunk(evt.text);
                     }
                     if (evt.done) {
+                        if (evt.session_chunks) sessionChunks = evt.session_chunks;
                         onDone({
                             fullText,
                             sources: evt.sources || [],
@@ -142,6 +145,8 @@ function attachAIToolListeners() {
             window.showStatus('doubtStatus', 'Please fill in subject, grade and your question.', 'error');
             return;
         }
+
+        if (conversationHistory.length === 0) sessionChunks = null;
 
         btn.disabled    = true;
         btn.textContent = 'Thinking...';
@@ -428,6 +433,103 @@ function attachAIToolListeners() {
         a.download = filename;
         a.click();
         URL.revokeObjectURL(url);
+    });
+
+    // ── Download PDF ───────────────────────────────────────────
+    function loadHtml2Pdf() {
+        return new Promise((resolve) => {
+            if (window.html2pdf) { resolve(); return; }
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            script.onload = resolve;
+            document.head.appendChild(script);
+        });
+    }
+
+    // ── Save to Materials (uploads PDF to Supabase Storage) ──────
+    document.getElementById('btnSaveToMaterials')?.addEventListener('click', async () => {
+        const outputEl = document.getElementById('testOutput');
+        const topic    = document.getElementById('testTopic').value.trim();
+        const subject  = document.getElementById('testSubject').value;
+        const grade    = document.getElementById('testGrade').value;
+        const btn      = document.getElementById('btnSaveToMaterials');
+
+        const title    = topic || `${subject} ${grade} Test`;
+        const filename = (topic || `${subject}-${grade}-test`).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.pdf';
+
+        btn.disabled    = true;
+        btn.textContent = 'Saving...';
+
+        try {
+            await loadHtml2Pdf();
+
+            // Generate PDF as Blob without triggering a download
+            const pdfBlob = await new Promise((resolve, reject) => {
+                window.html2pdf().set({
+                    margin:      [12, 12, 12, 12],
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak:   { mode: ['avoid-all', 'css'] },
+                }).from(outputEl).toPdf().get('pdf').then(pdf => {
+                    resolve(new Blob([pdf.output('arraybuffer')], { type: 'application/pdf' }));
+                }).catch(reject);
+            });
+
+            // Upload to Supabase Storage
+            const filePath = `tests/${Date.now()}_${filename}`;
+            const { error: storageError } = await window.supabaseClient
+                .storage.from('materials').upload(filePath, pdfBlob, { contentType: 'application/pdf' });
+            if (storageError) throw storageError;
+
+            const { data: { publicUrl } } = window.supabaseClient
+                .storage.from('materials').getPublicUrl(filePath);
+
+            // Insert file record
+            const res = await window.api.post('files', {
+                title,
+                subject,
+                grade,
+                file_url:    publicUrl,
+                upload_type: 'test',
+                uploaded_by: user.id,
+            });
+            if (!res.success) throw new Error(res.error);
+
+            window.showStatus('testStatus', `✅ Saved "${title}" to Materials → Tests.`, 'success');
+        } catch (err) {
+            console.error('Save to Materials error:', err);
+            window.showStatus('testStatus', err.message || 'Failed to save to Materials.', 'error');
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = 'Save to Materials';
+        }
+    });
+
+    document.getElementById('btnDownloadPdf')?.addEventListener('click', async () => {
+        const outputEl = document.getElementById('testOutput');
+        const topic    = document.getElementById('testTopic').value.trim() || 'test-paper';
+        const filename = topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.pdf';
+        const btn      = document.getElementById('btnDownloadPdf');
+
+        btn.disabled    = true;
+        btn.textContent = 'Generating...';
+
+        try {
+            await loadHtml2Pdf();
+            await window.html2pdf().set({
+                margin:     [12, 12, 12, 12],
+                filename,
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:   { mode: ['avoid-all', 'css'] },
+            }).from(outputEl).save();
+        } catch (err) {
+            console.error('PDF generation error:', err);
+            window.showStatus('testStatus', 'PDF generation failed. Try Download .txt instead.', 'error');
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = 'Download PDF';
+        }
     });
 }
 

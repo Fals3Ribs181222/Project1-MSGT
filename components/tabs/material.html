@@ -1,8 +1,8 @@
 <header class="panel__header">
     <h2>Materials</h2>
     <div class="pill-toggle">
-        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewMaterials">Materials
-            List</button>
+        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewMaterials">Materials List</button>
+        <button class="pill-toggle__btn" id="pillViewTests">Tests</button>
         <button class="pill-toggle__btn" id="pillAddMaterial">+ Upload New</button>
     </div>
 </header>
@@ -30,6 +30,32 @@
     </div>
     <div class="text-right">
         <button class="btn btn--primary btn--sm" id="btnRefreshMaterials">Refresh List</button>
+    </div>
+</div>
+
+<!-- Tests Container -->
+<div id="testsListContainer" style="display:none;">
+    <div id="testsListStatus" class="status"></div>
+    <div class="table-wrap">
+        <table id="testsTable" aria-label="Saved tests list">
+            <thead>
+                <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Link</th>
+                </tr>
+            </thead>
+            <tbody id="testsTableBody">
+                <tr>
+                    <td colspan="5" class="loading-text">Loading tests...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-right">
+        <button class="btn btn--primary btn--sm" id="btnRefreshTests">Refresh List</button>
     </div>
 </div>
 

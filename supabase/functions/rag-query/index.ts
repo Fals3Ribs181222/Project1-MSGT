@@ -86,24 +86,8 @@ async function fetchSimilarChunks(
         .slice(0, count);
 }
 
-// ── Doubt Solver Prompt ───────────────────────────────────────
-function buildDoubtPrompt(
-    question: string,
-    context: string,
-    history?: Array<{ question: string; answer: string }>,
-): string {
-    let historyBlock = "";
-    if (history && history.length > 0) {
-        const entries = history.slice(-3).map(h =>
-            `Student asked: ${h.question}\nYou answered: ${h.answer}`
-        ).join("\n\n");
-        historyBlock = `--- PREVIOUS CONVERSATION ---
-${entries}
---- END PREVIOUS CONVERSATION ---
-
-`;
-    }
-
+// ── Doubt Solver Prompts ──────────────────────────────────────
+function buildDoubtSystemPrompt(context: string): string {
     return `You are a helpful tutor assistant for an Indian commerce/accounts tuition centre.
 
 Use ONLY the following excerpts from the teacher's study materials to answer the student's question.
@@ -111,11 +95,11 @@ If the answer isn't covered in the excerpts, say: "This topic may not be in the 
 
 --- STUDY MATERIAL EXCERPTS ---
 ${context}
---- END ---
+--- END ---`;
+}
 
-${historyBlock}Student's question: ${question}
-
-Answer clearly and concisely. Use the same method and terminology as in the study material. You may use markdown formatting (bold, lists, tables) to improve readability.
+function buildDoubtUserInstruction(): string {
+    return `Answer clearly and concisely. Use the same method and terminology as in the study material. You may use markdown formatting (bold, lists, tables) to improve readability.
 
 After your answer, write "---SUGGESTIONS---" on a new line followed by 2-3 brief follow-up questions the student might ask next, each on its own line. These should be directly related to the topic just discussed.`;
 }
@@ -394,6 +378,7 @@ Deno.serve(async (req) => {
             sec_b_marks,
             sec_c_marks,
             conversation_history,
+            session_chunks,
         } = await req.json();
 
         if (!query || !subject || !grade || !mode) {
@@ -433,11 +418,15 @@ Deno.serve(async (req) => {
                 }
             }
 
-            // 2. Embed the query
-            const embedding = await embedQuery(query);
-
-            // 3. Vector search with similarity threshold
-            const chunks = await fetchSimilarChunks(embedding, subject, grade, file_id, 5, 0.3);
+            // 2. Embed + vector search (skip if client sent session_chunks for follow-ups)
+            const providedChunks = Array.isArray(session_chunks) && session_chunks.length > 0 && history.length > 0;
+            let chunks: Array<{ content: string; file_id: string; similarity: number }>;
+            if (providedChunks) {
+                chunks = (session_chunks as Array<{ content: string; file_id: string }>).map(c => ({ ...c, similarity: 1 }));
+            } else {
+                const embedding = await embedQuery(query);
+                chunks = await fetchSimilarChunks(embedding, subject, grade, file_id, 5, 0.3);
+            }
 
             if (chunks.length === 0) {
                 return new Response(
@@ -461,25 +450,38 @@ Deno.serve(async (req) => {
                 sources = (fileRecords || []).map((f: any) => ({ file_id: f.id, title: f.title }));
             }
 
-            // 5. Build context and prompt
+            // 5. Build context and prompts
             const context = chunks
                 .map((c: any, i: number) => `[Excerpt ${i + 1}]:\n${c.content}`)
                 .join("\n\n");
 
-            const prompt = buildDoubtPrompt(query, context, history);
+            const systemPrompt = buildDoubtSystemPrompt(context);
+            const userInstruction = buildDoubtUserInstruction();
 
-            // 6. Call Claude with streaming
+            // Build proper messages array: history turns + new question
+            const messages: Array<{ role: string; content: string }> = [];
+            for (const h of history.slice(-3)) {
+                messages.push({ role: "user",      content: h.question });
+                messages.push({ role: "assistant", content: h.answer   });
+            }
+            messages.push({ role: "user", content: `${query}\n\n${userInstruction}` });
+
+            // 6. Call Claude with streaming + prompt caching
             const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
                 method: "POST",
                 headers: {
                     "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
                     "anthropic-version": "2023-06-01",
+                    "anthropic-beta": "prompt-caching-2024-07-31",
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     model: "claude-sonnet-4-5-20250929",
                     max_tokens: 1024,
-                    messages: [{ role: "user", content: prompt }],
+                    system: [
+                        { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
+                    ],
+                    messages,
                     stream: true,
                 }),
             });
@@ -533,9 +535,10 @@ Deno.serve(async (req) => {
                             ? suggestionsPart.trim().split("\n").map(s => s.trim()).filter(s => s && s.length > 5).slice(0, 3)
                             : [];
 
-                        // Send final event with metadata
+                        // Send final event with metadata + chunks for session reuse
+                        const returnChunks = chunks.map((c: any) => ({ content: c.content, file_id: c.file_id }));
                         controller.enqueue(
-                            encoder.encode(`data: ${JSON.stringify({ done: true, sources, suggestions })}\n\n`)
+                            encoder.encode(`data: ${JSON.stringify({ done: true, sources, suggestions, session_chunks: returnChunks })}\n\n`)
                         );
 
                         // Cache the result (fire-and-forget)
