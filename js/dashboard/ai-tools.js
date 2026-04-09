@@ -422,17 +422,101 @@ function attachAIToolListeners() {
         setTimeout(() => btn.textContent = 'Copy', 2000);
     });
 
-    document.getElementById('btnDownloadTest')?.addEventListener('click', () => {
-        const text  = document.getElementById('testOutput').innerText;
-        const topic = document.getElementById('testTopic').value.trim() || 'test-paper';
-        const filename = topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.txt';
-        const blob = new Blob([text], { type: 'text/plain' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
+    // ── Load docx library lazily ───────────────────────────────
+    function loadDocx() {
+        return new Promise((resolve) => {
+            if (window.docx) { resolve(); return; }
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/docx@8.5.0/build/index.umd.js';
+            script.onload = resolve;
+            document.head.appendChild(script);
+        });
+    }
+
+    // ── Convert output text to a docx Blob ────────────────────
+    async function buildDocxBlob(outputEl) {
+        await loadDocx();
+        const { Document, Paragraph, TextRun, AlignmentType, Packer, PageBreak } = window.docx;
+
+        const lines = outputEl.innerText.split('\n');
+        const children = [];
+
+        for (const line of lines) {
+            const t = line.trim();
+            if (!t) { children.push(new Paragraph({ text: '' })); continue; }
+
+            // Centre-aligned titles: all-caps short lines (institution name, paper title)
+            const isCentreTitle = t === t.toUpperCase() && t.length <= 60 && /[A-Z]{3}/.test(t)
+                && !/^\(/.test(t) && !/^\[/.test(t) && !/^Q\d/.test(t);
+            // Section headings: SECTION A / ANSWER KEY
+            const isSectionHead = /^SECTION [ABC]/.test(t) || t === 'ANSWER KEY';
+            // Question lines: (i), (ii), Q2, Q3 …
+            const isQuestion = /^\((?:i{1,3}|iv|v|vi{1,3}|ix|x{1,2}|xi{1,2}|xiii|xiv)\)/.test(t)
+                || /^Q\d+/.test(t);
+
+            if (isSectionHead) {
+                children.push(new Paragraph({
+                    children: [new TextRun({ text: t, bold: true, size: 26, font: 'Times New Roman' })],
+                    spacing: { before: 280, after: 140 },
+                }));
+            } else if (isCentreTitle) {
+                children.push(new Paragraph({
+                    children: [new TextRun({ text: t, bold: true, size: 28, font: 'Times New Roman' })],
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 100, after: 100 },
+                }));
+            } else if (t === 'OR') {
+                children.push(new Paragraph({
+                    children: [new TextRun({ text: 'OR', bold: true, size: 24, font: 'Times New Roman' })],
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 140, after: 140 },
+                }));
+            } else {
+                children.push(new Paragraph({
+                    children: [new TextRun({ text: line, size: 24, font: 'Times New Roman' })],
+                    spacing: { after: 80 },
+                    indent: isQuestion ? { left: 360 } : {},
+                }));
+            }
+        }
+
+        const doc = new Document({
+            sections: [{
+                properties: {
+                    page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } // 2cm margins
+                },
+                children,
+            }],
+        });
+
+        return Packer.toBlob(doc);
+    }
+
+    // ── Download Word ──────────────────────────────────────────
+    document.getElementById('btnDownloadWord')?.addEventListener('click', async () => {
+        const outputEl = document.getElementById('testOutput');
+        const topic    = document.getElementById('testTopic').value.trim() || 'test-paper';
+        const filename = topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.docx';
+        const btn      = document.getElementById('btnDownloadWord');
+
+        btn.disabled    = true;
+        btn.textContent = 'Generating...';
+
+        try {
+            const blob = await buildDocxBlob(outputEl);
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Word generation error:', err);
+            window.showStatus('testStatus', 'Word generation failed.', 'error');
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = 'Download Word';
+        }
     });
 
     // ── Download PDF ───────────────────────────────────────────
@@ -446,7 +530,7 @@ function attachAIToolListeners() {
         });
     }
 
-    // ── Save to Materials (uploads PDF to Supabase Storage) ──────
+    // ── Save to Materials (uploads .docx to Supabase Storage) ────
     document.getElementById('btnSaveToMaterials')?.addEventListener('click', async () => {
         const outputEl = document.getElementById('testOutput');
         const topic    = document.getElementById('testTopic').value.trim();
@@ -455,36 +539,24 @@ function attachAIToolListeners() {
         const btn      = document.getElementById('btnSaveToMaterials');
 
         const title    = topic || `${subject} ${grade} Test`;
-        const filename = (topic || `${subject}-${grade}-test`).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.pdf';
+        const filename = (topic || `${subject}-${grade}-test`).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.docx';
 
         btn.disabled    = true;
         btn.textContent = 'Saving...';
 
         try {
-            await loadHtml2Pdf();
+            const docxBlob = await buildDocxBlob(outputEl);
 
-            // Generate PDF as Blob without triggering a download
-            const pdfBlob = await new Promise((resolve, reject) => {
-                window.html2pdf().set({
-                    margin:      [12, 12, 12, 12],
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak:   { mode: ['avoid-all', 'css'] },
-                }).from(outputEl).toPdf().get('pdf').then(pdf => {
-                    resolve(new Blob([pdf.output('arraybuffer')], { type: 'application/pdf' }));
-                }).catch(reject);
-            });
-
-            // Upload to Supabase Storage
             const filePath = `tests/${Date.now()}_${filename}`;
             const { error: storageError } = await window.supabaseClient
-                .storage.from('materials').upload(filePath, pdfBlob, { contentType: 'application/pdf' });
+                .storage.from('materials').upload(filePath, docxBlob, {
+                    contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                });
             if (storageError) throw storageError;
 
             const { data: { publicUrl } } = window.supabaseClient
                 .storage.from('materials').getPublicUrl(filePath);
 
-            // Insert file record
             const res = await window.api.post('files', {
                 title,
                 subject,
@@ -525,7 +597,7 @@ function attachAIToolListeners() {
             }).from(outputEl).save();
         } catch (err) {
             console.error('PDF generation error:', err);
-            window.showStatus('testStatus', 'PDF generation failed. Try Download .txt instead.', 'error');
+            window.showStatus('testStatus', 'PDF generation failed.', 'error');
         } finally {
             btn.disabled    = false;
             btn.textContent = 'Download PDF';

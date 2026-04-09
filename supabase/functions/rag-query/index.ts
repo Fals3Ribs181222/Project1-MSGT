@@ -136,73 +136,115 @@ function buildTestPrompt(
         const cMarks = secCMarks;
         const bCount = Math.round(bMarks / 4);
         const cCount = Math.round(cMarks / 8);
-        const sectionAPart = includeA ? `SECTION A — ${aMarks} MARKS (${aMarks} questions × 1 mark each, all compulsory, no internal choice)
-Use a MIX of: MCQ (4 options), Assertion-Reason, True/False, Analogy (X:Y::Z:___), Fill in the blank, Identify from diagram/org chart, State one term.
+        const sectionAPart = includeA ? `SECTION A — ${aMarks} MARKS (all compulsory, no internal choice)
+Question 1 has sub-parts (i) through (xiv). Each sub-part carries [1] mark, except those with two internal parts (a) and (b) which carry [2] marks total. Number as (i), (ii), (iii)... NOT Q1, Q2, Q3.
+
+Exact mix (follow this distribution):
+- 6-7 scenario-based MCQs with 4 options [1 mark each]
+- 1 Assertion-Reason question [1 mark] — preamble: "Given below are two statements marked Assertion and Reason. Read the statements carefully and choose the correct option." Options EXACTLY:
+  (a) Both Assertion and Reason are true and Reason is the correct explanation for Assertion.
+  (b) Both Assertion and Reason are true but Reason is not the correct explanation for Assertion.
+  (c) Assertion is true and Reason is false.
+  (d) Both Assertion and Reason are false.
+- 1 Analogy with two parts (a) and (b) [2 marks total]
+- 1 True/False with two parts (a) and (b) [2 marks total]
+- 2-3 Fill in the blank / Identify from diagram or image [1 mark each]
+- 2-3 Scenario → identify the concept (open answer, no MCQ options) [1 mark each]
 
 ` : "";
-        const sectionBPart = includeB ? `SECTION B — ${bMarks} MARKS (${bCount} questions × 4 marks each, internal choice in 2 questions)
-Use a MIX of:
-- "Distinguish between [X] and [Y]." (tabular, 4 points of difference)
-- "[Case scenario] — (a) Identify [1] (b) Explain three features [3]"
-- "Explain any four points on [importance/features of concept]"
-- "Name and explain [type/source/principle] used in [scenario]"
-Every Section B question MUST use a named Indian company or person in the scenario.
+        const sectionBPart = includeB ? `SECTION B — ${bMarks} MARKS (${bCount} questions × 4 marks each, internal choice in 2 questions — for those, provide (i) OR (ii) format)
+At least 6 out of 8 questions (~75%) MUST be case/scenario-based. Use a MIX of:
+- "[Case scenario] — Name and explain the [type/source/method] used." (Understanding)
+- "[Case scenario] — Which principle/concept of Henri Fayol can be applied? Explain." (Application, 2+2 split)
+- "[Case scenario] — (i) State the [level/type]. [1] (ii) Discuss any three [functions/features]. [3]" (Understanding)
+- "As a [role in a scenario], explain four [features/factors/objectives] of [concept]." (Understanding with role-play framing)
+- "[Case scenario] — Enumerate any four distinctions between [X] and [Y]." (Analysis, tabular with common basis)
+The remaining 2 questions may be direct format:
+- "Explain any four [importance/features/characteristics/objectives] of [concept]." (Understanding)
+- "Discuss the interplay/relationship between [X] and [Y]." (Understanding)
+Use ISC action verbs: Explain, Outline, Elucidate, Illustrate, Discuss, Enumerate, Compare, Evaluate.
+At least 3 questions should use a named Indian company or person in a scenario.
 
 ` : "";
-        sectionInstructions = `${sectionAPart}${sectionBPart}SECTION C — ${cMarks} MARKS (${cCount} questions × 8 marks each, internal choice in 1 question)
-Use a MIX of:
-- Case passage with 4-5 sub-questions (1+1+1+1+4 or 2+2+4 split)
-- Two-part: concept/case [5 marks] + factual recall [3 marks]
-- Long explanation: enumerate any four points on importance/features`;
+        sectionInstructions = `${sectionAPart}${sectionBPart}SECTION C — ${cMarks} MARKS (${cCount} questions × 8 marks each, internal choice in 1 question — provide alternate (i)+(ii) OR (iii)+(iv), both sub-parts replaced as a pair)
+
+Use TWO split patterns — ~75% should be 5+3, ~25% should be 2+2+2+2:
+
+PATTERN A — 5+3 split (use for 3 out of 4 questions):
+  (i) [5 marks] — Use one of these formats:
+    • "Explain any five [importance/objectives/points] of [concept]"
+    • "Evaluate three advantages and two disadvantages of [concept]" (3+2=5)
+    • "[Scenario] — Which [type/security]? Explain any four features" (1+4=5)
+    • "Name and explain [technique/concept] with its components"
+    • "Justify the statement by explaining any five [objectives/reasons]"
+  (ii) [3 marks] — Related but different sub-topic:
+    • "Explain any three differences between [X] and [Y]"
+    • "State any three features of [concept]"
+    • "Identify and explain three [rights/elements/types]"
+
+PATTERN B — 2+2+2+2 split (use for 1 out of 4 questions, typically Q13 passage-based):
+  Present a case passage (8-12 sentences) about a realistic business situation. Include "(Source (edited): [author/publication])". Follow with 3-4 sub-questions:
+  (i) [2 marks] — Identify/discuss concepts from the passage (Analysis)
+  (ii) [2 marks] — Mention objectives/features with reference to the case (Understanding)
+  (iii) [2 marks] — Apply/evaluate a specific aspect of the case (Application)
+  (iv) [2 marks] — Suggest/recommend based on the passage (Analysis)
+  OR use a 2+2+4 variant: (i)[2] + (ii)[2] + (iii)[4]`;
 
     } else if (includeB) {
         const aMarks = secAMarks;
         const bMarks = secBMarks;
         const bCount = Math.round(bMarks / 4);
-        const sectionAPart = includeA ? `SECTION A — ${aMarks} MARKS (${aMarks} questions × 1 mark each)
-Use a MIX of: MCQ, Assertion-Reason, True/False, Analogy, Fill in the blank, State one term.
+        const sectionAPart = includeA ? `SECTION A — ${aMarks} MARKS (all compulsory, no internal choice)
+Question 1 has sub-parts (i) through (xiv). Number as (i), (ii), (iii)... NOT Q1, Q2, Q3.
+Mix: 6-7 scenario-based MCQs (4 options), 1 Assertion-Reason (use exact ISC 4-option format), 1 Analogy [2 marks], 1 True/False [2 marks], 2-3 fill-in-the-blank or identify-from-diagram, 2-3 scenario→identify-term (no options).
 
 ` : "";
         sectionInstructions = `${sectionAPart}SECTION B — ${bMarks} MARKS (${bCount} questions × 4 marks each)
-Use a MIX of these ISC question types:
-- "Distinguish between [X] and [Y]." (tabular format, 4 points of difference)
-- "[Case scenario] — (a) Identify which [principle/element/level] is illustrated. [1] (b) Explain any three features/points. [3]"
-- "Explain any four [factors/points/importance] of [concept]."
-- "[Real company scenario] — Name and explain the [strategy/method/source] used."
-Every Section B question MUST use a real-world scenario involving a named Indian company or person (Amul, TCS, Samsung, Swiggy, Reliance, Muthoot, a fictional person like Rajan/Meera/Siddhi).`;
+At least 75% of questions MUST be case/scenario-based. Use a MIX of:
+- "[Case scenario] — Name and explain the [type/source/method] used." (Understanding)
+- "[Case scenario] — Which principle/concept can be applied? Explain." (Application)
+- "[Case scenario] — (i) State the [level/type]. [1] (ii) Discuss any three [functions/features]. [3]"
+- "As a [role in a scenario], explain four [features/factors/objectives] of [concept]." (Understanding)
+- "[Case scenario] — Enumerate any four distinctions between [X] and [Y]." (Analysis, tabular)
+The remaining may be direct:
+- "Explain any four [importance/features/characteristics] of [concept]." (Understanding)
+- "Discuss the interplay/relationship between [X] and [Y]." (Understanding)
+At least 3 questions MUST use a real-world scenario with a named Indian company or person (Amul, TCS, Samsung, Swiggy, Reliance, or a fictional person like Rajan/Meera/Siddhi).`;
 
     } else {
         // Section A only
         const aMarks = secAMarks || marksTarget;
         sectionInstructions = `SECTION A — ${aMarks} MARKS
-Generate ${aMarks} one-mark questions. Use a MIX of these ISC question types:
-- MCQ (4 options, write ONE answer)
-- Assertion-Reason (4 standard options: both true R explains A / both true R doesn't explain / A true R false / A false R true)
-- True/False
-- Analogy completion (X : Y :: Z : ___)
-- Fill in the blank
-- State one feature / Name the term`;
+Question 1 has sub-parts (i) through (xiv). Number as (i), (ii), (iii)... NOT Q1, Q2, Q3.
+Mix: 6-7 scenario-based MCQs (4 options), 1 Assertion-Reason [use exact ISC format: (a) Both Assertion and Reason are true and Reason is the correct explanation for Assertion. (b) Both...but not the correct explanation... (c) Assertion is true and Reason is false. (d) Both Assertion and Reason are false.], 1 Analogy [2 marks], 1 True/False [2 marks], 2-3 fill-in-the-blank or identify-from-diagram, 2-3 scenario→identify-term (no options).`;
     }
 
     // ── Cognitive level guidance ────────────────────────────────
     const cogGuidance: Record<string, string> = {
-        balanced: "Mix cognitive levels: ~20% Recall (define/state/name), ~30% Understanding (explain/describe/distinguish), ~25% Application (which principle? suggest suitable option for case), ~15% Analysis (identify concept from scenario), ~10% Evaluate/Create.",
-        recall: "Focus on Recall and Understanding levels (~50% Recall: define/state/name/True-False, ~30% Understanding: explain/distinguish/describe, ~20% Application).",
-        application: `ZERO DIRECT QUESTIONS. Every single question — including Section A 1-mark questions — must begin with a scenario, case paragraph, or real-world situation. The student must extract, identify, or apply concepts from the paragraph. Never name the concept in the question stem.
+        balanced: "Mix cognitive levels: ~55% Application (identify principle from scenario, suggest suitable option for case, name and explain from situation), ~35% Analysis (evaluate case, identify concept from complex scenario, compare, justify), ~10% Understanding (explain/describe/discuss). Aim for ZERO pure Recall questions — even definitional content should be wrapped in a scenario. Tag each question with its cognitive domain in parentheses after the question: (Application), (Analysis), (Understanding).",
+        recall: "Focus on Recall and Understanding levels (~50% Recall: define/state/name/True-False, ~30% Understanding: explain/distinguish/describe, ~20% Application). Tag each question with its cognitive domain in parentheses: (Recall), (Understanding), (Application).",
+        application: `ZERO DIRECT QUESTIONS in Section A. Every Section A question must begin with a scenario, case paragraph, or real-world situation. The student must extract, identify, or apply concepts. Never name the concept in the question stem.
+Tag each question with its cognitive domain in parentheses: (Application), (Analysis), (Evaluate), (Understanding).
 
 STRICT RULES FOR APPLICATION MODE:
 
 Section A (1-mark): ONLY scenario-based MCQs or identify-from-case questions.
 - BANNED: "Define X", "State one feature of X", "True or False: X is...", "Fill in the blank: X is called ___"
 - REQUIRED: Give a 2-3 sentence scenario. Ask "Which concept / principle / element is illustrated here?" or "What should [person] do in this situation?" with 4 options.
+- ALSO ALLOWED: Case passage followed by 4 statements (P, Q, R, S). Ask "Which combination is correct?" with options like (a) Only (P) and (Q), (b) Only (Q) and (R), etc. — tests analysis of the passage.
 
-Section B (4-mark distinction questions): BANNED format — "Distinguish between X and Y on the following bases: (i)... (ii)..."
-- REQUIRED format: Write a paragraph (4-6 sentences) that describes two concepts side by side in a real business situation WITHOUT naming them. Then ask: "(a) Identify the two concepts being described in the above paragraph. [1] (b) Distinguish between them on any three bases. [3]"
-- The student must figure out WHAT to distinguish, and then distinguish it — subheadings are NOT given.
+Section B: At least 5 out of 8 questions MUST be scenario/case-based.
+- "[Case scenario] — Name and explain the [type/source/method] used."
+- "[Case scenario] — Which principle/concept can be applied? Explain." (2+2 split)
+- "[Case scenario] — (i) State the [level/type]. [1] (ii) Discuss three [functions/features]. [3]"
+- Paragraph-based distinction: Describe two concepts in a business situation without naming them. Ask "(a) Identify the two concepts [1] (b) Distinguish between them on any three bases [3]"
+The remaining 2-3 may use direct format WITH analytical framing:
+- "Discuss the interplay between X and Y" (Understanding)
+- "As a [role], explain four [features/factors/objectives]" (Understanding)
+- "Evaluate three advantages and two disadvantages of [concept]" (Evaluate)
+BANNED: Plain "Explain any four features of X" without any scenario or analytical framing.
 
-Section B (identify+explain): Give a scenario. Ask (a) identify the principle/element/level [1]. Then ask (b) explain three features/points [3] — features must be drawn from the scenario context, not recited from memory.
-
-Section C: Case passages ONLY. No "enumerate any four points on importance of X" standalone questions. Every question must stem from a passage.`,
+Section C: Follow the standard 5+3 split. Questions 10-12: (i)[5] + (ii)[3]. Question 13: Reading passage with 2-3 sub-questions. At least Q13 must be a full case passage.`,
     };
 
     // ── Recall mode: override section instructions ──────────────
@@ -211,15 +253,17 @@ Section C: Case passages ONLY. No "enumerate any four points on importance of X"
         const includeB = sections.includes("B") && secBMarks > 0;
         const includeC = sections.includes("C") && secCMarks > 0;
 
-        const recA = includeA ? `SECTION A — ${secAMarks} MARKS (${secAMarks} questions × 1 mark each)
+        const recA = includeA ? `SECTION A — ${secAMarks} MARKS
+Question 1 has sub-parts (i) through (xiv). Number as (i), (ii), (iii)... NOT Q1, Q2, Q3.
 ONLY use these direct recall question types — NO scenarios, NO case paragraphs:
 - "Define [term]." or "What is meant by [term]?"
 - "State one feature / advantage / function of [concept]."
-- "True or False: [direct factual statement about a concept]."
-- "Fill in the blank: [concept] is also known as ___."
-- "Analogy: X : Y :: Z : ___" (testing direct knowledge of terms and their relationships)
+- "True or False: [direct factual statement about a concept]." (two parts (a) and (b), [2 marks total])
+- "Fill in the blank: [Sentence describing a conceptual relationship with one key term blanked out]."
+- "Analogy: X : Y :: Z : ___" (two parts (a) and (b), [2 marks total])
 - "Name the type of [shares/plan/source] that [brief factual description]."
-Every question must be answerable with a single word, phrase, or one sentence. No options needed unless it is an MCQ testing direct recall.
+- 1 Assertion-Reason question with exact ISC format: (a) Both Assertion and Reason are true and Reason is the correct explanation for Assertion. (b) Both...but not the correct explanation... (c) Assertion is true and Reason is false. (d) Both Assertion and Reason are false.
+Every question must be answerable with a single word, phrase, or one sentence.
 
 ` : "";
 
@@ -236,10 +280,22 @@ BANNED in recall Section B: Any scenario, any named company, any "identify from 
 ` : "";
 
         const recC = includeC ? `SECTION C — ${secCMarks} MARKS (${Math.round(secCMarks / 8)} questions × 8 marks each)
-Use these direct long-answer formats — minimal or NO case context:
-- Two-part direct: "[Concept]. Explain any five features / types / points. [5]" + "State any three [merits/demerits/differences] of [related concept]. [3]"
-- Enumerate: "Explain the importance of [concept] by giving any four points. [4]" + "Distinguish between [X] and [Y] on any four bases. [4]"
-- Definition + explanation: "What is [concept]? Explain any four [components/functions/steps] of [concept]. [8]"
+Use TWO split patterns — ~75% should be 5+3, ~25% should be 2+2+2+2:
+
+PATTERN A — 5+3 split (3 out of 4 questions):
+(i) [5 marks] — direct long-answer formats:
+  • "What is [concept]? Explain any four [components/functions/steps]." (1+4=5)
+  • "Explain the importance of [concept] by giving any five points."
+  • "Explain any three advantages and two disadvantages of [concept]." (3+2=5)
+(ii) [3 marks] — related sub-topic:
+  • "Distinguish between [X] and [Y] on any three bases."
+  • "State any three features/types of [related concept]."
+
+PATTERN B — 2+2+2+2 split (1 out of 4 questions):
+  (i) [2 marks] — "Define [concept] and state one key feature."
+  (ii) [2 marks] — "Explain two [types/components] of [concept]."
+  (iii) [2 marks] — "State two [advantages/differences]."
+  (iv) [2 marks] — "Name and explain two [related terms]."
 BANNED in recall Section C: Full case passages requiring inference or identification. Students should answer purely from textbook knowledge.` : "";
 
         sectionInstructions = `${recA}${recB}${recC}`.trim();
@@ -251,39 +307,63 @@ BANNED in recall Section C: Full case passages requiring inference or identifica
         const includeB = sections.includes("B") && secBMarks > 0;
         const includeC = sections.includes("C") && secCMarks > 0;
 
-        const appA = includeA ? `SECTION A — ${secAMarks} MARKS (${secAMarks} questions × 1 mark each)
-Every question MUST be a scenario-based MCQ or identify-from-case. Format:
+        const appA = includeA ? `SECTION A — ${secAMarks} MARKS
+Question 1 has sub-parts (i) through (xiv). Number as (i), (ii), (iii)... NOT Q1, Q2, Q3.
+Every question MUST be scenario-based. Format:
 "[2-3 sentence real-world scenario describing a situation without naming the concept]. Which [principle / element / type of plan / level of management / source of finance] is being illustrated here?"
 (a) Option 1  (b) Option 2  (c) Option 3  (d) Option 4
-NO True/False, NO fill-in-the-blank, NO "State one term", NO direct definition questions.
+ALSO ALLOWED:
+- Case passage with 4 statements (P, Q, R, S), "Which combination is correct?" with options like (a) Only (P) and (Q), etc.
+- 1 Assertion-Reason (use exact ISC 4-option format)
+- Scenario → identify term (no MCQ options, open answer) [1 mark each]
+NO "Define X", NO fill-in-the-blank, NO direct True/False.
 
 ` : "";
 
         const appB = includeB ? `SECTION B — ${secBMarks} MARKS (${Math.round(secBMarks / 4)} questions × 4 marks each)
-Every question MUST follow one of these two formats:
+At least 5 out of 8 questions MUST be scenario/case-based:
 
 FORMAT 1 — Paragraph-based distinction:
-Write a 4-6 sentence paragraph describing two concepts operating side by side in a real business situation. Do NOT name either concept in the paragraph or question. Then ask:
+Write a 4-6 sentence paragraph describing two concepts in a real business situation. Do NOT name either concept. Then ask:
 "(a) Identify the two concepts described in the above paragraph. [1]
  (b) Distinguish between them on any three bases in tabular format. [3]"
 
 FORMAT 2 — Scenario identify+explain:
 Give a 3-4 sentence real company scenario (Amul, TCS, Samsung, Swiggy etc.). Ask:
 "(a) Identify the [principle / element / type / level] illustrated in the above case. [1]
- (b) Explain any three [features / advantages / functions] of the identified [concept] with reference to the case. [3]"
-The student must connect each feature back to the scenario — not just recite textbook points.
+ (b) Explain any three [features / advantages / functions] of the identified [concept]. [3]"
 
-BANNED in Section B application mode: Any question that directly names what to distinguish, directly names the concept to explain, or asks students to "explain any four points on [topic]" without a case.
+FORMAT 3 — Case + principle application:
+"[Case scenario] — Which principle/concept of Henri Fayol can be applied? Explain." (2+2 split)
+
+The remaining 2-3 questions may use direct format WITH analytical framing:
+- "Discuss the interplay between [X] and [Y]." (Understanding)
+- "As a [role], explain four [features/objectives] of [concept]." (Understanding)
+- "Evaluate three advantages and two disadvantages of [concept]." (Evaluate)
+BANNED: Plain "Explain any four features of X" without any framing.
 
 ` : "";
 
         const appC = includeC ? `SECTION C — ${secCMarks} MARKS (${Math.round(secCMarks / 8)} questions × 8 marks each)
-Every question MUST be a case passage. Format:
-Write a substantial paragraph (6-10 sentences) about a real or realistic Indian company/person situation. Then ask 3-5 sub-questions of increasing difficulty, ALL answerable only by reading and analysing the passage:
-- (a) Identify [concept/principle/element] from the passage [1-2 marks]
-- (b) Explain how [specific sentence from passage] illustrates [concept] [2 marks]
-- (c) Based on the above case, explain any [three/four] [features/steps/points] of [identified concept] [3-4 marks]
-No standalone "enumerate importance of X" questions. Every mark must be tied to the passage.` : "";
+Use TWO split patterns — ~75% should be 5+3, ~25% should be 2+2+2+2:
+
+PATTERN A — 5+3 split (use for 3 out of 4 questions):
+  (i) [5 marks] — Case/scenario-based:
+    • "[Scenario] — Which [type/security]? Explain any four features" (1+4=5)
+    • "Evaluate three advantages and two disadvantages of [concept] as a [role]" (3+2=5)
+    • "Justify the statement by explaining any five [objectives/reasons]"
+  (ii) [3 marks] — Related sub-topic:
+    • "Explain any three differences between [X] and [Y]"
+    • "State and explain any three [rights/features/elements]"
+    • "Identify [concept] and state any two features"
+
+PATTERN B — 2+2+2+2 split (use for 1 question, typically Q13 as a reading passage):
+  Write a passage of 8-12 sentences about a realistic Indian business situation. Include "(Source (edited): [realistic publication])". Follow with 3-4 sub-questions:
+  (i) [2 marks] — Identify/discuss concepts from the passage (Analysis)
+  (ii) [2 marks] — Mention objectives/features with reference to the case (Understanding)
+  (iii) [2 marks] — Apply/evaluate a specific aspect (Application)
+  (iv) [2 marks] — Suggest/recommend (Analysis)
+All sub-questions must reference the passage.` : "";
 
         sectionInstructions = `${appA}${appB}${appC}`.trim();
     }
@@ -298,21 +378,25 @@ The following topics are "meaning only" in scope. NEVER ask for features, advant
 - Leadership Styles (Democratic, Autocratic, Laissez-faire, Bureaucratic) — only meaning/identification
 - Pricing Strategies (cost-plus, competitive, price-skimming, penetration, value-based) — only meaning/identification
 - Elements of Physical Distribution — only meaning
-- CPA 2023 — only with reference to misleading advertisements
-Digital Banking — features CAN be asked (3 features were tested in official SQP)`;
+- CPA 2019 (amended 2023) — provisions regarding misleading advertisements CAN be asked in detail (penalties, endorser liability, CCPA powers). Other CPA sections: only meaning/identification.
+Digital Banking — features CAN be asked (3 features were tested in official SQP)
+
+HIGH-WEIGHT TOPIC: Banking and Latest Trends in Banking is the MOST frequently tested topic in CISCE competency papers and SQPs. Include at least 3-4 questions on banking across sections, covering: RTGS/NEFT/IMPS differences and features, e-banking features, UPI and digital wallets (meaning only), debit vs credit cards, ATM features, CBS, MMID, bank drafts, SMS alerts.`;
 
     // ── Answer key format ───────────────────────────────────────
     const answerKeyFormat = `
 ANSWER KEY FORMAT (after all questions):
-Write "ANSWER KEY" as a heading.
+Write "ANSWER KEY" as a heading, then "SECTION A — 16 MARKS", "SECTION B — 32 MARKS", "SECTION C — 32 MARKS".
 For each question, provide:
-- The correct answer / expected response
+- For MCQ/True-False/Fill-blank/Analogy: just the answer, e.g. "(c) or Public Deposits"
 - For distinction questions: a 3-column table (Basis | X | Y) with 4 rows
 - For case identification questions: Name of principle/concept + 1-line explanation of why
 - For explain/enumerate questions: Bulleted list of point headings + 1 sentence each
-- For MCQ/True-False/Fill-blank/Analogy: just the answer
-- Include acceptable variants where relevant (e.g., "High geared / Highly geared / Trading on thin equity — all acceptable")
-Do NOT write exhaustive answers. Match the concise style of CISCE marking schemes.`;
+- For Section C 5+3 questions: separate answers for (i) and (ii)
+- Where multiple valid answers exist, note alternatives: "(Also accept: Operating level / Supervisory level)"
+- Include italicised guidance notes like real CISCE marking schemes: "(Candidates are required to explain any four factors. Each point must be explained briefly.)"
+Do NOT write exhaustive answers. Match the concise style of CISCE marking schemes.
+End with: "Note: The above answers are indicative. Accept any valid alternative."`;
 
     // ── Real-world examples to use ──────────────────────────────
     const realWorldExamples = `
@@ -328,11 +412,31 @@ PREFERRED REAL-WORLD EXAMPLES FOR SCENARIOS:
 - Bharat Biotech / Covaxin → Publicity (promotion mix)
 - Diwali seasonal offers → Sales promotion
 - Consumer court cases → CPA 2019, consumer rights
-Use these OR invent similar realistic scenarios with named fictional people (Rajan, Meera, Siddhi, Asha, Vivek).`;
+- Supreme Court firecracker ban → Legal/Political environment (Business Environment)
+- Celebrity endorsing weight loss pills → CPA misleading advertisements, CCPA powers
+- Naval Academy submarine training → Vestibule training / Safety training
+- Tech start-up retaining talent → Sweat equity shares
+- Café owner choosing debit vs credit card → Banking comparison
+- School budget allocation → Budget as a type of plan
+- Mobile phone pricing (high launch → price drop) → Price skimming + Competitive pricing
+- Soft Skills Training Academy → Services and their features
+- RTGS ₹4 lakh transfer → RTGS vs NEFT (Banking)
+- College student using phone payments → UPI / E-Wallet (Banking)
+- Fraudulent ATM withdrawals → E-banking risks, SMS alerts (Banking)
+- Face serum without storage instructions → Right to be informed (Consumer Protection)
+- Builder not giving plot possession → Right to be heard, CDRC (Consumer Protection)
+Use these OR invent similar realistic scenarios with named fictional people (Rajan, Meera, Siddhi, Asha, Vivek, Arjun, Shreya, Prerna).`;
 
     return `You are an expert ISC Commerce question paper setter for Class ${grade} students following the 2026 syllabus.
+Institution: Mitesh Sir's Study Circle, Mumbai
 Subject: ${subject} | Grade: ${grade}${topic ? ` | Topic/Unit: ${topic}` : " | Scope: Cover ALL topics from the provided study material excerpts comprehensively"}
 Total marks: ${marksTarget}
+
+The paper header must read:
+MITESH SIR'S STUDY CIRCLE
+${subject.toUpperCase()} — CLASS ${grade}
+${topic ? topic.toUpperCase() + " TEST" : "PRACTICE TEST"}
+Maximum Marks: ${marksTarget}
 
 ${sectionInstructions}
 
@@ -350,10 +454,12 @@ ${context}
 
 FORMATTING RULES:
 - Do NOT use markdown (no **, no ##, no bullet points in questions)
-- Number questions clearly: Q1, Q2 etc. with sub-parts (i), (ii) or (a), (b)
+- Number Section A as Question 1 (i), (ii), (iii)... Section B as Question 2, 3, 4... Section C as Question 10, 11, 12, 13
 - Show marks in square brackets [1], [2], [4], [8] at the end of each question/part
+- After each question/sub-part, include the cognitive domain in parentheses: (Recall), (Understanding), (Application), (Analysis), (Evaluate)
 - For internal choices write "OR" centred between the two options
 - Write in the formal ISC examination style — same tone as the board paper
+- Use ISC action verbs: Explain, Outline, Elucidate, Illustrate, Discuss, Enumerate, Compare, Evaluate, Justify, Suggest
 - After all questions, write the complete Answer Key
 
 ${answerKeyFormat}
