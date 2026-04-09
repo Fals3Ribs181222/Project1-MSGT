@@ -292,6 +292,14 @@ Deno.serve(async (req: Request) => {
                         // mssc_test_result_student: {{1}} student {{2}} test {{3}} subject {{4}} score {{5}} total {{6}} average
                         await sendTemplateViaMetaAPI(phone, 'mssc_test_result_student', [studentName, testTitle, subject, score, total, average]);
                     }
+                } else if (type === 'login') {
+                    const p = payload || {};
+                    // mssc_login_credentials: {{1}} student_name {{2}} username {{3}} password
+                    await sendTemplateViaMetaAPI(phone, 'mssc_login_credentials', [
+                        p.student_name || 'Student',
+                        p.username     || '',
+                        p.password     || '',
+                    ]);
                 } else {
                     await sendViaMetaAPI(phone, message);
                 }

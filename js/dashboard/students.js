@@ -82,8 +82,11 @@ function renderStudentsTable(students) {
             <td class="data-table__td--main">${window.esc(student.name) || '-'}</td>
             <td class="data-table__td">${window.esc(student.username) || '-'}</td>
             <td class="data-table__td">${window.esc(student.subjects) || '-'}</td>
-            <td class="data-table__td">
+            <td class="data-table__td" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                 <button class="btn btn--primary btn--sm" data-action="detail" data-id="${student.id}">Manage Student</button>
+                <button class="btn btn--sm" data-action="send-login" data-id="${student.id}" style="background:var(--color-whatsapp,#25d366);color:#fff;border:none;" ${student.phone ? '' : 'disabled title="No phone number"'}>
+                    <i class="ri-whatsapp-line"></i> Send Login
+                </button>
             </td>
         </tr>
     `).join('');
@@ -325,23 +328,59 @@ export function init() {
     // Table row delegation — opens detail view
     const tbody = document.getElementById('studentsTableBody');
     if (tbody) {
-        tbody.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action="detail"]');
-            if (!btn) return;
-            const student = allStudents.find(s => s.id === btn.dataset.id);
-            if (student) {
-                openStudentDetail(student, {
-                    onBack:        hideStudentDetail,
-                    onDelete:      (id) => deleteStudent(id, hideStudentDetail),
-                    onNotesUpdate: (id, notes) => {
-                        const cached = allStudents.find(s => s.id === id);
-                        if (cached) cached.teacher_notes = notes;
-                    },
-                    onPhoneUpdate: (id, field, val) => {
-                        const cached = allStudents.find(s => s.id === id);
-                        if (cached) cached[field] = val;
-                    },
-                });
+        tbody.addEventListener('click', async (e) => {
+            const detailBtn = e.target.closest('[data-action="detail"]');
+            if (detailBtn) {
+                const student = allStudents.find(s => s.id === detailBtn.dataset.id);
+                if (student) {
+                    openStudentDetail(student, {
+                        onBack:        hideStudentDetail,
+                        onDelete:      (id) => deleteStudent(id, hideStudentDetail),
+                        onNotesUpdate: (id, notes) => {
+                            const cached = allStudents.find(s => s.id === id);
+                            if (cached) cached.teacher_notes = notes;
+                        },
+                        onPhoneUpdate: (id, field, val) => {
+                            const cached = allStudents.find(s => s.id === id);
+                            if (cached) cached[field] = val;
+                        },
+                    });
+                }
+                return;
+            }
+
+            const loginBtn = e.target.closest('[data-action="send-login"]');
+            if (loginBtn) {
+                const student = allStudents.find(s => s.id === loginBtn.dataset.id);
+                if (!student) return;
+
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Sending...';
+
+                try {
+                    const recipients = window.whatsapp.resolveRecipients(student, 'student');
+                    if (recipients.length === 0) {
+                        alert('No phone number on record for this student.');
+                        return;
+                    }
+                    // Password is always set to username by default (CSV import + manual add)
+                    const result = await window.whatsapp.send({
+                        type: 'login',
+                        recipients,
+                        payload: {
+                            student_name: student.name,
+                            username: student.username || '',
+                            password: student.username || '',
+                        },
+                        sentBy: window.auth.getUser()?.id,
+                    });
+                    alert(`Sent: ${result.sent}, Failed: ${result.failed}`);
+                } catch (err) {
+                    alert('Failed to send: ' + err.message);
+                } finally {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="ri-whatsapp-line"></i> Send Login';
+                }
             }
         });
     }

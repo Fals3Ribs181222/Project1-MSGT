@@ -276,6 +276,37 @@ Keep working hard and giving your best in every class!
 
 ---
 
+## Login Credentials Template
+
+### 9. `mssc_login_credentials` ❌ Not yet created
+
+**Header:** Your Login Details
+
+**Body:**
+```
+Dear {{1}},
+
+Your login credentials for Mitesh Sir's Study Circle portal are ready.
+
+Username: {{2}}
+Password: {{3}}
+
+Visit the link below to log in. We recommend changing your password after your first login.
+```
+
+**Footer:** — Mitesh Sir's Study Circle
+
+**Button:** Visit website → https://www.miteshbhatt.in
+
+**Variable samples:**
+- {{1}} → Ribhhu (student name)
+- {{2}} → ribhhu (username)
+- {{3}} → ribhhu (password)
+
+**Sent from:** Students tab → "Send Login" button per student row (student phone only)
+
+---
+
 ## Planned Templates (not yet created)
 
 | Template name | Type | Variables |
