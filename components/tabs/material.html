@@ -1,7 +1,8 @@
 <header class="panel__header">
     <h2>Materials</h2>
     <div class="pill-toggle">
-        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewMaterials">Materials List</button>
+        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewMaterials">Student Materials</button>
+        <button class="pill-toggle__btn" id="pillViewAiMaterials">AI Materials</button>
         <button class="pill-toggle__btn" id="pillViewTests">Tests</button>
         <button class="pill-toggle__btn" id="pillAddMaterial">+ Upload New</button>
     </div>
@@ -30,6 +31,32 @@
     </div>
     <div class="text-right">
         <button class="btn btn--primary btn--sm" id="btnRefreshMaterials">Refresh List</button>
+    </div>
+</div>
+
+<!-- AI Materials Container -->
+<div id="aiMaterialsListContainer" style="display:none;">
+    <div id="aiMaterialsListStatus" class="status"></div>
+    <div class="table-wrap">
+        <table id="aiMaterialsTable" aria-label="AI materials list">
+            <thead>
+                <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Link</th>
+                </tr>
+            </thead>
+            <tbody id="aiMaterialsTableBody">
+                <tr>
+                    <td colspan="5" class="loading-text">Loading AI materials...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-right">
+        <button class="btn btn--primary btn--sm" id="btnRefreshAiMaterials">Refresh List</button>
     </div>
 </div>
 

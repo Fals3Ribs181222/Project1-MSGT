@@ -1,55 +1,15 @@
 const user = window.auth.getUser();
 
-// Load Materials List handler
-async function loadMaterials() {
-    const tbody = document.getElementById('materialsTableBody');
-    const status = document.getElementById('materialsListStatus');
-    const btnRefresh = document.getElementById('btnRefreshMaterials');
-
-    if (!tbody || !status || !btnRefresh) return;
-
-    btnRefresh.disabled = true;
-    btnRefresh.textContent = 'Refreshing...';
-    window.tableLoading('materialsTableBody', 6, 'Loading materials...');
-
-    const response = await window.api.get('files');
-
-    btnRefresh.disabled = false;
-    btnRefresh.textContent = 'Refresh List';
-
-    const teacherGrade = user.grade;
-    let files = response.data || [];
-    if (teacherGrade && teacherGrade !== 'All Grades') {
-        files = files.filter(f => !f.grade || f.grade === '' || f.grade === teacherGrade);
-    }
-
-    if (files.length > 0) {
-        tbody.innerHTML = files.map(file => `
-        <tr class="data-table__row">
-            <td class="data-table__td--main">${window.esc(file.title) || '-'}</td>
-            <td class="data-table__td">${file.subject || '-'}</td>
-            <td class="data-table__td">${file.grade || 'All'}</td>
-            <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
-            <td class="data-table__td"><a href="${window.safeUrl(file.file_url)}" target="_blank" class="navbar__link">View</a></td>
-        </tr>
-    `).join('');
-    } else {
-        window.tableLoading('materialsTableBody', 6, 'No materials uploaded yet.');
-    }
-
-}
-
-async function loadTests() {
-    const tbody = document.getElementById('testsTableBody');
-    const status = document.getElementById('testsListStatus');
-    const btnRefresh = document.getElementById('btnRefreshTests');
-
+// Generic table loader for files filtered by upload_type
+async function loadFileList({ tbodyId, btnRefreshId, uploadType, emptyMsg }) {
+    const tbody = document.getElementById(tbodyId);
+    const btnRefresh = document.getElementById(btnRefreshId);
     if (!tbody) return;
 
     if (btnRefresh) { btnRefresh.disabled = true; btnRefresh.textContent = 'Refreshing...'; }
-    window.tableLoading('testsTableBody', 5, 'Loading tests...');
+    window.tableLoading(tbodyId, 5, `Loading…`);
 
-    const response = await window.api.get('files', { upload_type: 'test' });
+    const response = await window.api.get('files', { upload_type: uploadType });
 
     if (btnRefresh) { btnRefresh.disabled = false; btnRefresh.textContent = 'Refresh List'; }
 
@@ -59,19 +19,43 @@ async function loadTests() {
         files = files.filter(f => !f.grade || f.grade === '' || f.grade === teacherGrade);
     }
 
-    if (files.length > 0) {
-        tbody.innerHTML = files.map(file => `
+    tbody.innerHTML = files.length > 0
+        ? files.map(file => `
         <tr class="data-table__row">
             <td class="data-table__td--main">${window.esc(file.title) || '-'}</td>
             <td class="data-table__td">${file.subject || '-'}</td>
             <td class="data-table__td">${file.grade || 'All'}</td>
             <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
             <td class="data-table__td"><a href="${window.safeUrl(file.file_url)}" target="_blank" class="navbar__link">View</a></td>
-        </tr>
-    `).join('');
-    } else {
-        window.tableLoading('testsTableBody', 5, 'No tests saved yet. Generate a test in AI Tools and click "Save to Materials".');
-    }
+        </tr>`).join('')
+        : `<tr><td colspan="5" class="loading-text">${emptyMsg}</td></tr>`;
+}
+
+async function loadMaterials() {
+    return loadFileList({
+        tbodyId: 'materialsTableBody',
+        btnRefreshId: 'btnRefreshMaterials',
+        uploadType: 'student',
+        emptyMsg: 'No student materials uploaded yet.',
+    });
+}
+
+async function loadAiMaterials() {
+    return loadFileList({
+        tbodyId: 'aiMaterialsTableBody',
+        btnRefreshId: 'btnRefreshAiMaterials',
+        uploadType: 'ai',
+        emptyMsg: 'No AI training materials uploaded yet.',
+    });
+}
+
+async function loadTests() {
+    return loadFileList({
+        tbodyId: 'testsTableBody',
+        btnRefreshId: 'btnRefreshTests',
+        uploadType: 'test',
+        emptyMsg: 'No tests saved yet. Generate a test in AI Tools and click "Save to Materials".',
+    });
 }
 
 async function loadMaterialComponent() {
@@ -193,32 +177,37 @@ export function init() {
     loadMaterials();
     loadMaterialComponent();
 
-    const btnRefresh = document.getElementById('btnRefreshMaterials');
-    if (btnRefresh) btnRefresh.addEventListener('click', loadMaterials);
-
-    const btnRefreshTests = document.getElementById('btnRefreshTests');
+    const btnRefresh          = document.getElementById('btnRefreshMaterials');
+    const btnRefreshAi        = document.getElementById('btnRefreshAiMaterials');
+    const btnRefreshTests     = document.getElementById('btnRefreshTests');
+    if (btnRefresh)      btnRefresh.addEventListener('click', loadMaterials);
+    if (btnRefreshAi)    btnRefreshAi.addEventListener('click', loadAiMaterials);
     if (btnRefreshTests) btnRefreshTests.addEventListener('click', loadTests);
 
     // Pill Toggle Logic
-    const pillView  = document.getElementById('pillViewMaterials');
-    const pillTests = document.getElementById('pillViewTests');
-    const pillAdd   = document.getElementById('pillAddMaterial');
-    const listContainer  = document.getElementById('materialsListContainer');
-    const testsContainer = document.getElementById('testsListContainer');
-    const addContainer   = document.getElementById('addMaterialContainer');
+    const pillView   = document.getElementById('pillViewMaterials');
+    const pillAi     = document.getElementById('pillViewAiMaterials');
+    const pillTests  = document.getElementById('pillViewTests');
+    const pillAdd    = document.getElementById('pillAddMaterial');
+    const pills      = [pillView, pillAi, pillTests, pillAdd];
 
-    function showOnly(active, containers) {
-        [pillView, pillTests, pillAdd].forEach(p => p?.classList.remove('pill-toggle__btn--active'));
+    const listContainer      = document.getElementById('materialsListContainer');
+    const aiListContainer    = document.getElementById('aiMaterialsListContainer');
+    const testsContainer     = document.getElementById('testsListContainer');
+    const addContainer       = document.getElementById('addMaterialContainer');
+    const containers         = [listContainer, aiListContainer, testsContainer, addContainer];
+
+    function showOnly(active, visible) {
+        pills.forEach(p => p?.classList.remove('pill-toggle__btn--active'));
         active?.classList.add('pill-toggle__btn--active');
-        [listContainer, testsContainer, addContainer].forEach((c, i) => {
-            if (c) c.style.display = containers[i] ? 'block' : 'none';
-        });
-        if (btnRefresh) btnRefresh.style.display = containers[0] ? 'inline-block' : 'none';
+        containers.forEach((c, i) => { if (c) c.style.display = visible[i] ? 'block' : 'none'; });
+        if (btnRefresh) btnRefresh.style.display = visible[0] ? 'inline-block' : 'none';
     }
 
-    pillView?.addEventListener('click',  () => showOnly(pillView,  [true,  false, false]));
-    pillTests?.addEventListener('click', () => { showOnly(pillTests, [false, true,  false]); loadTests(); });
-    pillAdd?.addEventListener('click',   () => showOnly(pillAdd,   [false, false, true]));
+    pillView?.addEventListener('click',  () => showOnly(pillView,  [true,  false, false, false]));
+    pillAi?.addEventListener('click',    () => { showOnly(pillAi,  [false, true,  false, false]); loadAiMaterials(); });
+    pillTests?.addEventListener('click', () => { showOnly(pillTests,[false, false, true,  false]); loadTests(); });
+    pillAdd?.addEventListener('click',   () => showOnly(pillAdd,   [false, false, false, true]));
 }
 
 export function refresh() {

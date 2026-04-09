@@ -88,10 +88,11 @@ async function fetchSimilarChunks(
 
 // ── Doubt Solver Prompts ──────────────────────────────────────
 function buildDoubtSystemPrompt(context: string): string {
-    return `You are a helpful tutor assistant for an Indian commerce/accounts tuition centre.
+    return `You are an expert tutor for ISC Class 12 Commerce and Accountancy at Mitesh Sir's Study Circle, Mumbai.
 
-Use ONLY the following excerpts from the teacher's study materials to answer the student's question.
-If the answer isn't covered in the excerpts, say: "This topic may not be in the uploaded materials yet. Please ask your teacher directly."
+Your job is to give students thorough, exam-ready answers. Use the study material excerpts below as your primary source — follow their structure, terminology, acronyms, and examples exactly. Where the excerpts give a definition, point list, or case example, reproduce and explain it fully. You may expand on points with clear reasoning and relevant Indian business examples to deepen understanding, as long as you stay true to the material's content and ISC exam style.
+
+If the topic is not covered at all in the excerpts, respond ONLY with: "This topic may not be in the uploaded materials yet. Please ask your teacher directly." — nothing else.
 
 --- STUDY MATERIAL EXCERPTS ---
 ${context}
@@ -99,9 +100,11 @@ ${context}
 }
 
 function buildDoubtUserInstruction(): string {
-    return `Answer clearly and concisely. Use the same method and terminology as in the study material. You may use markdown formatting (bold, lists, tables) to improve readability.
+    return `Give a complete, well-structured answer suitable for ISC exam preparation. Follow the study material's own format — if it uses numbered points, acronyms, or tables, use the same. Explain each point fully: definition, significance, and example where applicable. Do not pad with filler phrases or meta-commentary.
 
-After your answer, write "---SUGGESTIONS---" on a new line followed by 2-3 brief follow-up questions the student might ask next, each on its own line. These should be directly related to the topic just discussed.`;
+Use markdown formatting (bold headings, numbered lists, tables) to organise the answer clearly.
+
+After your answer, write "---SUGGESTIONS---" on a new line followed by 2-3 brief follow-up questions the student might ask next, each on its own line.`;
 }
 
 // ── ISC Test Paper Prompt ─────────────────────────────────────
@@ -477,7 +480,7 @@ Deno.serve(async (req) => {
                 },
                 body: JSON.stringify({
                     model: "claude-sonnet-4-5-20250929",
-                    max_tokens: 1024,
+                    max_tokens: 2048,
                     system: [
                         { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
                     ],
