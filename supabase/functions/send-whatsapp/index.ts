@@ -294,8 +294,8 @@ Deno.serve(async (req: Request) => {
                     }
                 } else if (type === 'login') {
                     const p = payload || {};
-                    // mssc_login_credentials: {{1}} student_name {{2}} username {{3}} password
-                    await sendTemplateViaMetaAPI(phone, 'mssc_login_credentials', [
+                    // mssc_welcome_student: {{1}} student_name {{2}} username {{3}} password
+                    await sendTemplateViaMetaAPI(phone, 'mssc_welcome_student', [
                         p.student_name || 'Student',
                         p.username     || '',
                         p.password     || '',
