@@ -85,7 +85,7 @@ function renderStudentsTable(students) {
             <td class="data-table__td" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                 <button class="btn btn--primary btn--sm" data-action="detail" data-id="${student.id}">Manage Student</button>
                 <button class="btn btn--sm" data-action="send-login" data-id="${student.id}" style="background:var(--color-whatsapp,#25d366);color:#fff;border:none;" ${student.phone ? '' : 'disabled title="No phone number"'}>
-                    <i class="ri-whatsapp-line"></i> Send Login
+                    <i class="ri-whatsapp-line"></i> Send Welcome
                 </button>
             </td>
         </tr>
@@ -379,7 +379,7 @@ export function init() {
                     alert('Failed to send: ' + err.message);
                 } finally {
                     loginBtn.disabled = false;
-                    loginBtn.innerHTML = '<i class="ri-whatsapp-line"></i> Send Login';
+                    loginBtn.innerHTML = '<i class="ri-whatsapp-line"></i> Send Welcome';
                 }
             }
         });
