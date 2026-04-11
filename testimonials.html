@@ -82,7 +82,7 @@
             </div>
 
             <!-- Text Testimonials -->
-            <div class="text-section" style="margin-top: 5rem;">
+            <div class="text-section">
                 <div class="masonry-grid" id="textList" role="list">
                     <div class="empty-state" id="loadingMsg">
                         Loading testimonials...
@@ -91,6 +91,22 @@
             </div>
         </section>
     </main>
+
+    <!-- Testimonial full-text modal -->
+    <div id="testimonialModal" class="testimonial-modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="testimonial-modal__backdrop"></div>
+        <div class="testimonial-modal__box">
+            <button class="testimonial-modal__close" aria-label="Close">&times;</button>
+            <p class="testimonial-modal__text" id="testimonialModalText"></p>
+            <div class="testimonials__author" style="border-top:1px solid var(--glass-border);padding-top:1rem;margin-top:1.5rem;">
+                <div class="testimonials__avatar" id="testimonialModalAvatar"></div>
+                <div class="testimonials__author-info">
+                    <h4 id="testimonialModalName"></h4>
+                    <p id="testimonialModalMeta"></p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <footer class="footer">
         <div class="container">
@@ -112,14 +128,14 @@
             const heroMediaContainer = document.getElementById('heroMediaContainer');
             const loadingMsg = document.getElementById('loadingMsg');
 
-            const response = await api.get('testimonials', {}, 'id, student_name, subject, year, testimonial_text, media_url, media_type, created_at');
+            const response = await api.get('testimonials', {}, 'id, student_name, subject, year, testimonial_text, media_url, media_type, youtube_video_id, created_at');
 
             if (response.success && response.data && response.data.length > 0) {
                 loadingMsg.style.display = 'none';
 
                 // Segregate data
-                const videos = response.data.filter(item => item.media_url && item.media_type && item.media_type.startsWith('video/'));
-                const textsAndPhotos = response.data.filter(item => !(item.media_url && item.media_type && item.media_type.startsWith('video/')));
+                const videos = response.data.filter(item => item.youtube_video_id);
+                const textsAndPhotos = response.data.filter(item => !item.youtube_video_id);
 
                 // Render Videos
                 if (videos.length > 0) {
@@ -167,11 +183,12 @@
             card.setAttribute('role', 'listitem');
 
             const mediaWrapper = createElement('div', 'video-card__media');
-            const video = document.createElement('video');
-            video.src = item.media_url;
-            video.controls = true;
-            video.preload = "metadata";
-            mediaWrapper.appendChild(video);
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.youtube.com/embed/${item.youtube_video_id}`;
+            iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+            iframe.setAttribute('allowfullscreen', '');
+            iframe.loading = 'lazy';
+            mediaWrapper.appendChild(iframe);
             card.appendChild(mediaWrapper);
 
             const authorDiv = createElement('div', 'video-card__author');
@@ -215,8 +232,19 @@
                 card.appendChild(mediaWrapper);
             }
 
-            const text = createElement('p', 'testimonials__text', `"${item.testimonial_text || ''}"`);
+            const fullText = item.testimonial_text || '';
+            const LIMIT = 180;
+            const isLong = fullText.length > LIMIT;
+
+            const text = createElement('p', 'testimonials__text', `"${isLong ? fullText.slice(0, LIMIT).trimEnd() + '…"' : fullText ? `"${fullText}"` : ''}"`);
+            text.textContent = isLong ? `"${fullText.slice(0, LIMIT).trimEnd()}…"` : (fullText ? `"${fullText}"` : '');
             card.appendChild(text);
+
+            if (isLong) {
+                const btn = createElement('button', 'testimonials__read-more', 'Read more');
+                btn.addEventListener('click', () => openTestimonialModal(fullText, studentName, item));
+                card.appendChild(btn);
+            }
 
             const authorDiv = createElement('div', 'testimonials__author');
 
@@ -237,6 +265,32 @@
             card.appendChild(authorDiv);
             return card;
         }
+
+        function openTestimonialModal(fullText, studentName, item) {
+            const modal = document.getElementById('testimonialModal');
+            document.getElementById('testimonialModalText').textContent = `"${fullText}"`;
+            document.getElementById('testimonialModalAvatar').textContent = studentName.charAt(0);
+            document.getElementById('testimonialModalName').textContent = studentName;
+            const meta = [item.subject, item.year ? `Batch ${item.year}` : null].filter(Boolean).join(' | ');
+            document.getElementById('testimonialModalMeta').textContent = meta;
+            modal.setAttribute('aria-hidden', 'false');
+            modal.classList.add('testimonial-modal--open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTestimonialModal() {
+            const modal = document.getElementById('testimonialModal');
+            modal.setAttribute('aria-hidden', 'true');
+            modal.classList.remove('testimonial-modal--open');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('testimonialModal');
+            modal.querySelector('.testimonial-modal__close').addEventListener('click', closeTestimonialModal);
+            modal.querySelector('.testimonial-modal__backdrop').addEventListener('click', closeTestimonialModal);
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTestimonialModal(); });
+        });
 
         function setupHeroParallax(items, container) {
             items.forEach((item, index) => {
@@ -278,20 +332,15 @@
                 const depth = 0.5 + Math.random() * 1.5;
                 el.setAttribute('data-depth', depth);
 
-                if (item.media_url) {
-                    if (item.media_type && item.media_type.startsWith('video/')) {
-                        const video = document.createElement('video');
-                        video.src = item.media_url;
-                        video.muted = true;
-                        video.loop = true;
-                        video.autoplay = true;
-                        video.playsInline = true;
-                        el.appendChild(video);
-                    } else {
-                        const img = document.createElement('img');
-                        img.src = item.media_url;
-                        el.appendChild(img);
-                    }
+                if (item.youtube_video_id) {
+                    const img = document.createElement('img');
+                    img.src = `https://img.youtube.com/vi/${item.youtube_video_id}/hqdefault.jpg`;
+                    img.alt = '';
+                    el.appendChild(img);
+                } else if (item.media_url) {
+                    const img = document.createElement('img');
+                    img.src = item.media_url;
+                    el.appendChild(img);
                 } else {
                     // Fallback to text snippet if no media
                     const p = document.createElement('p');

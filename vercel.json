@@ -7,7 +7,5 @@
         { "source": "/seed-tests", "destination": "/", "permanent": false },
         { "source": "/seed-phone", "destination": "/", "permanent": false },
         { "source": "/test-report.js", "destination": "/", "permanent": false },
-        { "source": "/testimonials", "destination": "/", "permanent": false },
-        { "source": "/results", "destination": "/", "permanent": false }
     ]
 }

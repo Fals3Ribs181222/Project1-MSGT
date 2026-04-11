@@ -1,5 +1,11 @@
 const user = window.auth.getUser();
 
+function extractYouTubeId(url) {
+    if (!url) return null;
+    const match = url.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+}
+
 async function loadTestimonials() {
     const tbody = document.getElementById('testimonialsTableBody');
     const status = document.getElementById('testimonialsListStatus');
@@ -19,19 +25,28 @@ async function loadTestimonials() {
 
     if (response.success) {
         if (response.data && response.data.length > 0) {
-            tbody.innerHTML = response.data.reverse().map(t => `
+            tbody.innerHTML = response.data.reverse().map(t => {
+                let mediaCell;
+                if (t.youtube_video_id) {
+                    mediaCell = `<a href="https://www.youtube.com/watch?v=${window.esc(t.youtube_video_id)}" target="_blank" class="navbar__link">Watch Video</a>`;
+                } else if (t.media_url) {
+                    mediaCell = `<a href="${window.safeUrl(t.media_url)}" target="_blank" class="navbar__link">View Photo</a>`;
+                } else {
+                    mediaCell = 'None';
+                }
+                return `
                 <tr class="data-table__row">
                     <td class="data-table__td--main">${window.esc(t.student_name) || '-'}</td>
                     <td class="data-table__td">${window.esc(t.subject) || '-'}</td>
                     <td class="data-table__td">${window.esc(t.year) || '-'}</td>
                     <td class="data-table__td"><div class="text-truncate" style="max-width: 200px;">${DOMPurify.sanitize(t.testimonial_text) || '-'}</div></td>
-                    <td class="data-table__td">${t.media_url ? `<a href="${window.safeUrl(t.media_url)}" target="_blank" class="navbar__link">View Media</a>` : 'None'}</td>
+                    <td class="data-table__td">${mediaCell}</td>
                     <td class="data-table__td">${t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'}</td>
                     <td class="data-table__td">
                         <button class="btn btn--danger btn--sm" onclick="deleteTestimonial('${t.id}', '${t.media_url || ''}')">Delete</button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         } else {
             tbody.innerHTML = '<tr><td colspan="7" class="loading-text">No testimonials found.</td></tr>';
         }
@@ -68,6 +83,7 @@ function attachTestimonialListeners() {
         const btn = document.getElementById('btnAddTestimonial');
         const status = document.getElementById('testimonialStatus');
         const mediaInput = document.getElementById('testimMedia');
+        const youtubeInput = document.getElementById('testimYouTube');
 
         btn.disabled = true;
         btn.textContent = 'Adding...';
@@ -76,7 +92,9 @@ function attachTestimonialListeners() {
         try {
             let mediaUrl = null;
             let mediaType = null;
+            let youtubeVideoId = null;
 
+            // Handle photo upload (images only)
             if (mediaInput.files.length > 0) {
                 const file = mediaInput.files[0];
                 mediaType = file.type;
@@ -96,13 +114,22 @@ function attachTestimonialListeners() {
                 mediaUrl = publicUrl;
             }
 
+            // Handle YouTube URL
+            if (youtubeInput && youtubeInput.value.trim()) {
+                youtubeVideoId = extractYouTubeId(youtubeInput.value.trim());
+                if (!youtubeVideoId) {
+                    throw new Error('Invalid YouTube URL. Please paste a valid YouTube link.');
+                }
+            }
+
             const payload = {
                 student_name: document.getElementById('testimStudentName').value,
                 subject: document.getElementById('testimSubject').value,
                 year: document.getElementById('testimYear').value,
-                testimonial_text: document.getElementById('testimText').value,
+                testimonial_text: document.getElementById('testimText').value.trim() || null,
                 media_url: mediaUrl,
-                media_type: mediaType
+                media_type: mediaType,
+                youtube_video_id: youtubeVideoId
             };
 
             const response = await window.api.post('testimonials', payload);
@@ -131,13 +158,13 @@ window.deleteTestimonial = async function (id, mediaUrl) {
     if (!confirm('Are you sure you want to delete this testimonial?')) return;
 
     try {
-        // 1. Delete from Storage if media exists
+        // Delete from Storage only if a photo was uploaded
         if (mediaUrl) {
             const filePath = mediaUrl.split('/').pop();
             await window.supabaseClient.storage.from('testimonials').remove([`testimonials/${filePath}`]);
         }
 
-        // 2. Delete from Database
+        // Delete from Database
         const { error } = await window.supabaseClient.from('testimonials').delete().eq('id', id);
         if (error) throw error;
 

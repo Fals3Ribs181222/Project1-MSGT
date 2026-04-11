@@ -15,17 +15,23 @@
     </div>
 
     <div class="form__group">
-        <label for="testimText" class="form__label">Testimonial Text *</label>
-        <textarea id="testimText" class="form__control" required placeholder="Enter the testimonial text..."
+        <label for="testimText" class="form__label">Testimonial Text (Optional)</label>
+        <textarea id="testimText" class="form__control" placeholder="Enter the testimonial text..."
             rows="4"></textarea>
     </div>
 
     <div class="form__group">
-        <label for="testimMedia" class="form__label">Media Upload (Photo or Video - Optional)</label>
-        <input type="file" id="testimMedia" class="form__control" accept="image/*,video/*">
+        <label for="testimMedia" class="form__label">Photo Upload (Optional)</label>
+        <input type="file" id="testimMedia" class="form__control" accept="image/*">
         <small class="form__help"
-            style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; display: block;">Upload a student
-            photo or video testimonial.</small>
+            style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; display: block;">Upload a student photo.</small>
+    </div>
+
+    <div class="form__group">
+        <label for="testimYouTube" class="form__label">Video Testimonial — YouTube URL (Optional)</label>
+        <input type="url" id="testimYouTube" class="form__control" placeholder="e.g. https://youtu.be/dQw4w9WgXcQ">
+        <small class="form__help"
+            style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; display: block;">Upload the video to YouTube as <strong>Unlisted</strong>, then paste the link here.</small>
     </div>
 
     <button type="submit" class="btn btn--primary btn--full" id="btnAddTestimonial">Add Testimonial</button>
