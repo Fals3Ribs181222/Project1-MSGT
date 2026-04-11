@@ -38,12 +38,17 @@
                 <input type="text" id="tYear" class="form__control" placeholder="e.g. 2025">
             </div>
             <div class="form__group">
-                <label class="form__label">Testimonial Text *</label>
-                <textarea id="tText" class="form__control" required rows="4" placeholder="Enter testimonial..."></textarea>
+                <label class="form__label">Testimonial Text (Optional)</label>
+                <textarea id="tText" class="form__control" rows="4" placeholder="Enter testimonial..."></textarea>
             </div>
             <div class="form__group">
-                <label class="form__label">Media (Photo or Video — Optional)</label>
-                <input type="file" id="tMedia" class="form__control" accept="image/*,video/*">
+                <label class="form__label">Photo Upload (Optional)</label>
+                <input type="file" id="tMedia" class="form__control" accept="image/*">
+            </div>
+            <div class="form__group">
+                <label class="form__label">Video Testimonial — YouTube URL (Optional)</label>
+                <input type="url" id="tYouTube" class="form__control" placeholder="e.g. https://youtu.be/dQw4w9WgXcQ">
+                <small style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;display:block;">Upload the video to YouTube as <strong>Unlisted</strong>, then paste the link here.</small>
             </div>
             <button type="submit" class="btn btn--primary" id="btnAdd">Add Testimonial</button>
             <div id="addStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
@@ -103,17 +108,26 @@ async function loadList() {
         return;
     }
 
-    tbody.innerHTML = data.map(t => `
+    tbody.innerHTML = data.map(t => {
+        let mediaCell;
+        if (t.youtube_video_id) {
+            mediaCell = `<a href="https://www.youtube.com/watch?v=${t.youtube_video_id}" target="_blank" style="color:var(--primary)">Watch Video</a>`;
+        } else if (t.media_url) {
+            mediaCell = `<a href="${t.media_url}" target="_blank" style="color:var(--primary)">View Photo</a>`;
+        } else {
+            mediaCell = '—';
+        }
+        return `
         <tr>
             <td>${t.student_name || '—'}</td>
             <td>${t.subject || '—'}</td>
             <td>${t.year || '—'}</td>
             <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(t.testimonial_text||'').replace(/"/g,'&quot;')}">${t.testimonial_text || '—'}</td>
-            <td>${t.media_url ? `<a href="${t.media_url}" target="_blank" style="color:var(--primary)">View</a>` : '—'}</td>
+            <td>${mediaCell}</td>
             <td>${t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}</td>
             <td><button class="btn btn--danger btn--sm" onclick="deleteRow('${t.id}','${(t.media_url||'').replace(/'/g,"\\'")}')">Delete</button></td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
 }
 
 window.deleteRow = async function(id, mediaUrl) {
@@ -136,7 +150,7 @@ document.getElementById('testimonialForm').addEventListener('submit', async (e) 
     status.style.display = 'none';
 
     try {
-        let mediaUrl = null, mediaType = null;
+        let mediaUrl = null, mediaType = null, youtubeVideoId = null;
         const mediaInput = document.getElementById('tMedia');
         if (mediaInput.files.length > 0) {
             const file = mediaInput.files[0];
@@ -148,13 +162,21 @@ document.getElementById('testimonialForm').addEventListener('submit', async (e) 
             mediaUrl = publicUrl;
         }
 
+        const ytUrl = document.getElementById('tYouTube').value.trim();
+        if (ytUrl) {
+            const match = ytUrl.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (!match) throw new Error('Invalid YouTube URL. Please paste a valid YouTube link.');
+            youtubeVideoId = match[1];
+        }
+
         const { error } = await client.from('testimonials').insert([{
             student_name: document.getElementById('tName').value.trim(),
             subject: document.getElementById('tSubject').value.trim() || null,
             year: document.getElementById('tYear').value.trim() || null,
-            testimonial_text: document.getElementById('tText').value.trim(),
+            testimonial_text: document.getElementById('tText').value.trim() || null,
             media_url: mediaUrl,
-            media_type: mediaType
+            media_type: mediaType,
+            youtube_video_id: youtubeVideoId
         }]);
         if (error) throw error;
 
