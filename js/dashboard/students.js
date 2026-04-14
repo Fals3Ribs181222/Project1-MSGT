@@ -163,7 +163,7 @@ function hideStudentDetail() {
 
 async function loadAddStudentComponent() {
     try {
-        const response = await fetch('components/add_student');
+        const response = await fetch('components/modals/add_student');
         if (response.ok) {
             const html = await response.text();
             const container = document.getElementById('addStudentContainer');

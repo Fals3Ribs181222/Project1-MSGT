@@ -82,6 +82,15 @@ export async function loadTab(targetId) {
 
 }
 
+export async function prefetchTabs(tabNames) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    for (const name of tabNames) {
+        fetch(`components/tabs/${name}`).catch(() => {});
+        import(`./${name}.js`).catch(() => {});
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+}
+
 export function initRouter(defaultTab) {
     const run = () => {
         const initialTab = location.hash.slice(1);

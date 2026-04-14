@@ -6,6 +6,12 @@
         { "source": "/seed-marks", "destination": "/", "permanent": false },
         { "source": "/seed-tests", "destination": "/", "permanent": false },
         { "source": "/seed-phone", "destination": "/", "permanent": false },
-        { "source": "/test-report.js", "destination": "/", "permanent": false }
+        { "source": "/test-report.js", "destination": "/", "permanent": false },
+        { "source": "/dev/seed-students", "destination": "/", "permanent": false },
+        { "source": "/dev/seed-attendance", "destination": "/", "permanent": false },
+        { "source": "/dev/seed-marks", "destination": "/", "permanent": false },
+        { "source": "/dev/seed-tests", "destination": "/", "permanent": false },
+        { "source": "/dev/seed-phone", "destination": "/", "permanent": false },
+        { "source": "/dev/test-report.js", "destination": "/", "permanent": false }
     ]
 }

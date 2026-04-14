@@ -86,9 +86,12 @@
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
     <script type="module">
-        import { loadTab, initRouter } from "./js/dashboard/router.js";
+        import { loadTab, initRouter, prefetchTabs } from "./js/dashboard/router.js";
         window.loadTab = loadTab;
         initRouter('panel-admin-overview');
+        prefetchTabs([
+            'admin-flags', 'admin-users', 'admin-bulk', 'admin-browse'
+        ]);
     </script>
     <script>
         (async () => {

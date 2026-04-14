@@ -116,6 +116,8 @@ Supabase Auth with JWT. Three roles: **teacher**, **student**, and **admin**. Ro
 
 Single stylesheet [css/styles.css](css/styles.css) using CSS custom properties for theming. No CSS framework.
 
+Before generating any HTML or CSS, read [DESIGN.md](DESIGN.md) for the full design system: color variables, component patterns, spacing rules, and do's/don'ts.
+
 ## Documentation
 
 Detailed documentation in [Documentation/](Documentation/) (22 markdown files):

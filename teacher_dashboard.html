@@ -209,9 +209,13 @@
     <script src="js/app.js"></script>
     <script src="js/whatsapp.js"></script>
     <script type="module">
-        import { loadTab, initRouter } from "./js/dashboard/router.js";
+        import { loadTab, initRouter, prefetchTabs } from "./js/dashboard/router.js";
         window.loadTab = loadTab;
         initRouter('panel-home');
+        prefetchTabs([
+            'students', 'material', 'test', 'announcement',
+            'batches', 'schedule', 'messages', 'ai-tools', 'leaderboard'
+        ]);
     </script>
 
     <!-- Remove logout from navbar — sidebar handles it -->
