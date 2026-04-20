@@ -141,12 +141,9 @@ async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
     const res = await window.api.get('batch_transfers', { to_batch_id: currentBatchId }, '*, profiles:student_id(id, name), batches:from_batch_id(name)');
     if (!res.success || !res.data) return;
 
-    const todaysGuests = res.data.filter(t => {
-        if (t.transfer_date !== dateStr) return false;
-        if (!t.end_date || t.end_date !== dateStr) return false;
-        if (t.reason !== `classId:${classId}`) return false;
-        return true;
-    });
+    const todaysGuests = res.data.filter(t =>
+        t.transfer_date === dateStr && t.reason === `classId:${classId}`
+    );
 
     if (todaysGuests.length === 0) return;
 
