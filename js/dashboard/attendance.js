@@ -121,11 +121,13 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
 
     await mergeTransferredGuests(batchId, classId, statusMap);
 
+    const dateStr = new Date().toISOString().split('T')[0];
     const sentRes = await window.supabaseClient
         .from('whatsapp_log')
         .select('student_id')
-        .eq('class_id', classId)
-        .eq('message_type', 'attendance');
+        .eq('message_type', 'attendance')
+        .gte('sent_at', dateStr + 'T00:00:00')
+        .or(`class_id.eq.${classId},class_id.is.null`);
     if (sentRes.data) {
         const sentIds = new Set(sentRes.data.map(r => r.student_id));
         sentIds.forEach(id => markRowAsSent(id));
