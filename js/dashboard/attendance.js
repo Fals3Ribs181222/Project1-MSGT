@@ -354,30 +354,51 @@ export function init() {
     if (guestBatchSelect) {
         guestBatchSelect.addEventListener('change', async (e) => {
             const batchId = e.target.value;
-            const studentSelect = document.getElementById('guestStudentSelect');
-            studentSelect.innerHTML = '<option value="">Loading...</option>';
-            studentSelect.disabled = true;
+            const listEl = document.getElementById('guestStudentList');
+            const searchInput = document.getElementById('guestStudentSearch');
+            const countEl = document.getElementById('guestSelectedCount');
+
+            listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">Loading...</p>';
+            searchInput.disabled = true;
+            searchInput.value = '';
+            if (countEl) countEl.textContent = '0 selected';
 
             if (!batchId) {
-                studentSelect.innerHTML = '<option value="">Pick a batch first...</option>';
+                listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">Pick a batch first...</p>';
                 return;
             }
 
             const res = await window.api.get('batch_students', { batch_id: batchId }, '*, profiles:student_id(id, name)');
             if (res.success && res.data) {
-                studentSelect.innerHTML = '<option value="">Select student...</option>';
                 const sorted = res.data.filter(m => m.profiles)
                     .sort((a, b) => (a.profiles.name || '').localeCompare(b.profiles.name || ''));
-                sorted.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m.profiles.id;
-                    opt.textContent = m.profiles.name;
-                    opt.dataset.name = m.profiles.name;
-                    studentSelect.appendChild(opt);
+
+                if (sorted.length === 0) {
+                    listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">No students in this batch.</p>';
+                    return;
+                }
+
+                listEl.innerHTML = sorted.map(m => `
+                    <label class="student-picker__item" data-name="${window.esc(m.profiles.name).toLowerCase()}" style="padding:0.4rem 0.5rem;">
+                        <input type="checkbox" class="form__checkbox" value="${m.profiles.id}" data-name="${window.esc(m.profiles.name)}">
+                        <span class="student-picker__name">${window.esc(m.profiles.name)}</span>
+                    </label>
+                `).join('');
+
+                searchInput.disabled = false;
+                searchInput.oninput = () => {
+                    const q = searchInput.value.toLowerCase();
+                    listEl.querySelectorAll('.student-picker__item').forEach(item => {
+                        item.style.display = item.dataset.name.includes(q) ? 'flex' : 'none';
+                    });
+                };
+
+                listEl.addEventListener('change', () => {
+                    const checked = listEl.querySelectorAll('input:checked').length;
+                    if (countEl) countEl.textContent = `${checked} selected`;
                 });
-                studentSelect.disabled = false;
             } else {
-                studentSelect.innerHTML = '<option value="">No students found</option>';
+                listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">Failed to load students.</p>';
             }
         });
     }
@@ -389,91 +410,104 @@ export function init() {
     const btnConfirmGuest = document.getElementById('btnConfirmGuest');
     if (btnConfirmGuest) {
         btnConfirmGuest.addEventListener('click', async () => {
-            const studentId = document.getElementById('guestStudentSelect').value;
+            const listEl = document.getElementById('guestStudentList');
             const fromBatchId = document.getElementById('guestBatchSelect').value;
             const statusEl = document.getElementById('guestStatus');
+            const checked = listEl ? Array.from(listEl.querySelectorAll('input:checked')) : [];
 
-            if (!studentId || !fromBatchId) {
-                statusEl.textContent = 'Please select a batch and student.';
+            if (!fromBatchId || checked.length === 0) {
+                statusEl.textContent = 'Please select a batch and at least one student.';
                 statusEl.className = 'status status--error';
                 statusEl.style.display = 'block';
                 return;
             }
+
+            btnConfirmGuest.disabled = true;
+            btnConfirmGuest.textContent = 'Adding...';
+            statusEl.style.display = 'none';
 
             const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
-
-            const res = await window.api.post('batch_transfers', {
-                student_id: studentId,
-                from_batch_id: fromBatchId,
-                to_batch_id: currentAttendanceBatch,
-                transfer_date: dateStr,
-                reason: `classId:${currentAttendanceClass}`,
-                created_by: user.id
-            });
-
-            if (!res.success) {
-                statusEl.textContent = 'Failed: ' + res.error;
-                statusEl.className = 'status status--error';
-                statusEl.style.display = 'block';
-                return;
-            }
-
-            const studentName = document.getElementById('guestStudentSelect').selectedOptions[0].dataset.name;
             const batchName = document.getElementById('guestBatchSelect').selectedOptions[0].textContent;
             const todayDay = window.DAYS[new Date().getDay()];
-            const transferId = res.data.id;
+            const tbody = document.getElementById('attendanceTableBody');
             const tagStyle = 'display:inline-block; margin-left:0.35rem; padding:0.15rem 0.5rem; border-radius:var(--radius-full); font-size:0.7rem; font-weight:600;';
 
-            const tbody = document.getElementById('attendanceTableBody');
-            const row = document.createElement('tr');
-            row.className = 'att-row';
-            row.dataset.student = studentId;
-            row.dataset.transferId = transferId;
-            row.innerHTML = `
-                <td>
-                    <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
-                        <strong>${window.esc(studentName)}</strong>
-                        <span style="${tagStyle} background:rgba(115,147,179,0.15); color:var(--primary);">Guest</span>
-                        <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${window.esc(batchName)}</span>
-                        <span style="${tagStyle} background:rgba(0,0,0,0.06); color:var(--text-muted);">${todayDay}</span>
-                        <button class="btn-remove-guest" data-id="${transferId}" style="margin-left:auto; background:none; border:none; color:var(--cadmium-red); cursor:pointer; font-size:1.1rem; padding:0 0.3rem;" title="Remove guest">✕</button>
-                    </div>
-                </td>
-                <td style="text-align: right;">
-                    <div class="attendance-toggles">
-                        <label class="attendance-toggle" title="Present">
-                            <input type="radio" name="att_${studentId}" value="present" data-student="${studentId}">
-                            <span class="attendance-toggle__mark">Present</span>
-                        </label>
-                        <label class="attendance-toggle" title="Late">
-                            <input type="radio" name="att_${studentId}" value="late" data-student="${studentId}">
-                            <span class="attendance-toggle__mark">Late</span>
-                        </label>
-                        <label class="attendance-toggle" title="Absent">
-                            <input type="radio" name="att_${studentId}" value="absent" data-student="${studentId}">
-                            <span class="attendance-toggle__mark">Absent</span>
-                        </label>
-                    </div>
-                </td>
-            `;
+            let failed = 0;
+            for (const cb of checked) {
+                const studentId = cb.value;
+                const studentName = cb.dataset.name;
 
-            row.querySelector('.btn-remove-guest')?.addEventListener('click', async () => {
-                if (!confirm('Remove this guest from the roster?')) return;
-                const delRes = await window.api.delete('batch_transfers', transferId);
-                if (delRes.success) { row.remove(); updateSendCheckedBtn(); }
-                else alert('Failed to remove: ' + delRes.error);
-            });
+                const res = await window.api.post('batch_transfers', {
+                    student_id: studentId,
+                    from_batch_id: fromBatchId,
+                    to_batch_id: currentAttendanceBatch,
+                    transfer_date: dateStr,
+                    reason: `classId:${currentAttendanceClass}`,
+                    created_by: user.id
+                });
 
-            tbody.appendChild(row);
+                if (!res.success) { failed++; continue; }
 
+                const transferId = res.data.id;
+                const row = document.createElement('tr');
+                row.className = 'att-row';
+                row.dataset.student = studentId;
+                row.dataset.transferId = transferId;
+                row.innerHTML = `
+                    <td>
+                        <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                            <strong>${window.esc(studentName)}</strong>
+                            <span style="${tagStyle} background:rgba(115,147,179,0.15); color:var(--primary);">Guest</span>
+                            <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${window.esc(batchName)}</span>
+                            <span style="${tagStyle} background:rgba(0,0,0,0.06); color:var(--text-muted);">${todayDay}</span>
+                            <button class="btn-remove-guest" data-id="${transferId}" style="margin-left:auto; background:none; border:none; color:var(--cadmium-red); cursor:pointer; font-size:1.1rem; padding:0 0.3rem;" title="Remove guest">✕</button>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="attendance-toggles">
+                            <label class="attendance-toggle" title="Present">
+                                <input type="radio" name="att_${studentId}" value="present" data-student="${studentId}">
+                                <span class="attendance-toggle__mark">Present</span>
+                            </label>
+                            <label class="attendance-toggle" title="Late">
+                                <input type="radio" name="att_${studentId}" value="late" data-student="${studentId}">
+                                <span class="attendance-toggle__mark">Late</span>
+                            </label>
+                            <label class="attendance-toggle" title="Absent">
+                                <input type="radio" name="att_${studentId}" value="absent" data-student="${studentId}">
+                                <span class="attendance-toggle__mark">Absent</span>
+                            </label>
+                        </div>
+                    </td>
+                `;
+
+                row.querySelector('.btn-remove-guest')?.addEventListener('click', async () => {
+                    if (!confirm('Remove this guest from the roster?')) return;
+                    const delRes = await window.api.delete('batch_transfers', transferId);
+                    if (delRes.success) { row.remove(); updateSendCheckedBtn(); }
+                    else alert('Failed to remove: ' + delRes.error);
+                });
+
+                tbody.appendChild(row);
+            }
+
+            btnConfirmGuest.disabled = false;
+            btnConfirmGuest.textContent = 'Add to Roster';
+
+            const added = checked.length - failed;
             document.getElementById('addGuestForm').style.display = 'none';
             document.getElementById('guestBatchSelect').value = '';
-            document.getElementById('guestStudentSelect').innerHTML = '<option value="">Pick a batch first...</option>';
-            document.getElementById('guestStudentSelect').disabled = true;
+            document.getElementById('guestStudentList').innerHTML = '<p class="loading-text" style="padding:0.5rem;">Pick a batch first...</p>';
+            document.getElementById('guestStudentSearch').disabled = true;
+            document.getElementById('guestStudentSearch').value = '';
+            document.getElementById('guestSelectedCount').textContent = '0 selected';
 
+            updateSendCheckedBtn();
             const saveStatus = document.getElementById('attendanceSaveStatus');
-            saveStatus.textContent = `${studentName} added as guest!`;
-            saveStatus.className = 'status status--success';
+            saveStatus.textContent = failed > 0
+                ? `${added} student(s) added, ${failed} failed.`
+                : `${added} student(s) added as guests!`;
+            saveStatus.className = failed > 0 ? 'status status--error' : 'status status--success';
             saveStatus.style.display = 'block';
             setTimeout(() => saveStatus.style.display = 'none', 3000);
         });
