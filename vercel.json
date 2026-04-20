@@ -1,5 +1,6 @@
 {
     "cleanUrls": true,
+    "outputDirectory": ".",
     "redirects": [
         { "source": "/seed-students", "destination": "/", "permanent": false },
         { "source": "/seed-attendance", "destination": "/", "permanent": false },
