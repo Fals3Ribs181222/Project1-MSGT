@@ -120,6 +120,17 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
     }).join('');
 
     await mergeTransferredGuests(batchId, classId, statusMap);
+
+    const sentRes = await window.supabaseClient
+        .from('whatsapp_log')
+        .select('student_id')
+        .eq('class_id', classId)
+        .eq('message_type', 'attendance');
+    if (sentRes.data) {
+        const sentIds = new Set(sentRes.data.map(r => r.student_id));
+        sentIds.forEach(id => markRowAsSent(id));
+    }
+
     updateSendCheckedBtn();
 }
 
@@ -235,6 +246,7 @@ async function saveAndSendOne(studentId) {
                 date: dateStr,
             },
             sentBy: user.id,
+            classId: currentAttendanceClass,
         });
         return { ok: true };
     } catch (err) {

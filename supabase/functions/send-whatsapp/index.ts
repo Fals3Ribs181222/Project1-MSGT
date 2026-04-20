@@ -136,7 +136,8 @@ async function logMessage(
     recipientName: string,
     recipientType: string,
     preview: string,
-    sentBy: string | null
+    sentBy: string | null,
+    classId: string | null = null,
 ) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -148,6 +149,7 @@ async function logMessage(
         recipient_type: recipientType,
         preview: preview,
         sent_by: sentBy,
+        class_id: classId,
     }]);
 }
 
@@ -270,7 +272,7 @@ Deno.serve(async (req: Request) => {
 
     try {
         const body = await req.json();
-        const { type, recipients, payload, sent_by } = body;
+        const { type, recipients, payload, sent_by, class_id } = body;
 
         if (!type || !recipients || !Array.isArray(recipients) || recipients.length === 0) {
             return new Response(JSON.stringify({ error: 'Missing type or recipients' }), {
@@ -345,6 +347,7 @@ Deno.serve(async (req: Request) => {
                     recipient.role || 'student',
                     logPreview,
                     sent_by || null,
+                    class_id || null,
                 );
 
                 results.push({ phone, success: true });
