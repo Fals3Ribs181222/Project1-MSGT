@@ -38,7 +38,7 @@ async function loadBoardResults() {
 }
 
 async function loadBoardResultComponent() {
-    await window.loadComponent('add_board_result', 'addBoardResultContainer', attachBoardResultListeners);
+    await window.loadComponent('modals/add_board_result.html', 'addBoardResultContainer', attachBoardResultListeners);
 }
 
 function attachBoardResultListeners() {

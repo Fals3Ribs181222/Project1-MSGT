@@ -3857,6 +3857,7 @@ a.dash-sidebar__item {
     border-right: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     background: var(--glass-bg);
 }
 
@@ -3873,6 +3874,7 @@ a.dash-sidebar__item {
 
 .msg-contact-list {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
 }
 
@@ -3952,6 +3954,72 @@ a.dash-sidebar__item {
     padding: 0.1rem 0.45rem;
     border-radius: var(--radius-full);
     margin-top: 0.25rem;
+}
+
+/* ── Student group accordion ───────────────────────────────── */
+.msg-student-group__header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--glass-border);
+    background: var(--bg-surface);
+    transition: background 0.15s;
+}
+
+.msg-student-group__header:hover {
+    background: var(--bg-surface-hover);
+}
+
+.msg-student-group__name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.msg-student-group__count {
+    font-size: 0.7rem;
+    background: rgba(115,147,179,0.15);
+    color: var(--primary);
+    border-radius: var(--radius-full);
+    padding: 0.1rem 0.5rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.msg-student-group__time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.msg-student-group__chevron {
+    font-size: 1rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.msg-student-group--expanded .msg-student-group__chevron {
+    transform: rotate(180deg);
+}
+
+.msg-student-group__contacts {
+    display: none;
+}
+
+.msg-student-group--expanded .msg-student-group__contacts {
+    display: block;
+}
+
+.msg-student-group__contacts .msg-contact-card {
+    padding-left: 1.5rem;
+    background: var(--glass-bg);
 }
 
 /* ── Thread panel (right panel) ────────────────────────────── */

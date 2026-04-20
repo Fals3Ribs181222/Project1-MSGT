@@ -14,7 +14,8 @@ async function loadBatches() {
     btnRefresh.textContent = 'Refreshing...';
     window.tableLoading('batchesTableBody', 6, 'Loading batches...');
 
-    const batchRes = await window.api.get('batches', {}, '*, classes(type, day_of_week, class_date, start_time)');
+    const batchFilter = user && user.grade ? { grade: user.grade } : {};
+    const batchRes = await window.api.get('batches', batchFilter, '*, classes(type, day_of_week, class_date, start_time)');
 
     btnRefresh.disabled = false;
     btnRefresh.textContent = 'Refresh List';
@@ -29,16 +30,14 @@ async function loadBatches() {
                 });
             }
 
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-            tbody.innerHTML = batchRes.data.reverse().map(batch => {
+            tbody.innerHTML = [...batchRes.data].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(batch => {
                 let scheduleStr = 'No schedule';
                 if (batch.classes && batch.classes.length > 0) {
                     const regularClasses = batch.classes.filter(c => c.type === 'regular');
                     if (regularClasses.length > 0) {
                         const schedParts = regularClasses.map(c => {
                             const timeFormat = window.formatTime(c.start_time);
-                            return `${days[c.day_of_week]} ${timeFormat}`;
+                            return `${window.DAYS[c.day_of_week]} ${timeFormat}`;
                         });
                         scheduleStr = [...new Set(schedParts)].join(', ');
                     }
@@ -66,17 +65,8 @@ async function loadBatches() {
     }
 }
 
-function formatTime(timeStr) {
-    if (!timeStr) return '';
-    const [h, m] = timeStr.split(':');
-    let hour = parseInt(h);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12 || 12;
-    return `${hour}:${m} ${ampm}`;
-}
-
 async function loadBatchComponent() {
-    await window.loadComponent('add_batch', 'addBatchContainer', attachBatchFormListeners);
+    await window.loadComponent('modals/add_batch.html', 'addBatchContainer', attachBatchFormListeners);
 }
 
 function attachBatchFormListeners() {
@@ -147,14 +137,13 @@ window.openBatchDetail = async function (batchId, batchName) {
         currentBatchGrade = b.grade || null;
         currentBatchSubject = b.subject || null;
 
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         let scheduleStr = '';
         if (b.classes && b.classes.length > 0) {
             const regularClasses = b.classes.filter(c => c.type === 'regular');
             if (regularClasses.length > 0) {
                 const schedParts = regularClasses.map(c => {
                     const timeFormat = window.formatTime(c.start_time);
-                    return `${days[c.day_of_week]} ${timeFormat}`;
+                    return `${window.DAYS[c.day_of_week]} ${timeFormat}`;
                 });
                 scheduleStr = [...new Set(schedParts)].join(', ');
             }

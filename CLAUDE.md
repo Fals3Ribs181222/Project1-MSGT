@@ -53,7 +53,7 @@ Global API wrapper in [js/app.js](js/app.js) exposes `window.api` (Supabase CRUD
 
 ### Key Modules
 
-All 19 tab modules live in `js/dashboard/` with paired HTML in `components/tabs/`.
+All tab modules live in `js/dashboard/` with paired HTML in `components/tabs/`. There are 30 JS files total: 13 teacher tabs, 8 student tabs, 5 admin tabs, and support modules (home, student-detail, student-import, router).
 
 **Teacher dashboard tabs:**
 
@@ -64,7 +64,7 @@ All 19 tab modules live in `js/dashboard/` with paired HTML in `components/tabs/
 | Batches | `components/tabs/batches.html` | `js/dashboard/batches.js` |
 | Schedule | `components/tabs/schedule.html` | `js/dashboard/schedule.js` |
 | Tests | `components/tabs/test.html` | `js/dashboard/test.js` |
-| Material Upload | `components/tabs/upload.html` | `js/dashboard/upload.js` |
+| Material Upload | `components/tabs/material.html` | `js/dashboard/material.js` |
 | Announcements | `components/tabs/announcement.html` | `js/dashboard/announcement.js` |
 | AI Tools | `components/tabs/ai-tools.html` | `js/dashboard/ai-tools.js` |
 | WhatsApp | `components/tabs/messages.html` | `js/dashboard/messages.js` |
@@ -87,7 +87,7 @@ All 19 tab modules live in `js/dashboard/` with paired HTML in `components/tabs/
 
 ```
 Teacher uploads file
-  → upload.js stores file in Supabase Storage
+  → material.js stores file in Supabase Storage
   → triggers index-material edge function:
       chunks text (400 words, 50-word overlap)
       → Voyage AI embeds each chunk
@@ -105,7 +105,8 @@ Edge functions:
 - [supabase/functions/index-material/index.ts](supabase/functions/index-material/index.ts) — chunking + embedding
 - [supabase/functions/rag-query/index.ts](supabase/functions/rag-query/index.ts) — RAG doubt solver + test generator
 - [supabase/functions/send-whatsapp/index.ts](supabase/functions/send-whatsapp/) — Meta Cloud API delivery (free-form + approved templates)
-- [supabase/functions/generate-report/index.ts](supabase/functions/generate-report/) — legacy report generation
+- [supabase/functions/whatsapp-webhook/index.ts](supabase/functions/whatsapp-webhook/) — receives inbound Meta messages and delivery status updates
+- [supabase/functions/generate-report/index.ts](supabase/functions/generate-report/) — AI report card generation (Claude Haiku)
 - [supabase/functions/admin-api/index.ts](supabase/functions/admin-api/) — privileged admin operations (bypasses RLS via service role key)
 
 ### Authentication & Roles
@@ -120,7 +121,7 @@ Before generating any HTML or CSS, read [DESIGN.md](DESIGN.md) for the full desi
 
 ## Documentation
 
-Detailed documentation in [Documentation/](Documentation/) (22 markdown files):
+Detailed documentation in [Documentation/](Documentation/) (25 markdown files):
 - `01-System-Overview.md` — full tech stack & architecture
 - `02-Authentication-and-Roles.md` — auth flow, roles, RLS
 - `03-Dashboards-and-UI.md` — dashboard structure and UI patterns
@@ -130,7 +131,7 @@ Detailed documentation in [Documentation/](Documentation/) (22 markdown files):
 - `07-Communication-and-Materials.md` — announcements and file sharing
 - `08-Public-Features.md` — public landing page, testimonials, board results
 - `09-Dashboard-Modularization.md` — router & module loading patterns
-- `10-NBLM-Implementation-Plan.md` — NBLM planning notes
+- `10-NBLM-Implementation-Plan.md` — NBLM planning notes (failed/historical)
 - `11-WhatsApp-Notifications.md` — WhatsApp integration (Meta Cloud API)
 - `12-URL-Routing.md` — Vercel clean URL routing
 - `13-AI-Report-Card-Generator.md` — AI report card feature
@@ -142,7 +143,9 @@ Detailed documentation in [Documentation/](Documentation/) (22 markdown files):
 - `19-Admin-Dashboard.md` — admin control panel
 - `20-Teacher-Grade-Access-Control.md` — per-teacher grade scoping
 - `21-Security-Improvements.md` — XSS prevention, security hardening
-- `22-Standalone-Pages.md` — manage_marks, manage-board-results, results, testimonials
+- `22-Standalone-Pages.md` — manage_marks, manage-board-results, manage-testimonials, manage_teachers, results, testimonials
+- `23-WhatsApp-Production-Setup.md` — step-by-step Meta WhatsApp production setup tracker
+- `24-WhatsApp-Templates.md` — approved Meta message templates and parameter mapping
 - `00-CSS-Data.md` — design system & CSS variables
 
 ## Environment Variables
@@ -151,4 +154,5 @@ Edge functions require these secrets (set via `supabase secrets set`):
 - `VOYAGE_API_KEY` — Voyage AI embeddings
 - `ANTHROPIC_API_KEY` — Claude API
 - `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN` — Meta Cloud API (WhatsApp Business)
+- `WHATSAPP_VERIFY_TOKEN` — self-defined token for Meta webhook verification (`whatsapp-webhook` function)
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase access from edge functions

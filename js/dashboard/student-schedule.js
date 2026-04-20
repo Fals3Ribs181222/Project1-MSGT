@@ -64,8 +64,7 @@ async function renderCalendar() {
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + 13);
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    header.textContent = `${monthNames[startDate.getMonth()]} ${startDate.getDate()} – ${monthNames[endDate.getMonth()]} ${endDate.getDate()}, ${endDate.getFullYear()}`;
+    header.textContent = `${window.MONTH_NAMES[startDate.getMonth()]} ${startDate.getDate()} – ${window.MONTH_NAMES[endDate.getMonth()]} ${endDate.getDate()}, ${endDate.getFullYear()}`;
 
     // Remove old day cells (keep header row)
     grid.querySelectorAll('.calendar__day').forEach(c => c.remove());

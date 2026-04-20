@@ -20,7 +20,7 @@ Each major feature of the dashboard has its own distinct HTML file containing on
 - `attendance.html`
 - `batches.html`
 - `schedule.html`
-- `upload.html` (Materials)
+- `material.html` (Materials)
 - `test.html`
 - `announcement.html`
 - `board_results.html`
@@ -32,7 +32,7 @@ The JavaScript logic has been split to correspond 1-to-1 with the HTML component
 - `attendance.js`
 - `batches.js`
 - `schedule.js`
-- `upload.js`
+- `material.js`
 - `test.js`
 - `announcement.js`
 - `board_results.js`

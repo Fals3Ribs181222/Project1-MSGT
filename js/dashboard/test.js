@@ -39,7 +39,7 @@ async function loadTestsList() {
 }
 
 async function loadTestComponent() {
-    await window.loadComponent('add_test', 'addTestContainer', attachTestListeners);
+    await window.loadComponent('modals/add_test.html', 'addTestContainer', attachTestListeners);
 }
 
 function attachTestListeners() {

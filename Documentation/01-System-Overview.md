@@ -5,7 +5,7 @@ The Mitesh Sir's Study Circle project is a web-based educational management syst
 
 ## Technology Stack
 - **Frontend:** HTML5, CSS3, JavaScript (Vanilla JS)
-- **Backend/Database:** Supabase (PostgreSQL)
+- **Backend/Database:** Supabase (PostgreSQL + pgvector extension)
 - **Authentication:** Supabase Auth
 - **Storage:** Supabase Storage (for Materials and Testimonials)
 
@@ -44,10 +44,12 @@ The system revolves around several core entities defined in the database:
 ### AI / RAG Tables
 - **`material_chunks`:** Stores embedded text chunks (pgvector) generated from uploaded study materials. Used for semantic similarity search.
 - **`doubt_cache`:** Caches previous RAG query results to avoid redundant API calls for repeated questions.
-- **`doubt_feedback`:** Stores teacher thumbs-up/down feedback on AI-generated answers.
+- **`doubt_feedback`:** Stores user thumbs-up/down feedback on AI-generated answers.
+- **`question_bank`:** ISC past paper questions with embeddings, used to seed the test generator with real exam questions.
 
-### Messaging Table
-- **`whatsapp_log`:** Audit log of all WhatsApp messages sent via Twilio, including recipient, content, and delivery status.
+### Messaging Tables
+- **`whatsapp_log`:** Audit log of all outbound WhatsApp messages sent via the Meta Cloud API, including recipient, content preview, and sender.
+- **`whatsapp_incoming`:** Stores inbound WhatsApp messages and delivery status events received from Meta webhooks.
 
 ## Security
 

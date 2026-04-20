@@ -168,8 +168,6 @@ export function openStudentDetail(student, callbacks) {
                         .in('id', batchIds);
 
                     if (batches && batches.length > 0) {
-                        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
                         studentReportData.batches = batches.map(b => {
                             let scheduleStr = '';
                             if (b.classes && b.classes.length > 0) {
@@ -177,7 +175,7 @@ export function openStudentDetail(student, callbacks) {
                                 if (regular.length > 0) {
                                     const parts = regular.map(c => {
                                         const t = window.formatTime ? window.formatTime(c.start_time) : c.start_time;
-                                        return `${days[c.day_of_week]} ${t}`;
+                                        return `${window.DAYS[c.day_of_week]} ${t}`;
                                     });
                                     scheduleStr = [...new Set(parts)].join(', ');
                                 }

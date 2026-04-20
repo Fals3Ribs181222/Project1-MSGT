@@ -135,6 +135,10 @@ function safeUrl(url) {
     return url;
 }
 
+// ── Date/Time Constants ───────────────────────────────────────────────────
+window.DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+window.MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 // Expose utilities globally
 window.formatTime = formatTime;
 window.showConfirmModal = showConfirmModal;

@@ -95,6 +95,29 @@ Standalone pages live at the project root and operate outside the tab-based dash
 
 ---
 
+---
+
+## `manage_teachers.html` — `/manage_teachers`
+
+**Purpose:** Assign grade restrictions to teacher accounts.
+
+**Access:** Teacher-only. The page reads the session via `window.auth.requireRole('teacher')` and redirects unauthenticated or student users to login.
+
+**Key behaviour:**
+- Lists all teacher profiles with their current assigned grade
+- **Assign Grade** button opens a modal to set `11th only`, `12th only`, or `All Grades (unrestricted)`
+- Changes are saved immediately to the `profiles` table via `window.api.patch()`
+
+**Key files:**
+| File | Purpose |
+|---|---|
+| `manage_teachers.html` | Full page — layout, grade assignment modal, inline script |
+| `js/dashboard/teachers.js` | Shared module — teacher list and grade assignment logic (also available as a dashboard tab) |
+
+See [20-Teacher-Grade-Access-Control.md](./20-Teacher-Grade-Access-Control.md) for full grade restriction implementation details.
+
+---
+
 ## Summary
 
 | Page | Auth Required | Writes To | Linked From |
@@ -102,5 +125,6 @@ Standalone pages live at the project root and operate outside the tab-based dash
 | `manage_marks` | Teacher | `marks` | Tests tab (Manage Marks button) |
 | `manage-board-results` | None (URL-only) | `board_results` | Not linked |
 | `manage-testimonials` | None (URL-only) | `testimonials` | Not linked |
+| `manage_teachers` | Teacher | `profiles` | Not linked |
 | `results` | None | — | Landing page, navbar |
 | `testimonials` | None | — | Landing page |

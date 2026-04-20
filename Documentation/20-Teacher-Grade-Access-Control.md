@@ -115,13 +115,13 @@ Each module calls `window.auth.getUser()?.grade` at execution time (not module l
 | `js/dashboard/students.js` | `loadStudents()` — student list capped to teacher's grade |
 | `js/dashboard/batches.js` | `loadStudentPicker()` — add-to-batch picker capped to teacher's grade |
 | `js/dashboard/messages.js` | `loadStudentPicker()` — WhatsApp compose student dropdown capped to teacher's grade |
-| `js/dashboard/upload.js` | `loadMaterials()` — materials list capped to teacher's grade |
+| `js/dashboard/material.js` | `loadMaterials()` — materials list capped to teacher's grade |
 
 #### Grade form field locking per module
 
 | Module | Select ID(s) | `populateGradeSelect` call | `lockGradeSelect` call |
 |---|---|---|---|
-| `upload.js` | `#fileGrade` | `populateGradeSelect('fileGrade')` | `lockGradeSelect('fileGrade')` |
+| `material.js` | `#fileGrade` | `populateGradeSelect('fileGrade')` | `lockGradeSelect('fileGrade')` |
 | `batches.js` | `#batchGrade` | `populateGradeSelect('batchGrade', false)` | `lockGradeSelect('batchGrade')` |
 | `ai-tools.js` | `#doubtGrade`, `#testGrade` | `populateGradeSelect('doubtGrade')` + `populateGradeSelect('testGrade', false)` | `lockGradeSelect('doubtGrade', 'testGrade')` |
 | `announcement.js` | `#noticeGrade` | `populateGradeSelect('noticeGrade')` | `lockGradeSelect('noticeGrade')` |

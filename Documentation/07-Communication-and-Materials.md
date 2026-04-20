@@ -10,7 +10,7 @@ The announcements feature serves as an internal noticeboard for the tuition cent
 3.  **WhatsApp Distribution:** When posting, teachers can check "Also send via WhatsApp to parents" to broadcast the announcement to both student and parent phone numbers for the selected grade.
 
 ## WhatsApp Messaging
-The system includes a unified WhatsApp messaging framework powered by Twilio and a single Supabase Edge Function (`send-whatsapp`). Teachers can send messages from multiple touchpoints:
+The system includes a unified WhatsApp messaging framework powered by the Meta Cloud API and a single Supabase Edge Function (`send-whatsapp`). Teachers can send messages from multiple touchpoints:
 
 | Feature | Location | Recipients |
 |---|---|---|
@@ -31,7 +31,7 @@ The dashboard includes a dedicated **Messages** tab with:
 
 | File | Purpose |
 |---|---|
-| `supabase/functions/send-whatsapp/index.ts` | Unified Edge Function — handles all message types via Twilio |
+| `supabase/functions/send-whatsapp/index.ts` | Unified Edge Function — handles all message types via Meta Cloud API |
 | `js/whatsapp.js` | Shared frontend helper (`window.whatsapp.send()`, `resolveRecipients()`, `getLog()`) |
 | `components/tabs/messages.html` | Messages tab UI |
 | `js/dashboard/messages.js` | Messages tab logic |
@@ -52,15 +52,16 @@ Every upload is tagged with an `upload_type` chosen at upload time via a pill to
 |-------|---------|---------------------|----------------|
 | `student` (default) | Study notes, past papers, handouts for students to download | ✅ Yes | ❌ No |
 | `ai` | Training material for the RAG pipeline / paper generator | ❌ No | ✅ Yes |
+| `test` | AI-generated test paper saved from the Test Generator | ❌ No | ❌ No |
 
 - The **student dashboard** (`student-materials.js`) fetches only `upload_type = 'student'` files.
-- The **AI tools paper generator** (`ai-tools.js`) lists only `upload_type = 'ai'` files in its material dropdown.
+- The **AI tools paper generator** (`ai-tools.js`) lists only `upload_type = 'ai'` files in its material dropdown, and saves generated test papers with `upload_type = 'test'`.
 - The RAG indexing call (`index-material` edge function) is only triggered when `upload_type = 'ai'`.
 - Existing files (uploaded before this feature) default to `'student'` — they continue to appear on the student dashboard unchanged.
 
 ### Grade-Scoped Access for Teachers
 If a teacher has been assigned a specific grade:
-- The **materials list** (`upload.js`) only shows files tagged for that grade (or untagged/all-grades files).
+- The **materials list** (`material.js`) only shows files tagged for that grade (or untagged/all-grades files).
 - The **grade dropdown** in the upload form is auto-set to the teacher's grade and locked (replaced by a visual badge) — they cannot upload materials for other grades.
 - **Database RLS** enforces this at the INSERT and DELETE level via the `teacher_grade()` function, so the restriction cannot be bypassed via direct API calls.
 

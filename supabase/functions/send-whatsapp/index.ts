@@ -167,10 +167,8 @@ function resolveAttendanceTemplate(payload: Record<string, string>, recipientNam
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     });
 
-    // Format class start time for display: "10:00 AM"
-    const classTimeDisplay = classTime
-        ? new Date(`1970-01-01T${classTime}:00`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-        : 'N/A';
+    // Format class start time for display: "12.30"
+    const classTimeDisplay = classTime ? classTime.replace(':', '.') : 'N/A';
 
     // ── Grace period logic (active once biometric is connected) ──
     // Rules: punch-in before or ≤10 min after class start → present (no notification)

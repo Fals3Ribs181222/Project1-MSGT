@@ -114,8 +114,8 @@
         const map = new Map();
         for (const s of profiles) {
             if (s.phone) map.set(s.phone.slice(-10), { name: s.name, label: 'Student', studentId: s.id });
-            if (s.father_phone) map.set(s.father_phone.slice(-10), { name: `${s.name}'s Father`, label: 'Parent', studentId: s.id });
-            if (s.mother_phone) map.set(s.mother_phone.slice(-10), { name: `${s.name}'s Mother`, label: 'Parent', studentId: s.id });
+            if (s.father_phone) map.set(s.father_phone.slice(-10), { name: s.father_name || `${s.name}'s Father`, label: 'Parent', studentId: s.id });
+            if (s.mother_phone) map.set(s.mother_phone.slice(-10), { name: s.mother_name || `${s.name}'s Mother`, label: 'Parent', studentId: s.id });
         }
         return map;
     }

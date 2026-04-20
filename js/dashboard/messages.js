@@ -8,7 +8,7 @@ let activePhone = null;
 
 // ── Load student profiles ────────────────────────────────────
 async function loadProfiles() {
-    const res = await window.api.get('profiles', { role: 'student' }, 'id, name, grade, phone, father_phone, mother_phone');
+    const res = await window.api.get('profiles', { role: 'student' }, 'id, name, grade, phone, father_name, father_phone, mother_name, mother_phone');
     if (res.success && res.data) {
         let students = res.data;
         const teacherGrade = user?.grade;
@@ -43,7 +43,30 @@ function windowAvatarColor(ts) {
     return 'var(--text-main)';
 }
 
-// ── Render contact list ──────────────────────────────────────
+// ── Render a single contact card ────────────────────────────
+function renderContactCard(c) {
+    const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length - 1] : null;
+    const preview = lastMsg
+        ? (lastMsg.direction === 'out' ? 'You: ' : '') + (lastMsg.text || '').substring(0, 45)
+        : '';
+    const time = c.lastTimestamp ? formatRelativeTime(c.lastTimestamp) : '';
+    const isActive = c.phone === activePhone ? ' msg-contact-card--active' : '';
+
+    return `
+        <div class="msg-contact-card${isActive}" data-phone="${window.esc(c.phone)}">
+            <div class="msg-contact-card__avatar" style="background:${windowAvatarColor(c.lastIncomingTimestamp)};"></div>
+            <div class="msg-contact-card__body">
+                <div class="msg-contact-card__name">${window.esc(c.displayName)}</div>
+                <div class="msg-contact-card__preview">${window.esc(preview)}</div>
+            </div>
+            <div class="msg-contact-card__meta">
+                <div class="msg-contact-card__time">${time}</div>
+            </div>
+        </div>
+    `;
+}
+
+// ── Render contact list (grouped by student) ─────────────────
 function renderContactList(convos) {
     const list = document.getElementById('msgContactList');
     if (!list) return;
@@ -53,29 +76,64 @@ function renderContactList(convos) {
         return;
     }
 
-    list.innerHTML = convos.map(c => {
-        const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length - 1] : null;
-        const preview = lastMsg
-            ? (lastMsg.direction === 'out' ? 'You: ' : '') + (lastMsg.text || '').substring(0, 45)
-            : '';
-        const time = c.lastTimestamp ? formatRelativeTime(c.lastTimestamp) : '';
-        const isActive = c.phone === activePhone ? ' msg-contact-card--active' : '';
+    // Group conversations by studentId
+    const groups = new Map();
+    const unknowns = [];
 
-        return `
-            <div class="msg-contact-card${isActive}" data-phone="${window.esc(c.phone)}">
-                <div class="msg-contact-card__avatar" style="background:${windowAvatarColor(c.lastIncomingTimestamp)};"></div>
-                <div class="msg-contact-card__body">
-                    <div class="msg-contact-card__name">${window.esc(c.displayName)}</div>
-                    <div class="msg-contact-card__preview">${window.esc(preview)}</div>
+    for (const c of convos) {
+        if (c.studentId) {
+            if (!groups.has(c.studentId)) {
+                const student = allStudentsCache.find(s => s.id === c.studentId);
+                groups.set(c.studentId, { name: student?.name || c.displayName, convos: [] });
+            }
+            groups.get(c.studentId).convos.push(c);
+        } else {
+            unknowns.push(c);
+        }
+    }
+
+    // Sort groups by most recent activity across all contacts in the group
+    const sortedGroups = [...groups.entries()].map(([studentId, group]) => {
+        const lastTs = Math.max(...group.convos.map(c => c.lastTimestamp?.getTime() || 0));
+        return { studentId, name: group.name, convos: group.convos, lastTs };
+    }).sort((a, b) => b.lastTs - a.lastTs);
+
+    let html = '';
+
+    for (const group of sortedGroups) {
+        const lastTs = group.lastTs > 0 ? new Date(group.lastTs) : null;
+        const time = lastTs ? formatRelativeTime(lastTs) : '';
+        const isExpanded = group.convos.some(c => c.phone === activePhone);
+        const expandedClass = isExpanded ? ' msg-student-group--expanded' : '';
+
+        html += `
+            <div class="msg-student-group${expandedClass}" data-student-id="${window.esc(group.studentId)}">
+                <div class="msg-student-group__header">
+                    <div class="msg-student-group__name">${window.esc(group.name)}</div>
+                    <span class="msg-student-group__count">${group.convos.length}</span>
+                    <span class="msg-student-group__time">${time}</span>
+                    <i class="ri-arrow-down-s-line msg-student-group__chevron"></i>
                 </div>
-                <div class="msg-contact-card__meta">
-                    <div class="msg-contact-card__time">${time}</div>
+                <div class="msg-student-group__contacts">
+                    ${group.convos.map(renderContactCard).join('')}
                 </div>
             </div>
         `;
-    }).join('');
+    }
 
-    // Click handlers
+    // Unknown numbers (no studentId) as flat cards at the bottom
+    html += unknowns.map(renderContactCard).join('');
+
+    list.innerHTML = html;
+
+    // Group header toggle
+    list.querySelectorAll('.msg-student-group__header').forEach(header => {
+        header.addEventListener('click', () => {
+            header.closest('.msg-student-group').classList.toggle('msg-student-group--expanded');
+        });
+    });
+
+    // Contact card click → open thread
     list.querySelectorAll('.msg-contact-card').forEach(card => {
         card.addEventListener('click', () => {
             openThread(card.dataset.phone);
@@ -93,6 +151,10 @@ function openThread(phone) {
     document.querySelectorAll('.msg-contact-card').forEach(c => {
         c.classList.toggle('msg-contact-card--active', c.dataset.phone === phone);
     });
+
+    // Auto-expand the parent group if this card is inside one
+    const activeCard = document.querySelector(`.msg-contact-card[data-phone="${phone}"]`);
+    activeCard?.closest('.msg-student-group')?.classList.add('msg-student-group--expanded');
 
     // Mobile: show thread, hide contacts
     document.getElementById('msgLayout')?.classList.add('msg-layout--thread-open');
@@ -386,6 +448,10 @@ function filterContacts(query) {
         c.phone.includes(q)
     );
     renderContactList(filtered);
+    // Auto-expand all groups when a search is active so results are visible
+    document.querySelectorAll('.msg-student-group').forEach(g => {
+        g.classList.add('msg-student-group--expanded');
+    });
 }
 
 // ── Relative time formatting ─────────────────────────────────

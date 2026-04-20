@@ -126,8 +126,7 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
 
 async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
     const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const todayDay = days[new Date().getDay()];
+    const todayDay = window.DAYS[new Date().getDay()];
 
     const res = await window.api.get('batch_transfers', { to_batch_id: currentBatchId }, '*, profiles:student_id(id, name), batches:from_batch_id(name)');
     if (!res.success || !res.data) return;
@@ -297,8 +296,7 @@ export function init() {
 
             const studentName = document.getElementById('guestStudentSelect').selectedOptions[0].dataset.name;
             const batchName = document.getElementById('guestBatchSelect').selectedOptions[0].textContent;
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const todayDay = days[new Date().getDay()];
+            const todayDay = window.DAYS[new Date().getDay()];
             const transferId = res.data.id;
             const tagStyle = 'display:inline-block; margin-left:0.35rem; padding:0.15rem 0.5rem; border-radius:var(--radius-full); font-size:0.7rem; font-weight:600;';
 
@@ -415,13 +413,12 @@ export function init() {
                 statusText.className = 'status status--success';
                 statusText.style.display = 'block';
 
-                // Always show Notify button after saving — notifies all students
                 const btnNotify = document.getElementById('btnNotifyAbsentLate');
                 if (btnNotify) {
                     btnNotify.style.display = 'inline-flex';
                     btnNotify.disabled = false;
                     btnNotify.innerHTML = `<i class="ri-whatsapp-line"></i> Notify via WhatsApp (${records.length})`;
-                    btnNotify._absentLateRecords = records;
+                    btnNotify._records = records;
                 }
 
                 setTimeout(() => {
@@ -435,11 +432,11 @@ export function init() {
         });
     }
 
-    // ── Notify Absent/Late via WhatsApp ──────────────────────────
+    // ── Notify via WhatsApp ──────────────────────────────────────
     const btnNotifyAbsentLate = document.getElementById('btnNotifyAbsentLate');
     if (btnNotifyAbsentLate) {
         btnNotifyAbsentLate.addEventListener('click', async () => {
-            const records = btnNotifyAbsentLate._absentLateRecords;
+            const records = btnNotifyAbsentLate._records;
             if (!records || records.length === 0) return;
 
             const notifyStatus = document.getElementById('notifyAbsentStatus');
@@ -463,7 +460,7 @@ export function init() {
                     notifyStatus.style.display = 'block';
                 }
                 btnNotifyAbsentLate.disabled = false;
-                btnNotifyAbsentLate.innerHTML = '<i class="ri-whatsapp-line"></i> Notify Absent/Late';
+                btnNotifyAbsentLate.innerHTML = '<i class="ri-whatsapp-line"></i> Notify via WhatsApp';
                 return;
             }
 

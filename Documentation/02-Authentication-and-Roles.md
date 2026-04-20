@@ -51,12 +51,17 @@ Teachers with no grade or `All Grades` retain full unrestricted access.
 See [19-Teacher-Grade-Access-Control.md](./19-Teacher-Grade-Access-Control.md) for full implementation details.
 
 ## Security Implementation (RLS)
-The database structure heavily relies on PostgreSQL Row Level Security (RLS). Policies restrict access based on `auth.uid()` and the user's role in the `profiles` table. Helper functions used in policies:
+The database structure heavily relies on PostgreSQL Row Level Security (RLS). Policies restrict access based on `auth.uid()` and the user's role in the `profiles` table. Helper functions used in policies (all `SECURITY DEFINER` to avoid recursive RLS on `profiles`):
 
 - **`public.is_teacher()`** — returns `true` if the current user has role `teacher`. Used in all teacher-only write policies.
-- **`public.is_admin()`** — returns `true` if the current user has role `admin`.
-- **`public.teacher_grade()`** — returns the current teacher's assigned grade. Used in grade-aware INSERT/DELETE policies on the `files` table.
+- **`public.get_my_grade()`** — returns the current user's `grade` value from `profiles`. Marked `STABLE` so PostgreSQL caches the result once per query. Used in all grade-scoped SELECT policies.
+- **`public.get_my_role()`** — returns the current user's `role` value from `profiles`. Marked `STABLE`. Used in grade-scoped SELECT policies.
 
+Grade-scoped SELECT policies are enforced at the database level across all major tables — see [21-Security-Improvements.md](./21-Security-Improvements.md#grade-scoped-rls) for full details.
+
+### Other RLS Notes
 Foreign keys on attribution columns (`posted_by`, `uploaded_by`, `scheduled_by`, `created_by`, `marked_by`) use `ON DELETE SET NULL` so that deleting a user account does not orphan or block related rows.
 
-The `profiles` table also exposes an `auth.refreshProfile()` frontend method that re-syncs the localStorage user cache from the database on every dashboard load, ensuring grade restrictions take effect without requiring a re-login.
+The `auth.refreshProfile()` frontend method re-syncs the localStorage user cache from the database on every dashboard load, ensuring grade restrictions take effect without requiring a re-login.
+
+See [21-Security-Improvements.md](./21-Security-Improvements.md) for full details on the RLS hardening history.

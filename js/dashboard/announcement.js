@@ -36,7 +36,7 @@ async function loadAnnouncements() {
 }
 
 async function loadAnnouncementComponent() {
-    await window.loadComponent('add_announcement', 'addAnnouncementContainer', attachAnnouncementListeners);
+    await window.loadComponent('modals/add_announcement.html', 'addAnnouncementContainer', attachAnnouncementListeners);
 }
 
 function attachAnnouncementListeners() {

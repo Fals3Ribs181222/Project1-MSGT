@@ -114,7 +114,6 @@ function buildCalendarHtml(records) {
     const dates = Object.keys(dateMap).sort();
     if (dates.length === 0) return '';
 
-    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const now = new Date();
     let html = '<div style="display:flex;flex-wrap:wrap;gap:1.5rem;">';
     let cur = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -127,7 +126,7 @@ function buildCalendarHtml(records) {
         const firstDow = new Date(year, month, 1).getDay();
 
         html += `<div style="min-width:200px;">`;
-        html += `<p style="font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin:0 0 0.5rem;">${monthNames[month]} ${year}</p>`;
+        html += `<p style="font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin:0 0 0.5rem;">${window.MONTH_NAMES[month]} ${year}</p>`;
         html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:0.7rem;text-align:center;">`;
         ['S','M','T','W','T','F','S'].forEach(d => { html += `<div style="color:var(--text-muted);padding-bottom:2px;">${d}</div>`; });
         for (let i = 0; i < firstDow; i++) html += '<div></div>';

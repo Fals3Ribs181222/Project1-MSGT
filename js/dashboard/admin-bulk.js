@@ -1,25 +1,4 @@
-async function callAdminApi(action, payload = {}) {
-    const { data: { session } } = await window.supabaseClient.auth.getSession();
-    const res = await fetch(`${window.CONFIG.SUPABASE_URL}/functions/v1/admin-api`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ action, ...payload })
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Admin API error');
-    return json;
-}
-
-function showBulkStatus(elId, msg, type) {
-    const el = document.getElementById(elId);
-    if (!el) return;
-    el.textContent = msg;
-    el.className = `status status--${type}`;
-    el.style.display = 'block';
-}
+import { callAdminApi } from './admin-utils.js';
 
 async function loadDropdowns() {
     // Load batches
@@ -68,7 +47,7 @@ export function init() {
     // Delete attendance for batch
     document.getElementById('btnDeleteAttendance')?.addEventListener('click', () => {
         const batchId = document.getElementById('bulkAttendanceBatch')?.value;
-        if (!batchId) { showBulkStatus('bulkAttendanceStatus', 'Please select a batch.', 'error'); return; }
+        if (!batchId) { window.showStatus('bulkAttendanceStatus', 'Please select a batch.', 'error'); return; }
         const batchName = document.getElementById('bulkAttendanceBatch').selectedOptions[0]?.text || 'selected batch';
         window.showConfirmModal(
             'Delete Attendance',
@@ -76,9 +55,9 @@ export function init() {
             async () => {
                 try {
                     const { deleted } = await callAdminApi('bulk_delete_attendance', { batch_id: batchId });
-                    showBulkStatus('bulkAttendanceStatus', `Deleted ${deleted} attendance records.`, 'success');
+                    window.showStatus('bulkAttendanceStatus', `Deleted ${deleted} attendance records.`, 'success');
                 } catch (err) {
-                    showBulkStatus('bulkAttendanceStatus', `Error: ${err.message}`, 'error');
+                    window.showStatus('bulkAttendanceStatus', `Error: ${err.message}`, 'error');
                 }
             }
         );
@@ -87,7 +66,7 @@ export function init() {
     // Clear marks for test
     document.getElementById('btnDeleteMarks')?.addEventListener('click', () => {
         const testId = document.getElementById('bulkMarksTest')?.value;
-        if (!testId) { showBulkStatus('bulkMarksStatus', 'Please select a test.', 'error'); return; }
+        if (!testId) { window.showStatus('bulkMarksStatus', 'Please select a test.', 'error'); return; }
         const testName = document.getElementById('bulkMarksTest').selectedOptions[0]?.text || 'selected test';
         window.showConfirmModal(
             'Clear Marks',
@@ -95,9 +74,9 @@ export function init() {
             async () => {
                 try {
                     const { deleted } = await callAdminApi('bulk_delete_marks', { test_id: testId });
-                    showBulkStatus('bulkMarksStatus', `Cleared ${deleted} mark records.`, 'success');
+                    window.showStatus('bulkMarksStatus', `Cleared ${deleted} mark records.`, 'success');
                 } catch (err) {
-                    showBulkStatus('bulkMarksStatus', `Error: ${err.message}`, 'error');
+                    window.showStatus('bulkMarksStatus', `Error: ${err.message}`, 'error');
                 }
             }
         );
@@ -106,7 +85,7 @@ export function init() {
     // Delete student account
     document.getElementById('btnDeleteStudent')?.addEventListener('click', () => {
         const userId = document.getElementById('bulkDeleteStudent')?.value;
-        if (!userId) { showBulkStatus('bulkStudentStatus', 'Please select a student.', 'error'); return; }
+        if (!userId) { window.showStatus('bulkStudentStatus', 'Please select a student.', 'error'); return; }
         const studentName = document.getElementById('bulkDeleteStudent').selectedOptions[0]?.text || 'selected student';
         window.showConfirmModal(
             'Delete Student',
@@ -114,10 +93,10 @@ export function init() {
             async () => {
                 try {
                     await callAdminApi('delete_user', { user_id: userId });
-                    showBulkStatus('bulkStudentStatus', 'Student account deleted.', 'success');
+                    window.showStatus('bulkStudentStatus', 'Student account deleted.', 'success');
                     await loadDropdowns();
                 } catch (err) {
-                    showBulkStatus('bulkStudentStatus', `Error: ${err.message}`, 'error');
+                    window.showStatus('bulkStudentStatus', `Error: ${err.message}`, 'error');
                 }
             }
         );
@@ -148,10 +127,10 @@ export function init() {
                 btn.textContent = 'Wiping...';
                 try {
                     const { deleted } = await callAdminApi('wipe_seed_data');
-                    showBulkStatus('bulkWipeStatus', `Wiped ${deleted} student accounts and all linked data.`, 'success');
+                    window.showStatus('bulkWipeStatus', `Wiped ${deleted} student accounts and all linked data.`, 'success');
                     await loadDropdowns();
                 } catch (err) {
-                    showBulkStatus('bulkWipeStatus', `Error: ${err.message}`, 'error');
+                    window.showStatus('bulkWipeStatus', `Error: ${err.message}`, 'error');
                 } finally {
                     btn.disabled = false;
                     btn.textContent = 'Wipe All Seed Data';

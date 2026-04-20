@@ -59,7 +59,7 @@ async function loadTests() {
 }
 
 async function loadMaterialComponent() {
-    await window.loadComponent('add_material', 'addMaterialContainer', attachMaterialListeners);
+    await window.loadComponent('modals/add_material.html', 'addMaterialContainer', attachMaterialListeners);
 }
 
 function attachMaterialListeners() {

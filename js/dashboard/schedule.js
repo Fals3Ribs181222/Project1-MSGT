@@ -11,15 +11,6 @@ let pickerState = {
     end: { hour: '12', min: '00', ampm: 'PM', set: false }
 };
 
-function formatTime(timeStr) {
-    if (!timeStr) return '';
-    const [h, m] = timeStr.split(':');
-    let hour = parseInt(h);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12 || 12;
-    return `${hour}:${m} ${ampm}`;
-}
-
 async function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
     const header = document.getElementById('calendarMonthYear');
@@ -33,8 +24,7 @@ async function renderCalendar() {
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + 13); // 14 days total
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    header.innerHTML = `<span class="cal-range-start">${monthNames[startDate.getMonth()]} ${startDate.getDate()}</span><span class="cal-range-sep"> – </span><span class="cal-range-end">${monthNames[endDate.getMonth()]} ${endDate.getDate()}</span>`;
+    header.innerHTML = `<span class="cal-range-start">${window.MONTH_NAMES[startDate.getMonth()]} ${startDate.getDate()}</span><span class="cal-range-sep"> – </span><span class="cal-range-end">${window.MONTH_NAMES[endDate.getMonth()]} ${endDate.getDate()}</span>`;
 
     const dayCells = grid.querySelectorAll('.calendar__day');
     dayCells.forEach(cell => cell.remove());
@@ -98,8 +88,7 @@ async function renderCalendar() {
                 other.class_group_id === c.class_group_id && other.id !== c.id
             ) : [];
 
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const relatedDays = relatedClasses.map(rc => days[rc.day_of_week]).join(', ');
+            const relatedDays = relatedClasses.map(rc => window.DAYS[rc.day_of_week]).join(', ');
 
             pill.dataset.classData = JSON.stringify({
                 id: c.id,
@@ -107,6 +96,7 @@ async function renderCalendar() {
                 title: c.title,
                 batchName: c.batches ? c.batches.name : 'Unknown Batch',
                 timeSpan: `${window.formatTime(c.start_time)} – ${window.formatTime(c.end_time)}`,
+                startTime: c.start_time.substring(0, 5),
                 type: c.type,
                 notes: c.notes,
                 batch_id: c.batch_id,
@@ -117,7 +107,7 @@ async function renderCalendar() {
                 const data = JSON.parse(e.currentTarget.dataset.classData);
                 await window.loadTab('panel-attendance');
                 if (window.openAttendanceGrid) {
-                    window.openAttendanceGrid(data.id, data.batch_id, data.title, data.batchName, data.timeSpan);
+                    window.openAttendanceGrid(data.id, data.batch_id, data.title, data.batchName, data.startTime);
                 }
             });
 

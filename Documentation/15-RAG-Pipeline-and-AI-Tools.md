@@ -54,7 +54,7 @@ Top 5 chunks above similarity ≥ 0.3 selected
         ↓ no chunks above threshold → "ask your teacher" response
 Chunks + ISC-specific system prompt injected into Claude
         ↓
-Claude (claude-sonnet-4-6) streams answer via SSE
+Claude (claude-sonnet-4-5-20250929) streams answer via SSE
         ↓
 Sources (file titles) and follow-up suggestions returned at stream end
         ↓
@@ -119,7 +119,7 @@ Caches doubt answers to avoid re-embedding and re-querying identical questions.
 
 ### `doubt_feedback` table
 
-Records teacher thumbs up / thumbs down ratings on doubt answers.
+Records thumbs up / thumbs down ratings on doubt answers.
 
 | Column | Type | Description |
 |---|---|---|
@@ -129,10 +129,33 @@ Records teacher thumbs up / thumbs down ratings on doubt answers.
 | `rating` | text | `"up"` or `"down"` |
 | `subject` | text | Subject context |
 | `grade` | text | Grade context |
-| `teacher_id` | uuid | References `profiles(id)` |
+| `user_id` | uuid | References `profiles(id)` — the user who submitted the rating |
 | `created_at` | timestamptz | Timestamp |
 
-**RLS:** Teachers can only insert and read their own feedback rows.
+**RLS:** Any authenticated user can INSERT their own feedback (enforced via `auth.uid() = user_id`). Teachers can SELECT all feedback rows for review.
+
+### `question_bank` table
+
+Stores ISC past paper questions with embeddings. Used by the test generator to ground output in real exam questions.
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `year` | integer | Exam year (nullable) |
+| `subject` | text | e.g. `Commerce`, `Accounts` |
+| `grade` | text | e.g. `11th`, `12th` |
+| `section` | text | ISC section: `A`, `B`, or `C` |
+| `marks` | integer | Mark value of the question |
+| `question_type` | text | Question format (e.g. MCQ, distinction, case-based) |
+| `cog_level` | text | Cognitive level: `balanced`, `recall`, or `application` |
+| `topic_tags` | text[] | Array of topic tags for filtering |
+| `question_text` | text | Full question text |
+| `answer_text` | text | Model answer / answer key |
+| `embedding` | vector(512) | Voyage AI embedding for similarity search |
+| `uploaded_by` | uuid | References `profiles(id)` |
+| `created_at` | timestamptz | Timestamp |
+
+**RLS:** Authenticated users can SELECT, INSERT, and DELETE.
 
 ### `match_chunks` SQL function
 
@@ -176,7 +199,7 @@ $$;
 
 ### `index-material`
 
-**Trigger:** Called automatically from `upload.js` after a file is successfully inserted into the `files` table.
+**Trigger:** Called automatically from `material.js` after a file is successfully inserted into the `files` table.
 
 **Request body:**
 ```json
@@ -450,7 +473,7 @@ The Test Generator UI uses a custom section marks picker (matching the time-pick
 | `supabase/functions/rag-query/index.ts` | Semantic search + Claude prompt builder + SSE streaming response |
 | `js/dashboard/ai-tools.js` | Frontend logic — streaming reader, markdown render, conversation state, feedback, suggestions |
 | `components/tabs/ai-tools.html` | UI for both AI tools — sources, feedback buttons, suggestions container |
-| `js/dashboard/upload.js` | Triggers indexing after successful file upload |
+| `js/dashboard/material.js` | Triggers indexing after successful file upload |
 
 ---
 
@@ -585,7 +608,7 @@ These question patterns appear consistently across years. The AI generator is pr
 
 ## Important Notes
 
-- **Model:** `claude-sonnet-4-6` is used for both doubt solving and test generation.
+- **Model:** `claude-sonnet-4-5-20250929` is used for both doubt solving and test generation.
 - **Streaming:** Doubt mode uses SSE (`text/event-stream`). Test mode uses a standard JSON response (non-streaming).
 - **Similarity threshold:** Doubt mode uses a threshold of `0.3`. Chunks scoring below this are discarded — if none pass, the user is told the topic isn't covered in the uploaded material. Test mode uses `0` (no threshold) to maximise coverage. Similarity is computed in TypeScript via dot-product / magnitude normalisation, not via the `match_chunks` SQL function.
 - **Caching:** Doubt answers are cached for 7 days by question hash + subject + grade. Re-uploading a file clears the cache.

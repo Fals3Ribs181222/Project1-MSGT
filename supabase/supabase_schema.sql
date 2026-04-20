@@ -1,5 +1,8 @@
 -- Supabase Schema for Mitesh Sir's Study Circle
 
+-- Extensions
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
+
 -- 1. Profiles Table (Extends Auth Users)
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
@@ -67,7 +70,7 @@ ALTER TABLE files ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE marks ENABLE ROW LEVEL SECURITY;
 
--- Helper function to check teacher role (SECURITY DEFINER bypasses RLS to prevent recursion)
+-- Helper functions (SECURITY DEFINER bypasses RLS to prevent recursion)
 CREATE OR REPLACE FUNCTION public.is_teacher()
 RETURNS boolean AS $$
   SELECT EXISTS (
@@ -76,44 +79,107 @@ RETURNS boolean AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER;
 
--- Basic Policies (Safe Re-run)
+CREATE OR REPLACE FUNCTION public.get_my_grade()
+RETURNS text AS $$
+  SELECT grade FROM public.profiles WHERE id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS text AS $$
+  SELECT role FROM public.profiles WHERE id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- profiles policies
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
-CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Teachers can manage all profiles" ON profiles;
+
+CREATE POLICY "Grade-scoped profile visibility" ON profiles
+  FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND (
+      profiles.id = auth.uid()
+      OR profiles.role = 'teacher'
+      OR (public.get_my_role() = 'teacher' AND profiles.role = 'student' AND (public.get_my_grade() IS NULL OR public.get_my_grade() = 'All Grades'))
+      OR (public.get_my_role() = 'teacher' AND profiles.role = 'student' AND public.get_my_grade() IS NOT NULL AND public.get_my_grade() <> 'All Grades' AND profiles.grade = public.get_my_grade())
+    )
+  );
 
 DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
 CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
-DROP POLICY IF EXISTS "Teachers can manage all profiles" ON profiles;
-CREATE POLICY "Teachers can manage all profiles" ON profiles FOR ALL 
-USING (public.is_teacher());
+CREATE POLICY "Teachers can insert profiles" ON profiles
+  FOR INSERT WITH CHECK (public.is_teacher());
 
+CREATE POLICY "Teachers can update profiles" ON profiles
+  FOR UPDATE USING (public.is_teacher());
+
+CREATE POLICY "Teachers can delete profiles" ON profiles
+  FOR DELETE USING (public.is_teacher());
+
+-- announcements policies
 DROP POLICY IF EXISTS "Public announcements are viewable by everyone" ON announcements;
-CREATE POLICY "Public announcements are viewable by everyone" ON announcements FOR SELECT USING (true);
 
+CREATE POLICY "Grade-scoped announcement visibility" ON announcements
+  FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND (
+      announcements.grade IS NULL
+      OR (public.get_my_role() = 'teacher' AND (public.get_my_grade() IS NULL OR public.get_my_grade() = 'All Grades'))
+      OR (public.get_my_role() = 'teacher' AND public.get_my_grade() IS NOT NULL AND public.get_my_grade() <> 'All Grades' AND announcements.grade = public.get_my_grade())
+      OR (public.get_my_role() = 'student' AND announcements.grade = public.get_my_grade())
+    )
+  );
+
+-- files policies
 DROP POLICY IF EXISTS "Public files are viewable by everyone" ON files;
-CREATE POLICY "Public files are viewable by everyone" ON files FOR SELECT USING (true);
 
+CREATE POLICY "Grade-scoped file visibility" ON files
+  FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND (
+      (files.grade IS NULL OR files.grade = '')
+      OR (public.get_my_role() = 'teacher' AND (public.get_my_grade() IS NULL OR public.get_my_grade() = 'All Grades'))
+      OR (public.get_my_role() = 'teacher' AND public.get_my_grade() IS NOT NULL AND public.get_my_grade() <> 'All Grades' AND files.grade = public.get_my_grade())
+      OR (public.get_my_role() = 'student' AND files.grade = public.get_my_grade())
+    )
+  );
+
+-- tests policies
 DROP POLICY IF EXISTS "Public tests are viewable by everyone" ON tests;
-CREATE POLICY "Public tests are viewable by everyone" ON tests FOR SELECT USING (true);
 
+CREATE POLICY "Grade-scoped test visibility" ON tests
+  FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND (
+      (public.get_my_role() = 'teacher' AND (public.get_my_grade() IS NULL OR public.get_my_grade() = 'All Grades'))
+      OR (public.get_my_role() = 'teacher' AND public.get_my_grade() IS NOT NULL AND public.get_my_grade() <> 'All Grades' AND tests.grade = public.get_my_grade())
+      OR (public.get_my_role() = 'student' AND tests.grade = public.get_my_grade())
+    )
+  );
+
+-- marks policies (open for now — future hardening target)
 DROP POLICY IF EXISTS "Public marks are viewable by everyone" ON marks;
 CREATE POLICY "Public marks are viewable by everyone" ON marks FOR SELECT USING (true);
 
 -- Teacher-only writes (using is_teacher() to avoid recursion)
 DROP POLICY IF EXISTS "Teachers can insert announcements" ON announcements;
-CREATE POLICY "Teachers can insert announcements" ON announcements FOR INSERT 
+CREATE POLICY "Teachers can insert announcements" ON announcements FOR INSERT
 WITH CHECK (public.is_teacher());
 
 DROP POLICY IF EXISTS "Teachers can insert files" ON files;
-CREATE POLICY "Teachers can insert files" ON files FOR INSERT 
+CREATE POLICY "Teachers can insert files" ON files FOR INSERT
 WITH CHECK (public.is_teacher());
 
 DROP POLICY IF EXISTS "Teachers can insert tests" ON tests;
-CREATE POLICY "Teachers can insert tests" ON tests FOR INSERT 
+CREATE POLICY "Teachers can insert tests" ON tests FOR INSERT
 WITH CHECK (public.is_teacher());
 
 DROP POLICY IF EXISTS "Teachers can manage marks" ON marks;
-CREATE POLICY "Teachers can manage marks" ON marks FOR ALL 
+CREATE POLICY "Teachers can manage marks" ON marks FOR ALL
 USING (public.is_teacher());
 
 -- 6. Automatic Profile Creation Trigger
@@ -217,7 +283,17 @@ CREATE TABLE IF NOT EXISTS batches (
 ALTER TABLE batches ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public batches are viewable by everyone" ON batches;
-CREATE POLICY "Public batches are viewable by everyone" ON batches FOR SELECT USING (true);
+
+CREATE POLICY "Grade-scoped batch visibility" ON batches
+  FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND (
+      (public.get_my_role() = 'teacher' AND (public.get_my_grade() IS NULL OR public.get_my_grade() = 'All Grades'))
+      OR (public.get_my_role() = 'teacher' AND public.get_my_grade() IS NOT NULL AND public.get_my_grade() <> 'All Grades' AND batches.grade = public.get_my_grade())
+      OR (public.get_my_role() = 'student' AND batches.grade = public.get_my_grade())
+    )
+  );
 
 DROP POLICY IF EXISTS "Teachers can manage batches" ON batches;
 CREATE POLICY "Teachers can manage batches" ON batches FOR ALL
@@ -235,7 +311,19 @@ CREATE TABLE IF NOT EXISTS batch_students (
 ALTER TABLE batch_students ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public batch students are viewable by everyone" ON batch_students;
-CREATE POLICY "Public batch students are viewable by everyone" ON batch_students FOR SELECT USING (true);
+
+CREATE POLICY "Grade-scoped batch_students visibility" ON batch_students
+  FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND (
+      (public.get_my_role() = 'teacher' AND (public.get_my_grade() IS NULL OR public.get_my_grade() = 'All Grades'))
+      OR (public.get_my_role() = 'teacher' AND public.get_my_grade() IS NOT NULL AND public.get_my_grade() <> 'All Grades'
+          AND batch_students.batch_id IN (SELECT id FROM public.batches WHERE grade = public.get_my_grade()))
+      OR (public.get_my_role() = 'student'
+          AND batch_students.batch_id IN (SELECT id FROM public.batches WHERE grade = public.get_my_grade()))
+    )
+  );
 
 DROP POLICY IF EXISTS "Teachers can manage batch students" ON batch_students;
 CREATE POLICY "Teachers can manage batch students" ON batch_students FOR ALL
@@ -260,7 +348,19 @@ CREATE TABLE IF NOT EXISTS classes (
 ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public classes are viewable by everyone" ON classes;
-CREATE POLICY "Public classes are viewable by everyone" ON classes FOR SELECT USING (true);
+
+CREATE POLICY "Grade-scoped class visibility" ON classes
+  FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND (
+      (public.get_my_role() = 'teacher' AND (public.get_my_grade() IS NULL OR public.get_my_grade() = 'All Grades'))
+      OR (public.get_my_role() = 'teacher' AND public.get_my_grade() IS NOT NULL AND public.get_my_grade() <> 'All Grades'
+          AND classes.batch_id IN (SELECT id FROM public.batches WHERE grade = public.get_my_grade()))
+      OR (public.get_my_role() = 'student'
+          AND classes.batch_id IN (SELECT id FROM public.batches WHERE grade = public.get_my_grade()))
+    )
+  );
 
 DROP POLICY IF EXISTS "Teachers can manage classes" ON classes;
 CREATE POLICY "Teachers can manage classes" ON classes FOR ALL
@@ -282,7 +382,18 @@ CREATE TABLE IF NOT EXISTS attendance (
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public attendance is viewable by everyone" ON attendance;
-CREATE POLICY "Public attendance is viewable by everyone" ON attendance FOR SELECT USING (true);
+
+CREATE POLICY "Grade-scoped attendance visibility" ON attendance
+  FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND (
+      (public.get_my_role() = 'teacher' AND (public.get_my_grade() IS NULL OR public.get_my_grade() = 'All Grades'))
+      OR (public.get_my_role() = 'teacher' AND public.get_my_grade() IS NOT NULL AND public.get_my_grade() <> 'All Grades'
+          AND attendance.batch_id IN (SELECT id FROM public.batches WHERE grade = public.get_my_grade()))
+      OR (public.get_my_role() = 'student' AND attendance.student_id = auth.uid())
+    )
+  );
 
 DROP POLICY IF EXISTS "Teachers can manage attendance" ON attendance;
 CREATE POLICY "Teachers can manage attendance" ON attendance FOR ALL
@@ -407,6 +518,8 @@ SELECT
 FROM student_stats ss
 LEFT JOIN class_avg_cte ca ON ca.grade = ss.grade;
 
+ALTER VIEW public.student_rankings SET (security_invoker = true);
+
 -- 18. Rank History (weekly snapshots for movement tracking)
 CREATE TABLE IF NOT EXISTS rank_history (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -447,3 +560,144 @@ CREATE POLICY "Users can insert own feedback" ON doubt_feedback
 DROP POLICY IF EXISTS "Teachers can view all feedback" ON doubt_feedback;
 CREATE POLICY "Teachers can view all feedback" ON doubt_feedback
   FOR SELECT USING (public.is_teacher());
+
+-- 20. Material Chunks (RAG / pgvector)
+CREATE TABLE IF NOT EXISTS material_chunks (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  file_id     UUID REFERENCES files(id) ON DELETE CASCADE,
+  chunk_index INTEGER NOT NULL,
+  content     TEXT NOT NULL,
+  embedding   vector(512),
+  subject     TEXT,
+  grade       TEXT,
+  teacher_id  UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS material_chunks_embedding_idx
+  ON material_chunks USING ivfflat (embedding vector_cosine_ops);
+
+ALTER TABLE material_chunks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role full access on material_chunks" ON material_chunks;
+CREATE POLICY "Service role full access on material_chunks" ON material_chunks
+  FOR ALL USING (true);
+
+-- 21. WhatsApp Log (Outbound Message History)
+CREATE TABLE IF NOT EXISTS whatsapp_log (
+  id             UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id     UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  message_type   TEXT DEFAULT 'report',
+  preview        TEXT,
+  sent_by        UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  sent_at        TIMESTAMPTZ DEFAULT NOW(),
+  recipient_phone TEXT,
+  recipient_name  TEXT,
+  recipient_type  TEXT DEFAULT 'student'
+);
+
+ALTER TABLE whatsapp_log ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Teachers can view whatsapp log" ON whatsapp_log;
+CREATE POLICY "Teachers can view whatsapp log" ON whatsapp_log
+  FOR SELECT USING (public.is_teacher());
+
+DROP POLICY IF EXISTS "Service role can insert whatsapp log" ON whatsapp_log;
+CREATE POLICY "Service role can insert whatsapp log" ON whatsapp_log
+  FOR INSERT WITH CHECK (true);
+
+-- 22. Feature Flags (Admin-Controlled Feature Toggles)
+CREATE TABLE IF NOT EXISTS feature_flags (
+  key         TEXT PRIMARY KEY,
+  enabled     BOOLEAN NOT NULL DEFAULT true,
+  label       TEXT NOT NULL,
+  description TEXT,
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE feature_flags ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can read feature flags" ON feature_flags;
+CREATE POLICY "Public can read feature flags" ON feature_flags
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Service role can manage feature flags" ON feature_flags;
+CREATE POLICY "Service role can manage feature flags" ON feature_flags
+  FOR ALL USING (true);
+
+-- Seed default feature flags (idempotent)
+INSERT INTO feature_flags (key, label, enabled) VALUES
+  ('ai_tools_enabled',       'AI Tools',          true),
+  ('announcements_enabled',  'Announcements',     true),
+  ('attendance_enabled',     'Attendance',        true),
+  ('batches_enabled',        'Batches',           true),
+  ('leaderboard_enabled',    'Leaderboard',       true),
+  ('materials_enabled',      'Materials',         true),
+  ('messages_enabled',       'WhatsApp Messages', true),
+  ('schedule_enabled',       'Schedule',          true),
+  ('student_portal_enabled', 'Student Portal',    true),
+  ('students_enabled',       'Students',          true),
+  ('tests_enabled',          'Tests',             true)
+ON CONFLICT (key) DO NOTHING;
+
+-- 23. Question Bank (ISC Past Paper Questions)
+CREATE TABLE IF NOT EXISTS question_bank (
+  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  year          INTEGER,
+  subject       TEXT NOT NULL,
+  grade         TEXT NOT NULL,
+  section       TEXT NOT NULL,
+  marks         INTEGER NOT NULL,
+  question_type TEXT NOT NULL,
+  cog_level     TEXT NOT NULL DEFAULT 'balanced',
+  topic_tags    TEXT[] DEFAULT '{}',
+  question_text TEXT NOT NULL,
+  answer_text   TEXT NOT NULL,
+  embedding     vector(512),
+  uploaded_by   UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE question_bank ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can read question bank" ON question_bank;
+CREATE POLICY "Authenticated users can read question bank" ON question_bank
+  FOR SELECT USING (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Authenticated users can insert question bank" ON question_bank;
+CREATE POLICY "Authenticated users can insert question bank" ON question_bank
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Authenticated users can delete question bank" ON question_bank;
+CREATE POLICY "Authenticated users can delete question bank" ON question_bank
+  FOR DELETE USING (auth.role() = 'authenticated');
+
+-- 24. WhatsApp Incoming (Inbound Webhook Messages)
+-- Note: Also created via migration 20260325000000_create_whatsapp_incoming.sql
+CREATE TABLE IF NOT EXISTS whatsapp_incoming (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type   TEXT,
+  from_number  TEXT,
+  message_text TEXT,
+  raw_payload  JSONB,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE whatsapp_incoming ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Teachers can view incoming messages" ON whatsapp_incoming;
+CREATE POLICY "Teachers can view incoming messages" ON whatsapp_incoming
+  FOR SELECT USING (public.is_teacher());
+
+DROP POLICY IF EXISTS "Service role can insert incoming messages" ON whatsapp_incoming;
+CREATE POLICY "Service role can insert incoming messages" ON whatsapp_incoming
+  FOR INSERT WITH CHECK (true);
+
+-- 25. profiles.teacher_notes (Private Teacher Notes per Student)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS teacher_notes TEXT;
+
+-- 26. files.upload_type — expand constraint to include 'test' (AI-generated test papers)
+ALTER TABLE files DROP CONSTRAINT IF EXISTS files_upload_type_check;
+ALTER TABLE files ADD CONSTRAINT files_upload_type_check
+  CHECK (upload_type IN ('student', 'ai', 'test'));
+
