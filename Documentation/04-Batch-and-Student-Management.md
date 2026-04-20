@@ -24,9 +24,9 @@ Teachers can delete a student from the student detail view. The delete button ca
 ### Grade-Scoped Access
 If a teacher has been assigned a specific grade (`11th` or `12th`) via the Manage Teachers page:
 - The **batch list** (`batches.js`) queries only batches matching the teacher's grade — the grade filter is passed as a server-side query parameter, not filtered client-side.
-- The **batch list** displays batches sorted **alphabetically by name**.
+- The **batch list** displays batches sorted **alphabetically by name**. The batch filter dropdown in the Students tab and all batch dropdowns (attendance, schedule) are also sorted alphabetically.
 - The **student list** (`students.js`) is filtered to show only students of that grade.
-- The **add-to-batch student picker** (`batches.js`) only shows students of that grade.
+- The **add-to-batch student picker** (`batches.js`) only shows students of that grade, sorted alphabetically by name. The batch members table is also sorted alphabetically.
 - The **batch creation form** has the grade dropdown locked to the teacher's assigned grade.
 
 This grade scoping is also enforced at the **database level via RLS** — even a direct API call without a grade filter will only return batches for the teacher's assigned grade. See [21-Security-Improvements.md](./21-Security-Improvements.md#grade-scoped-rls).

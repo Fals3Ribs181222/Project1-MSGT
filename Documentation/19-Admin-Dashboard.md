@@ -76,7 +76,7 @@ Dropdown of 15 whitelisted tables. "Load" fetches 50 rows at a time via `browse_
 
 **Location:** `supabase/functions/admin-api/index.ts`
 
-**Auth pattern:** The browser sends `Authorization: Bearer <session.access_token>`. The function creates a user-scoped Supabase client, looks up `profiles.role` for `auth.uid()`, and rejects (403) if the role is not `admin`. All subsequent DB operations use a service-role client that bypasses RLS.
+**Auth pattern:** The browser sends `Authorization: Bearer <session.access_token>` plus `apikey: <anon_key>`. The function extracts the Bearer token and calls `adminClient.auth.getUser(token)` (service-role client) to verify the JWT and resolve the caller's user ID. It then looks up `profiles.role` for that user and rejects (403) if the role is not `admin` (or not `teacher`/`admin` for teacher-accessible actions). All subsequent DB operations use the same service-role client, bypassing RLS. The function must be deployed with `--no-verify-jwt` since it handles JWT verification internally.
 
 **Supported actions:**
 

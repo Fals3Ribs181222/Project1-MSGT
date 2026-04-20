@@ -45,10 +45,24 @@ Deno.serve(async (req: Request) => {
 
                     // Incoming messages
                     for (const message of value?.messages ?? []) {
+                        let messageText: string | null = null;
+                        if (message.type === 'text') {
+                            messageText = message?.text?.body ?? null;
+                        } else if (message.type === 'reaction') {
+                            messageText = message?.reaction?.emoji ?? '👍';
+                        } else if (message.type === 'image') {
+                            messageText = '📷 Image';
+                        } else if (message.type === 'audio') {
+                            messageText = '🎤 Voice message';
+                        } else if (message.type === 'document') {
+                            messageText = '📄 Document';
+                        } else if (message.type === 'video') {
+                            messageText = '🎥 Video';
+                        }
                         await supabase.from('whatsapp_incoming').insert({
                             event_type: 'message',
                             from_number: message.from,
-                            message_text: message?.text?.body ?? null,
+                            message_text: messageText,
                             raw_payload: body,
                         });
                     }

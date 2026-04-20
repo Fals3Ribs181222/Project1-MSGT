@@ -26,7 +26,9 @@ async function loadConversations() {
     if (list) list.innerHTML = '<p style="padding:2rem 1rem;text-align:center;color:var(--text-muted);">Loading...</p>';
 
     try {
-        conversations = await window.whatsapp.getConversations(allStudentsCache);
+        const all = await window.whatsapp.getConversations(allStudentsCache);
+        // Only show contacts linked to this teacher's grade; drop unknown numbers from other grades
+        conversations = all.filter(c => c.studentId !== null);
         renderContactList(conversations);
     } catch (err) {
         if (list) list.innerHTML = `<p style="padding:2rem 1rem;text-align:center;color:var(--text-muted);">Error: ${window.esc(err.message)}</p>`;

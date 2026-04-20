@@ -146,9 +146,38 @@ async function logMessage(
         recipient_phone: recipientPhone,
         recipient_name: recipientName,
         recipient_type: recipientType,
-        preview: preview.substring(0, 120),
+        preview: preview,
         sent_by: sentBy,
     }]);
+}
+
+// ── Render template preview (mirrors Meta template bodies) ───
+function renderTemplatePreview(name: string, params: string[]): string {
+    const p = (i: number) => params[i] ?? '';
+    const footer = '\n\n— Mitesh Sir\'s Study Circle';
+
+    switch (name) {
+        case 'mssc_attendance_absent_parent':
+            return `Dear ${p(0)},\n\n${p(1)} did not attend class on ${p(2)}.\n\nBatch: ${p(3)}\nClass time: ${p(4)}\n\nPlease ensure ${p(5)} is present next class.${footer}`;
+        case 'mssc_attendance_absent_student':
+            return `Dear ${p(0)},\n\nYou did not attend class on ${p(1)}.\n\nBatch: ${p(2)}\nClass time: ${p(3)}\n\nPlease make sure to attend next class.${footer}`;
+        case 'mssc_attendance_late_parent':
+            return `Dear ${p(0)},\n\n${p(1)} arrived late to class on ${p(2)}.\n\nBatch: ${p(3)}\nClass time: ${p(4)}\nArrived at: ${p(5)}\n\nPlease ensure ${p(6)} arrives on time.${footer}`;
+        case 'mssc_attendance_late_student':
+            return `Dear ${p(0)},\n\nYou arrived late to class on ${p(1)}.\n\nBatch: ${p(2)}\nClass time: ${p(3)}\nArrived at: ${p(4)}\n\nPlease try to arrive on time next class.${footer}`;
+        case 'mssc_attendance_present_parent':
+            return `Dear ${p(0)},\n\n${p(1)} attended class on ${p(2)}.\n\nBatch: ${p(3)}\nClass time: ${p(4)}\nArrived at: ${p(5)}\n\nThank you and have a great day!${footer}`;
+        case 'mssc_attendance_present_student':
+            return `Dear ${p(0)},\n\nYou attended class on ${p(1)}.\n\nBatch: ${p(2)}\nClass time: ${p(3)}\nArrived at: ${p(4)}\n\nSee you next class!${footer}`;
+        case 'mssc_test_result_parent':
+            return `Dear ${p(0)},\n\nWe are writing to share the latest test result for your child ${p(1)}.\n\nTest: ${p(2)}\nSubject: ${p(3)}\nMarks: ${p(4)}/${p(5)}\nClass Average: ${p(6)}\n\nThank you for your continued support in ${p(7)}'s learning journey.${footer}`;
+        case 'mssc_test_result_student':
+            return `Dear ${p(0)},\n\nYour latest test result is now available.\n\nTest: ${p(1)}\nSubject: ${p(2)}\nMarks: ${p(3)}/${p(4)}\nClass Average: ${p(5)}\n\nKeep working hard and giving your best in every class!${footer}`;
+        case 'mssc_welcome_student':
+            return `Dear ${p(0)},\n\nWelcome to Mitesh Sir's Study Circle!\n\nUsername: ${p(1)}\nPassword: ${p(2)}${footer}`;
+        default:
+            return `[${name}] ${params.join(' | ')}`;
+    }
 }
 
 // ── Attendance template resolver ──────────────────────────────
@@ -274,6 +303,7 @@ Deno.serve(async (req: Request) => {
                         continue;
                     }
                     await sendTemplateViaMetaAPI(phone, attendanceTemplate.name, attendanceTemplate.params);
+                    logPreview = renderTemplatePreview(attendanceTemplate.name, attendanceTemplate.params);
                 } else if (type === 'score') {
                     const p = payload || {};
                     const isParent = (recipient.role || 'parent') === 'parent';
@@ -287,9 +317,11 @@ Deno.serve(async (req: Request) => {
                         const parentName = recipient.name || 'Parent';
                         // mssc_test_result_parent: {{1}} parent {{2}} student {{3}} test {{4}} subject {{5}} score {{6}} total {{7}} average {{8}} student
                         await sendTemplateViaMetaAPI(phone, 'mssc_test_result_parent', [parentName, studentName, testTitle, subject, score, total, average, studentName]);
+                        logPreview = renderTemplatePreview('mssc_test_result_parent', [parentName, studentName, testTitle, subject, score, total, average, studentName]);
                     } else {
                         // mssc_test_result_student: {{1}} student {{2}} test {{3}} subject {{4}} score {{5}} total {{6}} average
                         await sendTemplateViaMetaAPI(phone, 'mssc_test_result_student', [studentName, testTitle, subject, score, total, average]);
+                        logPreview = renderTemplatePreview('mssc_test_result_student', [studentName, testTitle, subject, score, total, average]);
                     }
                 } else if (type === 'login') {
                     const p = payload || {};
@@ -299,8 +331,10 @@ Deno.serve(async (req: Request) => {
                         p.username     || '',
                         p.password     || '',
                     ]);
+                    logPreview = renderTemplatePreview('mssc_welcome_student', [p.student_name || 'Student', p.username || '', p.password || '']);
                 } else {
                     await sendViaMetaAPI(phone, message);
+                    logPreview = message;
                 }
 
                 await logMessage(
@@ -309,7 +343,7 @@ Deno.serve(async (req: Request) => {
                     phone,
                     recipient.name || 'Unknown',
                     recipient.role || 'student',
-                    message,
+                    logPreview,
                     sent_by || null,
                 );
 

@@ -19,7 +19,7 @@ async function loadTeachers() {
     if (btnRefresh) { btnRefresh.disabled = false; btnRefresh.textContent = 'Refresh List'; }
 
     if (response.success) {
-        allTeachers = response.data || [];
+        allTeachers = (response.data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         renderTeachersTable();
     } else {
         window.showStatus('teachersListStatus', response.error || 'Failed to load teachers.', 'error');

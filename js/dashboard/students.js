@@ -54,8 +54,9 @@ export async function loadStudents() {
         });
         const batchFilter = document.getElementById('studentBatchFilter');
         if (batchFilter) {
+            const sortedBatches = batches.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             batchFilter.innerHTML = '<option value="">All Batches</option>' +
-                batches.map(b => `<option value="${window.esc(b.id)}">${window.esc(b.name)}</option>`).join('');
+                sortedBatches.map(b => `<option value="${window.esc(b.id)}">${window.esc(b.name)}</option>`).join('');
         }
 
         filterStudents();

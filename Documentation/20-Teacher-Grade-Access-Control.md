@@ -12,7 +12,7 @@ Teachers can be assigned to a specific grade (`11th` or `12th`). A grade-assigne
 A standalone admin page accessible at `/manage_teachers`. Teacher-only (redirects unauthenticated or student users to login).
 
 **Features:**
-- Lists all teacher profiles with their current assigned grade
+- Lists all teacher profiles sorted **alphabetically by name** with their current assigned grade
 - **Assign Grade** button opens a modal to set `11th only`, `12th only`, or `All Grades (unrestricted)`
 - Changes are saved immediately to the `profiles` table
 
@@ -114,7 +114,7 @@ Each module calls `window.auth.getUser()?.grade` at execution time (not module l
 |---|---|
 | `js/dashboard/students.js` | `loadStudents()` — student list capped to teacher's grade |
 | `js/dashboard/batches.js` | `loadStudentPicker()` — add-to-batch picker capped to teacher's grade |
-| `js/dashboard/messages.js` | `loadStudentPicker()` — WhatsApp compose student dropdown capped to teacher's grade |
+| `js/dashboard/messages.js` | `loadProfiles()` — compose student dropdown capped to teacher's grade; `loadConversations()` — conversation list filtered to only show contacts linked to the teacher's grade (other-grade numbers are dropped) |
 | `js/dashboard/material.js` | `loadMaterials()` — materials list capped to teacher's grade |
 
 #### Grade form field locking per module

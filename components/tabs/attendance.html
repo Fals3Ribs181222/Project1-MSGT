@@ -37,15 +37,14 @@
         </table>
     </div>
     <div class="form__actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-        <button class="btn btn--outline" id="btnAddGuest" style="font-size: 0.9rem;">+ Add
-            Student</button>
+        <button class="btn btn--outline" id="btnAddGuest" style="font-size: 0.9rem;">+ Add Student</button>
         <button class="btn btn--outline" id="btnMarkAllPresent">Mark All Present</button>
         <button class="btn btn--primary" id="btnSaveAttendance">Save Attendance</button>
-        <button class="btn btn--outline" id="btnNotifyAbsentLate" style="display:none; background:rgba(37,211,102,0.1); border-color:#25D366; color:#25D366;">
-            <i class="ri-whatsapp-line"></i> Notify Absent/Late
+        <button class="btn btn--outline" id="btnSendChecked" disabled style="background:rgba(37,211,102,0.1); border-color:#25D366; color:#25D366; opacity:0.5;">
+            <i class="ri-whatsapp-line"></i> Send WhatsApp (0)
         </button>
     </div>
-    <div id="notifyAbsentStatus" class="status" style="display:none; margin-top: 0.75rem;"></div>
+    <div id="sendCheckedStatus" class="status" style="display:none; margin-top: 0.75rem;"></div>
 
     <!-- Add Guest / Transfer Form -->
     <div id="addGuestForm"

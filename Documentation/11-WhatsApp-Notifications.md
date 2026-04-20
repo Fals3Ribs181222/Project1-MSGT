@@ -6,12 +6,12 @@ The system sends WhatsApp messages to students and parents via a unified Edge Fu
 
 The messaging pipeline is fully serverless using Supabase Edge Functions and Meta's WhatsApp Cloud API directly (no third-party BSP).
 
-1. **Teacher Action:** Teacher clicks a send button (e.g., "Notify Absent/Late", "Send Scores", or composes a custom message).
+1. **Teacher Action:** Teacher clicks a send button (e.g., "Send WhatsApp (N)", "Send Scores", or composes a custom message).
 2. **Frontend Helper:** `js/whatsapp.js` calls `window.whatsapp.send()`, which invokes the `send-whatsapp` Edge Function.
 3. **Edge Function:** `send-whatsapp` receives the message type, recipients, and payload, then:
-   - Builds a formatted message from built-in templates.
+   - Resolves the correct Meta-approved template and parameters per recipient.
    - Sends via Meta Cloud API (`graph.facebook.com/v19.0`).
-   - Logs every message to `whatsapp_log` with recipient details.
+   - Renders the full template body locally via `renderTemplatePreview()` and logs it to `whatsapp_log`.
 4. **WhatsApp Delivery:** Recipients receive the message on WhatsApp.
 
 ### Incoming messages / webhook
@@ -20,17 +20,20 @@ A second edge function `whatsapp-webhook` handles inbound traffic from Meta:
 - **GET** — Meta verification challenge (echoes `hub.challenge` if `WHATSAPP_VERIFY_TOKEN` matches)
 - **POST** — Incoming messages and delivery status updates, logged to `whatsapp_incoming` table
 
+Incoming message types are handled explicitly: `text` → body text, `reaction` → emoji, `image/audio/document/video` → descriptive label. Previously only `text` was extracted; other types stored `null`.
+
 ## Message Types
 
-| Type | Template | Typical Trigger |
+| Type | Delivery | Typical Trigger |
 |---|---|---|
-| `attendance` | Absent/Late alert with class details | Attendance page → "Notify Absent/Late" button |
-| `score` | Test score notification | Manage Marks page → "Send Scores via WhatsApp" button |
-| `announcement` | Batch announcement broadcast | Announcements page → "Also send via WhatsApp" checkbox |
-| `report` | AI-generated progress report | Student detail → "Send WhatsApp" button |
-| `custom` | Free-form text message | Messages tab → Compose section |
+| `attendance` | Meta template (present/absent/late × student/parent) | Attendance page → "Send WhatsApp (N)" button |
+| `score` | Meta template (`mssc_test_result_parent/student`) | Manage Marks page → "Send Scores via WhatsApp" button |
+| `login` | Meta template (`mssc_welcome_student`) | Students tab → "Send Welcome" button |
+| `announcement` | Free-form text | Announcements page → "Also send via WhatsApp" checkbox |
+| `report` | Free-form text | Student detail → "Send WhatsApp" button |
+| `custom` | Free-form text | Messages tab → Compose section |
 
-> **Note:** Free-form text messages (all types above) require the recipient to have sent a message to the business number within the last 24 hours. For one-way outbound notifications without prior contact, Meta-approved message templates are required.
+> **Note:** Free-form text requires the recipient to have messaged the business number within the last 24 hours. Template messages (`attendance`, `score`, `login`) can be sent at any time.
 
 ## Key Files
 
@@ -39,14 +42,22 @@ A second edge function `whatsapp-webhook` handles inbound traffic from Meta:
 | `supabase/functions/send-whatsapp/index.ts` | Sends messages via Meta Cloud API + auto-logging |
 | `supabase/functions/whatsapp-webhook/index.ts` | Receives incoming messages and status updates from Meta |
 | `js/whatsapp.js` | Shared frontend helper: `send()`, `resolveRecipients()`, `getLog()`, `getAllLogs()` |
-| `components/tabs/messages.html` | Messages tab UI (Compose + History) |
-| `js/dashboard/messages.js` | Messages tab logic |
+| `components/tabs/messages.html` | Messages tab UI — two-panel conversation interface (contact list + thread view) |
+| `js/dashboard/messages.js` | Messages tab logic — loads conversations, renders threaded chat, handles compose and reply |
+
+### Messages Tab UI
+
+The Messages tab (`js/dashboard/messages.js`) is a conversation-centric interface:
+- **Left panel:** Contact list grouped by student. Each student can have multiple entries (their own phone + parent phones). Groups are collapsible, sorted by most recent activity. An avatar dot indicates 24h window status: green (>10h left), amber (2–10h), red (<2h), grey (closed).
+- **Right panel:** Thread view showing message bubbles with date dividers, a 24h window badge, and a reply input. The reply input auto-resizes and submits on Enter.
+- **New message modal:** A "New message" button opens a modal to compose to a student (by name) or an arbitrary phone number.
+- **Grade scoping:** `loadProfiles()` filters `allStudentsCache` to the teacher's assigned grade before conversations are loaded.
 
 Integration points in existing files:
-- `js/dashboard/attendance.js` — Notify Absent/Late handler
+- `js/dashboard/attendance.js` — "Send WhatsApp (N)" handler (sends to all marked, un-notified students via attendance templates)
 - `js/manage_marks.js` — Send Scores handler
 - `js/dashboard/announcement.js` — WhatsApp checkbox handler
-- `js/dashboard/students.js` — Report send
+- `js/dashboard/students.js` — "Send Welcome" button (sends `mssc_welcome_student` template to student's own phone)
 
 ## Database
 
@@ -62,10 +73,14 @@ Every sent message is logged with:
 - `student_id`, `message_type`, `preview`, `sent_by`, `sent_at`
 - `recipient_phone`, `recipient_name`, `recipient_type` (student/parent)
 
+The `preview` field stores a full human-readable rendering of the message via `renderTemplatePreview()` in `send-whatsapp/index.ts`. This mirrors the actual Meta template body so the log is readable without decoding parameter arrays. Previously truncated to 120 chars — now stored in full.
+
 ### `whatsapp_incoming` table
 Every inbound message or status update from Meta is logged with:
 - `event_type` (`message` or `status`)
 - `from_number`, `message_text`, `raw_payload`, `created_at`
+
+`message_text` is resolved by type: plain text for `text` messages, emoji for `reaction`, and descriptive labels (`📷 Image`, `🎤 Voice message`, `📄 Document`, `🎥 Video`) for media types.
 
 ## Environment Secrets (Edge Functions)
 

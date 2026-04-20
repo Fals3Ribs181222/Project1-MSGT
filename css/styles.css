@@ -29,6 +29,8 @@
     --font-main: 'Outfit', 'Inter', sans-serif;
     --amber: #FFBF00;
     --cadmium-red: #D22B2B;
+    --grade-11: #FF4433;
+    --grade-12: #00A36C;
 }
 
 body {
@@ -1758,6 +1760,16 @@ button:disabled {
     background: var(--amber);
     color: white;
     box-shadow: 0 4px 6px rgba(255, 191, 0, 0.2);
+}
+
+.calendar__pill--grade-11 {
+    background: var(--grade-11);
+    color: white;
+}
+
+.calendar__pill--grade-12 {
+    background: var(--grade-12);
+    color: white;
 }
 
 .calendar__pill-time {

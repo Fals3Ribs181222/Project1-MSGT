@@ -74,8 +74,11 @@ async function renderCalendar() {
 
         dayClasses.forEach(c => {
             const pill = document.createElement('div');
-            pill.className = `calendar__pill calendar__pill--${c.type}`;
             const batchGrade = c.batches?.grade || '';
+            const gradeClass = batchGrade.includes('11') ? 'calendar__pill--grade-11'
+                : batchGrade.includes('12') ? 'calendar__pill--grade-12'
+                : `calendar__pill--${c.type}`;
+            pill.className = `calendar__pill ${gradeClass}`;
             const batchSubject = c.batches?.subject || '';
             const batchName = c.batches?.name || '';
             pill.innerHTML = `
@@ -142,7 +145,8 @@ async function refreshBatchDropdown() {
     select.innerHTML = '<option value="">-- Select Batch --</option>';
     const res = await window.api.get('batches');
     if (res.success && res.data) {
-        res.data.forEach(batch => {
+        const sorted = (res.data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        sorted.forEach(batch => {
             const opt = document.createElement('option');
             opt.value = batch.id;
             const subject = batch.subject || 'General Segment';

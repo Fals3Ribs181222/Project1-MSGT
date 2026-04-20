@@ -17,6 +17,12 @@ This document lists all the custom CSS variables used across the project to main
 - `--amber`: `#FFBF00` (A bright amber/yellow for specific highlights, though usage is sparse in the core CSS snippet provided)
 - `--cadmium-red`: `#D22B2B` (A strong red, likely intended for danger/error states alongside the explicit rgba reds used in `.btn--danger`)
 
+### Grade Colors
+- `--grade-11`: `#FF4433` (Red Orange — used to identify Grade 11 students and UI elements)
+- `--grade-12`: `#00A36C` (Jade — used to identify Grade 12 students and UI elements)
+
+Applied via `.calendar__pill--grade-11` and `.calendar__pill--grade-12` on schedule calendar pills. Falls back to type-based colour (`.calendar__pill--regular` / `.calendar__pill--extra`) if the batch has no grade.
+
 ### Typography Colors
 - `--text-main`: `#2d3748` (A dark slate gray for high contrast readability of body text)
 - `--text-muted`: `#4a5568` (A lighter slate gray for secondary text, labels, and less prominent information)

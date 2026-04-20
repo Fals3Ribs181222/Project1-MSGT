@@ -3,7 +3,7 @@ const user = window.auth.getUser();
 let currentAttendanceClass = null;
 let currentAttendanceBatch = null;
 let currentBatchName = '';
-let currentClassTime = ''; // "HH:MM" 24h — used for WhatsApp notify payload
+let currentClassTime = ''; // "HH:MM" 24h
 
 async function loadTodaysClasses() {
     const grid = document.getElementById('todaysClassesGrid');
@@ -44,9 +44,7 @@ async function loadTodaysClasses() {
         </button>
     `).join('');
 
-    // Attach click listeners
-    const pills = grid.querySelectorAll('.landing-pill');
-    pills.forEach(pill => {
+    grid.querySelectorAll('.landing-pill').forEach(pill => {
         pill.addEventListener('click', () => {
             const t = pill.dataset;
             openAttendanceGrid(t.classId, t.batchId, t.title, t.batchName, t.time);
@@ -59,7 +57,7 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
     currentAttendanceClass = classId;
     currentAttendanceBatch = batchId;
     currentBatchName = batchName;
-    currentClassTime = time; // "HH:MM"
+    currentClassTime = time;
 
     document.getElementById('attendancePreSelectionContainer').style.display = 'none';
     document.getElementById('attendanceGridContainer').style.display = 'block';
@@ -71,6 +69,7 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
     const tbody = document.getElementById('attendanceTableBody');
     tbody.innerHTML = '<tr><td colspan="2" class="loading-text">Loading roster...</td></tr>';
     document.getElementById('attendanceSaveStatus').style.display = 'none';
+    resetSendCheckedBtn();
 
     const res = await window.api.get('batch_students', { batch_id: batchId }, '*, profiles:student_id(id, name)');
 
@@ -79,7 +78,8 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
         return;
     }
 
-    const students = res.data.map(m => m.profiles).filter(Boolean);
+    const students = res.data.map(m => m.profiles).filter(Boolean)
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
     if (students.length === 0) {
         tbody.innerHTML = '<tr><td colspan="2" class="loading-text">No students enrolled in this batch.</td></tr>';
@@ -91,15 +91,13 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
 
     const statusMap = {};
     if (attRes.success && attRes.data) {
-        attRes.data.forEach(a => {
-            statusMap[a.student_id] = a.status;
-        });
+        attRes.data.forEach(a => { statusMap[a.student_id] = a.status; });
     }
 
     tbody.innerHTML = students.map(s => {
-        const status = statusMap[s.id] || 'present';
+        const status = statusMap[s.id] || '';
         return `
-        <tr>
+        <tr class="att-row" data-student="${s.id}">
             <td><strong>${window.esc(s.name)}</strong></td>
             <td style="text-align: right;">
                 <div class="attendance-toggles">
@@ -122,6 +120,7 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
     }).join('');
 
     await mergeTransferredGuests(batchId, classId, statusMap);
+    updateSendCheckedBtn();
 }
 
 async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
@@ -146,11 +145,13 @@ async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
     todaysGuests.forEach(t => {
         const s = t.profiles;
         if (!s) return;
-        if (tbody.querySelector(`input[data-student="${s.id}"]`)) return;
+        if (tbody.querySelector(`tr[data-student="${s.id}"]`)) return;
 
         const batchName = t.batches ? t.batches.name : 'Unknown';
-        const status = statusMap[s.id] || 'present';
+        const status = statusMap[s.id] || '';
         const row = document.createElement('tr');
+        row.className = 'att-row';
+        row.dataset.student = s.id;
         row.dataset.transferId = t.id;
         row.innerHTML = `
             <td>
@@ -180,26 +181,151 @@ async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
             </td>
         `;
 
-        const btnRemove = row.querySelector('.btn-remove-guest');
-        if (btnRemove) {
-            btnRemove.addEventListener('click', async () => {
-                if (!confirm('Remove this guest from the roster?')) return;
-                const res = await window.api.delete('batch_transfers', t.id);
-                if (res.success) {
-                    row.remove();
-                } else {
-                    alert('Failed to remove: ' + res.error);
-                }
-            });
-        }
+        row.querySelector('.btn-remove-guest')?.addEventListener('click', async () => {
+            if (!confirm('Remove this guest from the roster?')) return;
+            const res = await window.api.delete('batch_transfers', t.id);
+            if (res.success) { row.remove(); updateSendCheckedBtn(); }
+            else alert('Failed to remove: ' + res.error);
+        });
 
         tbody.appendChild(row);
     });
 }
 
+async function saveAndSendOne(studentId) {
+    const radioChecked = document.querySelector(`#attendanceTableBody input[name="att_${studentId}"]:checked`);
+    if (!radioChecked) return { ok: false, msg: 'No status selected' };
+
+    const status = radioChecked.value;
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    const { error } = await window.supabaseClient
+        .from('attendance')
+        .upsert([{
+            class_id: currentAttendanceClass,
+            batch_id: currentAttendanceBatch,
+            student_id: studentId,
+            date: dateStr,
+            status,
+            marked_by: user.id
+        }], { onConflict: 'class_id, student_id, date' });
+
+    if (error) return { ok: false, msg: error.message };
+
+    const { data: profiles } = await window.supabaseClient
+        .from('profiles')
+        .select('id, name, phone, father_name, father_phone, mother_name, mother_phone')
+        .eq('id', studentId);
+
+    if (!profiles?.length) return { ok: false, msg: 'Profile not found' };
+
+    const profile = profiles[0];
+    const recipients = window.whatsapp.resolveRecipients(profile, 'both');
+    if (!recipients.length) return { ok: false, msg: 'No phone on file' };
+
+    try {
+        await window.whatsapp.send({
+            type: 'attendance',
+            recipients,
+            payload: {
+                status,
+                student_name: profile.name,
+                batch_name: currentBatchName,
+                class_time: currentClassTime,
+                date: dateStr,
+            },
+            sentBy: user.id,
+        });
+        return { ok: true };
+    } catch (err) {
+        return { ok: false, msg: err.message };
+    }
+}
+
+function markRowAsSent(studentId) {
+    const row = document.querySelector(`#attendanceTableBody tr.att-row[data-student="${studentId}"]`);
+    if (!row) return;
+    row.classList.add('att-row--sent');
+    row.style.background = 'rgba(37,211,102,0.12)';
+    row.style.borderLeft = '3px solid #25D366';
+    row.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+
+    const nameTd = row.querySelector('td:first-child strong');
+    if (nameTd && !row.querySelector('.sent-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'sent-badge';
+        badge.textContent = 'Sent';
+        badge.style.cssText = 'display:inline-block;margin-left:0.5rem;padding:0.1rem 0.5rem;border-radius:var(--radius-full);font-size:0.7rem;font-weight:600;background:rgba(37,211,102,0.2);color:#25D366;vertical-align:middle;';
+        nameTd.after(badge);
+    }
+
+    document.getElementById('attendanceTableBody').appendChild(row);
+    updateSendCheckedBtn();
+}
+
+function updateSendCheckedBtn() {
+    const btn = document.getElementById('btnSendChecked');
+    if (!btn) return;
+    const rows = document.querySelectorAll('#attendanceTableBody tr.att-row:not(.att-row--sent)');
+    const count = [...rows].filter(row => row.querySelector('input[type="radio"]:checked')).length;
+    btn.innerHTML = `<i class="ri-whatsapp-line"></i> Send WhatsApp (${count})`;
+    btn.disabled = count === 0;
+    btn.style.opacity = count === 0 ? '0.5' : '1';
+}
+
+function resetSendCheckedBtn() {
+    const btn = document.getElementById('btnSendChecked');
+    if (!btn) return;
+    btn.innerHTML = '<i class="ri-whatsapp-line"></i> Send WhatsApp (0)';
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+}
+
 export function init() {
     loadTodaysClasses();
 
+    // Auto-update send button count when any radio changes
+    const tbody = document.getElementById('attendanceTableBody');
+    if (tbody) {
+        tbody.addEventListener('change', (e) => {
+            if (e.target.type === 'radio') updateSendCheckedBtn();
+        });
+    }
+
+    // Send WhatsApp to all marked, un-sent students
+    const btnSendChecked = document.getElementById('btnSendChecked');
+    if (btnSendChecked) {
+        btnSendChecked.addEventListener('click', async () => {
+            const rows = [...document.querySelectorAll('#attendanceTableBody tr.att-row:not(.att-row--sent)')]
+                .filter(row => row.querySelector('input[type="radio"]:checked'));
+            if (!rows.length) return;
+
+            const statusEl = document.getElementById('sendCheckedStatus');
+            btnSendChecked.disabled = true;
+            if (statusEl) statusEl.style.display = 'none';
+
+            let sent = 0, failed = 0;
+            const total = rows.length;
+
+            for (const row of rows) {
+                btnSendChecked.innerHTML = `<i class="ri-loader-4-line"></i> Sending ${sent + failed + 1}/${total}...`;
+                const { ok } = await saveAndSendOne(row.dataset.student);
+                if (ok) { sent++; markRowAsSent(row.dataset.student); } else failed++;
+            }
+
+            btnSendChecked.disabled = false;
+            updateSendCheckedBtn();
+
+            if (statusEl) {
+                statusEl.textContent = `WhatsApp: ${sent} sent${failed > 0 ? `, ${failed} failed` : ''}`;
+                statusEl.className = failed > 0 ? 'status status--error' : 'status status--success';
+                statusEl.style.display = 'block';
+                setTimeout(() => statusEl.style.display = 'none', 4000);
+            }
+        });
+    }
+
+    // Add Guest
     const btnAddGuest = document.getElementById('btnAddGuest');
     if (btnAddGuest) {
         btnAddGuest.addEventListener('click', async () => {
@@ -210,7 +336,8 @@ export function init() {
             if (batchSelect.options.length <= 1) {
                 const res = await window.api.get('batches', {});
                 if (res.success) {
-                    res.data.forEach(b => {
+                    const sorted = (res.data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                    sorted.forEach(b => {
                         if (b.id !== currentAttendanceBatch) {
                             const opt = document.createElement('option');
                             opt.value = b.id;
@@ -239,14 +366,14 @@ export function init() {
             const res = await window.api.get('batch_students', { batch_id: batchId }, '*, profiles:student_id(id, name)');
             if (res.success && res.data) {
                 studentSelect.innerHTML = '<option value="">Select student...</option>';
-                res.data.forEach(m => {
-                    if (m.profiles) {
-                        const opt = document.createElement('option');
-                        opt.value = m.profiles.id;
-                        opt.textContent = m.profiles.name;
-                        opt.dataset.name = m.profiles.name;
-                        studentSelect.appendChild(opt);
-                    }
+                const sorted = res.data.filter(m => m.profiles)
+                    .sort((a, b) => (a.profiles.name || '').localeCompare(b.profiles.name || ''));
+                sorted.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.profiles.id;
+                    opt.textContent = m.profiles.name;
+                    opt.dataset.name = m.profiles.name;
+                    studentSelect.appendChild(opt);
                 });
                 studentSelect.disabled = false;
             } else {
@@ -255,12 +382,9 @@ export function init() {
         });
     }
 
-    const btnCancelGuest = document.getElementById('btnCancelGuest');
-    if (btnCancelGuest) {
-        btnCancelGuest.addEventListener('click', () => {
-            document.getElementById('addGuestForm').style.display = 'none';
-        });
-    }
+    document.getElementById('btnCancelGuest')?.addEventListener('click', () => {
+        document.getElementById('addGuestForm').style.display = 'none';
+    });
 
     const btnConfirmGuest = document.getElementById('btnConfirmGuest');
     if (btnConfirmGuest) {
@@ -302,6 +426,8 @@ export function init() {
 
             const tbody = document.getElementById('attendanceTableBody');
             const row = document.createElement('tr');
+            row.className = 'att-row';
+            row.dataset.student = studentId;
             row.dataset.transferId = transferId;
             row.innerHTML = `
                 <td>
@@ -316,7 +442,7 @@ export function init() {
                 <td style="text-align: right;">
                     <div class="attendance-toggles">
                         <label class="attendance-toggle" title="Present">
-                            <input type="radio" name="att_${studentId}" value="present" checked data-student="${studentId}">
+                            <input type="radio" name="att_${studentId}" value="present" data-student="${studentId}">
                             <span class="attendance-toggle__mark">Present</span>
                         </label>
                         <label class="attendance-toggle" title="Late">
@@ -331,18 +457,12 @@ export function init() {
                 </td>
             `;
 
-            const btnRemove = row.querySelector('.btn-remove-guest');
-            if (btnRemove) {
-                btnRemove.addEventListener('click', async () => {
-                    if (!confirm('Remove this guest from the roster?')) return;
-                    const delRes = await window.api.delete('batch_transfers', transferId);
-                    if (delRes.success) {
-                        row.remove();
-                    } else {
-                        alert('Failed to remove: ' + delRes.error);
-                    }
-                });
-            }
+            row.querySelector('.btn-remove-guest')?.addEventListener('click', async () => {
+                if (!confirm('Remove this guest from the roster?')) return;
+                const delRes = await window.api.delete('batch_transfers', transferId);
+                if (delRes.success) { row.remove(); updateSendCheckedBtn(); }
+                else alert('Failed to remove: ' + delRes.error);
+            });
 
             tbody.appendChild(row);
 
@@ -359,23 +479,14 @@ export function init() {
         });
     }
 
-    const btnSwitchClassAttendance = document.getElementById('btnSwitchClassAttendance');
-    if (btnSwitchClassAttendance) {
-        btnSwitchClassAttendance.addEventListener('click', () => {
-            document.getElementById('attendancePreSelectionContainer').style.display = 'block';
-            document.getElementById('attendanceGridContainer').style.display = 'none';
-            document.getElementById('attendanceHeaderActions').style.display = 'none';
-            document.getElementById('addGuestForm').style.display = 'none';
-        });
-    }
+    document.getElementById('btnSwitchClassAttendance')?.addEventListener('click', () => {
+        window.loadTab('panel-schedule');
+    });
 
-    const btnMarkAllPresent = document.getElementById('btnMarkAllPresent');
-    if (btnMarkAllPresent) {
-        btnMarkAllPresent.addEventListener('click', () => {
-            const radios = document.querySelectorAll('#attendanceTableBody input[value="present"]');
-            radios.forEach(r => r.checked = true);
-        });
-    }
+    document.getElementById('btnMarkAllPresent')?.addEventListener('click', () => {
+        document.querySelectorAll('#attendanceTableBody input[value="present"]').forEach(r => r.checked = true);
+        updateSendCheckedBtn();
+    });
 
     const btnSaveAttendance = document.getElementById('btnSaveAttendance');
     if (btnSaveAttendance) {
@@ -400,7 +511,7 @@ export function init() {
                 marked_by: user.id
             }));
 
-            const { data, error } = await window.supabaseClient
+            const { error } = await window.supabaseClient
                 .from('attendance')
                 .upsert(records, { onConflict: 'class_id, student_id, date' })
                 .select();
@@ -409,103 +520,14 @@ export function init() {
             btnSaveAttendance.textContent = 'Save Attendance';
 
             if (!error) {
-                statusText.textContent = 'Attendance saved successfully!';
+                statusText.textContent = 'Attendance saved!';
                 statusText.className = 'status status--success';
                 statusText.style.display = 'block';
-
-                const btnNotify = document.getElementById('btnNotifyAbsentLate');
-                if (btnNotify) {
-                    btnNotify.style.display = 'inline-flex';
-                    btnNotify.disabled = false;
-                    btnNotify.innerHTML = `<i class="ri-whatsapp-line"></i> Notify via WhatsApp (${records.length})`;
-                    btnNotify._records = records;
-                }
-
-                setTimeout(() => {
-                    statusText.style.display = 'none';
-                }, 3000);
+                setTimeout(() => statusText.style.display = 'none', 3000);
             } else {
                 statusText.textContent = 'Failed to save: ' + error.message;
                 statusText.className = 'status status--error';
                 statusText.style.display = 'block';
-            }
-        });
-    }
-
-    // ── Notify via WhatsApp ──────────────────────────────────────
-    const btnNotifyAbsentLate = document.getElementById('btnNotifyAbsentLate');
-    if (btnNotifyAbsentLate) {
-        btnNotifyAbsentLate.addEventListener('click', async () => {
-            const records = btnNotifyAbsentLate._records;
-            if (!records || records.length === 0) return;
-
-            const notifyStatus = document.getElementById('notifyAbsentStatus');
-            btnNotifyAbsentLate.disabled = true;
-            btnNotifyAbsentLate.textContent = 'Sending...';
-            if (notifyStatus) notifyStatus.style.display = 'none';
-
-            const dateStr = new Date().toISOString().split('T')[0];
-
-            // Fetch profiles for student phone + mother/father phone
-            const studentIds = records.map(r => r.student_id);
-            const { data: profiles } = await window.supabaseClient
-                .from('profiles')
-                .select('id, name, phone, father_name, father_phone, mother_name, mother_phone')
-                .in('id', studentIds);
-
-            if (!profiles || profiles.length === 0) {
-                if (notifyStatus) {
-                    notifyStatus.textContent = 'No student profiles found.';
-                    notifyStatus.className = 'status status--error';
-                    notifyStatus.style.display = 'block';
-                }
-                btnNotifyAbsentLate.disabled = false;
-                btnNotifyAbsentLate.innerHTML = '<i class="ri-whatsapp-line"></i> Notify via WhatsApp';
-                return;
-            }
-
-            let totalSent = 0;
-            let totalFailed = 0;
-
-            for (const record of records) {
-                const profile = profiles.find(p => p.id === record.student_id);
-                if (!profile) continue;
-
-                const recipients = window.whatsapp.resolveRecipients(profile, 'both');
-                if (recipients.length === 0) {
-                    totalFailed++;
-                    continue;
-                }
-
-                try {
-                    const result = await window.whatsapp.send({
-                        type: 'attendance',
-                        recipients,
-                        payload: {
-                            status: record.status,
-                            student_name: profile.name,
-                            batch_name: currentBatchName,
-                            class_time: currentClassTime,
-                            date: dateStr,
-                            // punch_in_time: — omitted until biometric machine is connected
-                        },
-                        sentBy: user.id,
-                    });
-                    totalSent += result.sent || 0;
-                    totalFailed += result.failed || 0;
-                } catch (err) {
-                    totalFailed++;
-                }
-            }
-
-            btnNotifyAbsentLate.disabled = false;
-            btnNotifyAbsentLate.style.display = 'none';
-
-            if (notifyStatus) {
-                notifyStatus.textContent = `WhatsApp: ${totalSent} sent, ${totalFailed} failed`;
-                notifyStatus.className = totalFailed > 0 ? 'status status--error' : 'status status--success';
-                notifyStatus.style.display = 'block';
-                setTimeout(() => notifyStatus.style.display = 'none', 5000);
             }
         });
     }

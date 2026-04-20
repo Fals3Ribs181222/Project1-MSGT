@@ -165,7 +165,7 @@ async function loadBatchMembers(batchId) {
     const res = await window.api.get('batch_students', { batch_id: batchId }, '*, profiles:student_id(name, username, grade)');
 
     if (res.success) {
-        const members = res.data || [];
+        const members = (res.data || []).sort((a, b) => (a.profiles?.name || '').localeCompare(b.profiles?.name || ''));
         countBadge.textContent = members.length;
 
         if (members.length > 0) {
@@ -222,7 +222,8 @@ async function loadStudentPicker(batchId) {
             });
         }
 
-        const available = allStudents.filter(s => !memberIds.has(s.id));
+        const available = allStudents.filter(s => !memberIds.has(s.id))
+            .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         if (available.length > 0) {
             listEl.innerHTML = available.map(s => `
