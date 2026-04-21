@@ -19,6 +19,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Pitch materials
+pitch/
+
 # Google Drive temp uploads
 .tmp.driveupload/
 

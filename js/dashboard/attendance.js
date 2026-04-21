@@ -4,6 +4,7 @@ let currentAttendanceClass = null;
 let currentAttendanceBatch = null;
 let currentBatchName = '';
 let currentClassTime = ''; // "HH:MM" 24h
+let guestListLoadedForBatch = null;
 
 async function loadTodaysClasses() {
     const grid = document.getElementById('todaysClassesGrid');
@@ -140,7 +141,7 @@ async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
     const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
     const todayDay = window.DAYS[new Date().getDay()];
 
-    const res = await window.api.get('batch_transfers', { to_batch_id: currentBatchId }, '*, profiles:student_id(id, name), batches:from_batch_id(name)');
+    const res = await window.api.get('batch_transfers', { to_batch_id: currentBatchId }, '*, profiles:student_id(id, name)');
     if (!res.success || !res.data) return;
 
     const todaysGuests = res.data.filter(t =>
@@ -157,7 +158,6 @@ async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
         if (!s) return;
         if (tbody.querySelector(`tr[data-student="${s.id}"]`)) return;
 
-        const batchName = t.batches ? t.batches.name : 'Unknown';
         const status = statusMap[s.id] || '';
         const row = document.createElement('tr');
         row.className = 'att-row';
@@ -168,7 +168,6 @@ async function mergeTransferredGuests(currentBatchId, classId, statusMap) {
                 <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
                     <strong>${window.esc(s.name)}</strong>
                     <span style="${tagStyle} background:rgba(115,147,179,0.15); color:var(--primary);">Guest</span>
-                    <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${window.esc(batchName)}</span>
                     <span style="${tagStyle} background:rgba(0,0,0,0.06); color:var(--text-muted);">${todayDay}</span>
                     <button class="btn-remove-guest" data-id="${t.id}" style="margin-left:auto; background:none; border:none; color:var(--cadmium-red); cursor:pointer; font-size:1.1rem; padding:0 0.3rem;" title="Remove guest">✕</button>
                 </div>
@@ -341,30 +340,12 @@ export function init() {
     if (btnAddGuest) {
         btnAddGuest.addEventListener('click', async () => {
             const form = document.getElementById('addGuestForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            const isOpen = form.style.display !== 'none';
+            form.style.display = isOpen ? 'none' : 'block';
+            if (isOpen) return;
 
-            const batchSelect = document.getElementById('guestBatchSelect');
-            if (batchSelect.options.length <= 1) {
-                const res = await window.api.get('batches', {});
-                if (res.success) {
-                    const sorted = (res.data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                    sorted.forEach(b => {
-                        if (b.id !== currentAttendanceBatch) {
-                            const opt = document.createElement('option');
-                            opt.value = b.id;
-                            opt.textContent = b.name;
-                            batchSelect.appendChild(opt);
-                        }
-                    });
-                }
-            }
-        });
-    }
+            if (guestListLoadedForBatch === currentAttendanceBatch) return;
 
-    const guestBatchSelect = document.getElementById('guestBatchSelect');
-    if (guestBatchSelect) {
-        guestBatchSelect.addEventListener('change', async (e) => {
-            const batchId = e.target.value;
             const listEl = document.getElementById('guestStudentList');
             const searchInput = document.getElementById('guestStudentSearch');
             const countEl = document.getElementById('guestSelectedCount');
@@ -374,43 +355,52 @@ export function init() {
             searchInput.value = '';
             if (countEl) countEl.textContent = '0 selected';
 
-            if (!batchId) {
-                listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">Pick a batch first...</p>';
+            const batchRes = await window.api.get('batches', { id: currentAttendanceBatch }, 'subject, grade');
+            if (!batchRes.success || !batchRes.data?.length) {
+                listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">Failed to load batch info.</p>';
+                return;
+            }
+            const { grade } = batchRes.data[0];
+
+            const enrolledRes = await window.api.get('batch_students', { batch_id: currentAttendanceBatch }, 'student_id');
+            const enrolledIds = new Set((enrolledRes.data || []).map(r => r.student_id));
+
+            const studentsRes = await window.api.get('profiles', { role: 'student', grade }, 'id, name');
+            if (!studentsRes.success) {
+                listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">Failed to load students.</p>';
                 return;
             }
 
-            const res = await window.api.get('batch_students', { batch_id: batchId }, '*, profiles:student_id(id, name)');
-            if (res.success && res.data) {
-                const sorted = res.data.filter(m => m.profiles)
-                    .sort((a, b) => (a.profiles.name || '').localeCompare(b.profiles.name || ''));
+            const eligible = (studentsRes.data || [])
+                .filter(s => !enrolledIds.has(s.id))
+                .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-                if (sorted.length === 0) {
-                    listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">No students in this batch.</p>';
-                    return;
-                }
-
-                listEl.innerHTML = sorted.map(m => `
-                    <label class="student-picker__item" data-name="${window.esc(m.profiles.name).toLowerCase()}" style="padding:0.4rem 0.5rem;">
-                        <input type="checkbox" class="form__checkbox" value="${m.profiles.id}" data-name="${window.esc(m.profiles.name)}">
-                        <span class="student-picker__name">${window.esc(m.profiles.name)}</span>
-                    </label>
-                `).join('');
-
-                searchInput.disabled = false;
-                searchInput.oninput = () => {
-                    const q = searchInput.value.toLowerCase();
-                    listEl.querySelectorAll('.student-picker__item').forEach(item => {
-                        item.style.display = item.dataset.name.includes(q) ? 'flex' : 'none';
-                    });
-                };
-
-                listEl.addEventListener('change', () => {
-                    const checked = listEl.querySelectorAll('input:checked').length;
-                    if (countEl) countEl.textContent = `${checked} selected`;
-                });
-            } else {
-                listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">Failed to load students.</p>';
+            if (eligible.length === 0) {
+                listEl.innerHTML = '<p class="loading-text" style="padding:0.5rem;">No other students in this grade.</p>';
+                return;
             }
+
+            listEl.innerHTML = eligible.map(s => `
+                <label class="student-picker__item" data-name="${window.esc(s.name).toLowerCase()}" style="padding:0.4rem 0.5rem;">
+                    <input type="checkbox" class="form__checkbox" value="${s.id}" data-name="${window.esc(s.name)}">
+                    <span class="student-picker__name">${window.esc(s.name)}</span>
+                </label>
+            `).join('');
+
+            searchInput.disabled = false;
+            searchInput.oninput = () => {
+                const q = searchInput.value.toLowerCase();
+                listEl.querySelectorAll('.student-picker__item').forEach(item => {
+                    item.style.display = item.dataset.name.includes(q) ? 'flex' : 'none';
+                });
+            };
+
+            listEl.addEventListener('change', () => {
+                const n = listEl.querySelectorAll('input:checked').length;
+                if (countEl) countEl.textContent = `${n} selected`;
+            });
+
+            guestListLoadedForBatch = currentAttendanceBatch;
         });
     }
 
@@ -422,12 +412,11 @@ export function init() {
     if (btnConfirmGuest) {
         btnConfirmGuest.addEventListener('click', async () => {
             const listEl = document.getElementById('guestStudentList');
-            const fromBatchId = document.getElementById('guestBatchSelect').value;
             const statusEl = document.getElementById('guestStatus');
             const checked = listEl ? Array.from(listEl.querySelectorAll('input:checked')) : [];
 
-            if (!fromBatchId || checked.length === 0) {
-                statusEl.textContent = 'Please select a batch and at least one student.';
+            if (checked.length === 0) {
+                statusEl.textContent = 'Please select at least one student.';
                 statusEl.className = 'status status--error';
                 statusEl.style.display = 'block';
                 return;
@@ -438,7 +427,6 @@ export function init() {
             statusEl.style.display = 'none';
 
             const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
-            const batchName = document.getElementById('guestBatchSelect').selectedOptions[0].textContent;
             const todayDay = window.DAYS[new Date().getDay()];
             const tbody = document.getElementById('attendanceTableBody');
             const tagStyle = 'display:inline-block; margin-left:0.35rem; padding:0.15rem 0.5rem; border-radius:var(--radius-full); font-size:0.7rem; font-weight:600;';
@@ -450,7 +438,6 @@ export function init() {
 
                 const res = await window.api.post('batch_transfers', {
                     student_id: studentId,
-                    from_batch_id: fromBatchId,
                     to_batch_id: currentAttendanceBatch,
                     transfer_date: dateStr,
                     reason: `classId:${currentAttendanceClass}`,
@@ -469,7 +456,6 @@ export function init() {
                         <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
                             <strong>${window.esc(studentName)}</strong>
                             <span style="${tagStyle} background:rgba(115,147,179,0.15); color:var(--primary);">Guest</span>
-                            <span style="${tagStyle} background:rgba(138,154,91,0.15); color:var(--secondary);">${window.esc(batchName)}</span>
                             <span style="${tagStyle} background:rgba(0,0,0,0.06); color:var(--text-muted);">${todayDay}</span>
                             <button class="btn-remove-guest" data-id="${transferId}" style="margin-left:auto; background:none; border:none; color:var(--cadmium-red); cursor:pointer; font-size:1.1rem; padding:0 0.3rem;" title="Remove guest">✕</button>
                         </div>
@@ -507,8 +493,6 @@ export function init() {
 
             const added = checked.length - failed;
             document.getElementById('addGuestForm').style.display = 'none';
-            document.getElementById('guestBatchSelect').value = '';
-            document.getElementById('guestStudentList').innerHTML = '<p class="loading-text" style="padding:0.5rem;">Pick a batch first...</p>';
             document.getElementById('guestStudentSearch').disabled = true;
             document.getElementById('guestStudentSearch').value = '';
             document.getElementById('guestSelectedCount').textContent = '0 selected';

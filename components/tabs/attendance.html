@@ -49,22 +49,14 @@
     <!-- Add Guest / Transfer Form -->
     <div id="addGuestForm"
         style="display:none; margin-top: 1.5rem; padding: 1.25rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); backdrop-filter: blur(16px);">
-        <h4 style="margin: 0 0 1rem 0; color: var(--primary);">Cross-Batch Transfer</h4>
-        <div class="transfer-form-grid">
-            <div class="form__group">
-                <label class="form__label" for="guestBatchSelect">From Batch</label>
-                <select class="form__control" id="guestBatchSelect">
-                    <option value="">Select a batch...</option>
-                </select>
+        <h4 style="margin: 0 0 1rem 0; color: var(--primary);">Add Guest Student</h4>
+        <div class="form__group">
+            <label class="form__label">Students</label>
+            <input class="form__control" type="text" id="guestStudentSearch" placeholder="Search students..." disabled style="margin-bottom: 0.5rem;">
+            <div id="guestStudentList" class="student-picker__list" style="max-height:200px; overflow-y:auto; border:1px solid var(--glass-border); border-radius:var(--radius-md); padding:0.25rem;">
+                <p class="loading-text" style="padding:0.5rem;">Loading...</p>
             </div>
-            <div class="form__group">
-                <label class="form__label">Students</label>
-                <input class="form__control" type="text" id="guestStudentSearch" placeholder="Search students..." disabled style="margin-bottom: 0.5rem;">
-                <div id="guestStudentList" class="student-picker__list" style="max-height:200px; overflow-y:auto; border:1px solid var(--glass-border); border-radius:var(--radius-md); padding:0.25rem;">
-                    <p class="loading-text" style="padding:0.5rem;">Pick a batch first...</p>
-                </div>
-                <p id="guestSelectedCount" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.35rem;">0 selected</p>
-            </div>
+            <p id="guestSelectedCount" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.35rem;">0 selected</p>
         </div>
         <div class="form__actions" style="margin-top: 1rem; justify-content: flex-end; gap: 0.75rem;">
             <button class="btn btn--outline" id="btnCancelGuest">Cancel</button>

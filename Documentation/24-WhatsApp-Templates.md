@@ -309,8 +309,34 @@ Use the link below to log in and get started.
 
 ---
 
-## Planned Templates (not yet created)
+## Announcement Template
 
-| Template name | Type | Variables |
-|---------------|------|-----------|
-| Announcement | UTILITY | batch_name, title, message |
+### 10. `mssc_announcement` ❌ Not yet created
+
+**Header:** Announcement
+
+**Body:**
+```
+Dear {{1}},
+
+We have an important update from Mitesh Sir's Study Circle.
+
+{{2}}
+
+If you have any questions, feel free to reach out to us.
+
+Thank you for your continued support.
+```
+
+**Footer:** — Mitesh Sir's Study Circle
+
+**Button:** Visit website → https://www.miteshbhatt.in
+
+**Variable samples:**
+- {{1}} → Parent / Student (recipient name)
+- {{2}} → Classes will be suspended on Monday, 21 April 2026 due to a public holiday. Classes resume Tuesday as per the regular schedule.
+
+**Notes:**
+- {{2}} supports multi-line text up to ~1024 chars; newlines in the variable value are preserved by Meta
+- Send to parents, students, or both depending on context
+- Category: UTILITY
