@@ -1,4 +1,8 @@
 
+[functions.whatsapp-webhook]
+enabled = true
+verify_jwt = false
+
 [functions.send-whatsapp-report]
 enabled = true
 verify_jwt = true

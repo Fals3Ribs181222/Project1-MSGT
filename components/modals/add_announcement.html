@@ -15,6 +15,11 @@
             placeholder="Type your announcement here..."></textarea>
     </div>
 
+    <div id="waMessageHint" style="display:none; font-size:0.8rem; color:var(--color-warning, #b45309); margin-top:0.25rem;">
+        &#9888; WhatsApp messages must be a single paragraph — no line breaks. Keep under 900 characters for best delivery.
+    </div>
+    <div id="waCharCount" style="display:none; font-size:0.78rem; color:var(--text-muted); text-align:right; margin-top:0.15rem;">0 / 900</div>
+
     <div class="form__group" style="display:flex; align-items:center; gap:0.65rem; margin-top:0.25rem;">
         <input type="checkbox" id="noticeWhatsApp" style="width:18px; height:18px; accent-color:#25D366;">
         <label for="noticeWhatsApp" style="font-size:0.9rem; color:var(--text-main); cursor:pointer;">

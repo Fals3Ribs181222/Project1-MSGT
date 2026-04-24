@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed Everything</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 760px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            background: #f5f5f5;
+            color: #2d3748;
+        }
+
+        h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+
+        p.sub {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            color: #2d3748;
+            cursor: pointer;
+        }
+
+        button {
+            background: #2d3748;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        button:disabled { background: #aaa; cursor: not-allowed; }
+
+        .phases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .phase {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #888;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .phase .icon { font-size: 1.4rem; display: block; margin-bottom: 0.25rem; }
+        .phase .label { font-weight: 600; }
+        .phase .status { font-size: 0.75rem; margin-top: 0.2rem; }
+
+        .phase.running  { border-color: #5B6FA6; color: #5B6FA6; }
+        .phase.done     { border-color: #2d7a2d; color: #2d7a2d; }
+        .phase.error    { border-color: #c0392b; color: #c0392b; }
+
+        #progress {
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 0.75rem;
+            min-height: 1.4em;
+        }
+
+        .log {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-size: 0.85rem;
+            line-height: 1.9;
+            min-height: 120px;
+            max-height: 480px;
+            overflow-y: auto;
+        }
+
+        .ok   { color: #2d7a2d; }
+        .err  { color: #c0392b; }
+        .info { color: #5B6FA6; font-weight: 600; }
+        .sep  { color: #bbb; }
+    </style>
+</head>
+
+<body>
+
+    <h1>🌱 Seed Everything</h1>
+    <p class="sub">
+        One-click seed: teacher → students → batches (Accounts + Commerce) → classes → tests → marks.<br>
+        No pre-login needed — the demo teacher account is created automatically.
+    </p>
+
+    <div class="controls">
+        <select id="gradeSelect">
+            <option value="12th" selected>Grade 12th</option>
+            <option value="11th">Grade 11th</option>
+            <option value="Demo">Demo (pitch)</option>
+        </select>
+        <button id="btnRun" onclick="runAll()">Seed Everything</button>
+    </div>
+
+    <div class="phases">
+        <div class="phase" id="ph-teacher">
+            <span class="icon">🧑‍🏫</span>
+            <span class="label">Teacher</span>
+            <div class="status" id="ph-teacher-status">pending</div>
+        </div>
+        <div class="phase" id="ph-students">
+            <span class="icon">👥</span>
+            <span class="label">Students</span>
+            <div class="status" id="ph-students-status">pending</div>
+        </div>
+        <div class="phase" id="ph-batches">
+            <span class="icon">🗂️</span>
+            <span class="label">Batches</span>
+            <div class="status" id="ph-batches-status">pending</div>
+        </div>
+        <div class="phase" id="ph-classes">
+            <span class="icon">📅</span>
+            <span class="label">Classes</span>
+            <div class="status" id="ph-classes-status">pending</div>
+        </div>
+        <div class="phase" id="ph-tests">
+            <span class="icon">📝</span>
+            <span class="label">Tests</span>
+            <div class="status" id="ph-tests-status">pending</div>
+        </div>
+        <div class="phase" id="ph-marks">
+            <span class="icon">💯</span>
+            <span class="label">Marks</span>
+            <div class="status" id="ph-marks-status">pending</div>
+        </div>
+    </div>
+
+    <div id="progress"></div>
+    <div class="log" id="log">Waiting to start...</div>
+
+    <script>
+        const SUPABASE_URL = 'https://tksruuqtzxflgglnljef.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrc3J1dXF0enhmbGdnbG5samVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzY0OTIsImV4cCI6MjA4Nzk1MjQ5Mn0.eu6LwoP-9O5sG9nHhBza0UgYHCOm7Ni5flk_1Lgl4FU';
+
+        const { createClient } = supabase;
+        const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ── Student names ─────────────────────────────────────────────────────────────
+        const STUDENT_NAMES = [
+            { name: 'Aarav Mehta',  base: 'aarav.mehta'  },
+            { name: 'Priya Sharma', base: 'priya.sharma' },
+            { name: 'Rohan Patel',  base: 'rohan.patel'  },
+            { name: 'Sneha Joshi',  base: 'sneha.joshi'  },
+            { name: 'Kiran Desai',  base: 'kiran.desai'  },
+            { name: 'Ananya Verma', base: 'ananya.verma' },
+            { name: 'Dev Malhotra', base: 'dev.malhotra' },
+            { name: 'Riya Shah',    base: 'riya.shah'    },
+            { name: 'Arjun Nair',   base: 'arjun.nair'   },
+            { name: 'Pooja Gupta',  base: 'pooja.gupta'  },
+            { name: 'Vivek Iyer',   base: 'vivek.iyer'   },
+            { name: 'Meera Pillai', base: 'meera.pillai' },
+            { name: 'Sahil Kapoor', base: 'sahil.kapoor' },
+            { name: 'Nisha Reddy',  base: 'nisha.reddy'  },
+            { name: 'Yash Bhatt',   base: 'yash.bhatt'   },
+        ];
+
+        const DEFAULT_PASSWORD  = 'Trial@1234';
+        const DEMO_TEACHER_EMAIL = 'demo.teacher@msgt.internal';
+        const DEMO_TEACHER_PASS  = 'Demo@1234';
+
+        // ── Batch templates (same as seed-batch-class.html) ───────────────────────────
+        const BATCH_TEMPLATES = {
+            Accounts: [
+                { name: 'MF', days: [1, 5], studentBases: ['aarav.mehta','priya.sharma','rohan.patel','sneha.joshi','kiran.desai'] },
+                { name: 'TT', days: [2, 4], studentBases: ['ananya.verma','dev.malhotra','riya.shah','arjun.nair','pooja.gupta'] },
+                { name: 'WS', days: [3, 6], studentBases: ['vivek.iyer','meera.pillai','sahil.kapoor','nisha.reddy','yash.bhatt'] },
+            ],
+            Commerce: [
+                { name: 'MF', days: [1, 5], studentBases: ['vivek.iyer','ananya.verma','aarav.mehta','riya.shah','sneha.joshi'] },
+                { name: 'TT', days: [2, 4], studentBases: ['priya.sharma','meera.pillai','kiran.desai','dev.malhotra','nisha.reddy'] },
+                { name: 'WS', days: [3, 6], studentBases: ['rohan.patel','arjun.nair','pooja.gupta','sahil.kapoor','yash.bhatt'] },
+            ],
+        };
+
+        const CLASS_START = '17:00';
+        const CLASS_END   = '18:30';
+        const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+        // ── UI helpers ────────────────────────────────────────────────────────────────
+        function log(msg, type = '') {
+            const div = document.getElementById('log');
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = msg;
+            div.appendChild(line);
+            div.scrollTop = div.scrollHeight;
+        }
+
+        function sep() { log('─────────────────────────────────────', 'sep'); }
+
+        function setProgress(msg) {
+            document.getElementById('progress').textContent = msg;
+        }
+
+        function setPhase(id, state, statusText) {
+            const el = document.getElementById(`ph-${id}`);
+            el.className = `phase ${state}`;
+            document.getElementById(`ph-${id}-status`).textContent = statusText;
+        }
+
+        function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // ── Phase 0: Demo Teacher ─────────────────────────────────────────────────────
+        async function seedTeacher() {
+            setPhase('teacher', 'running', 'running…');
+            log('▶ PHASE 0 — DEMO TEACHER', 'info');
+
+            // Try signing in first (idempotent on reruns)
+            const { data: signInData, error: signInErr } = await client.auth.signInWithPassword({
+                email: DEMO_TEACHER_EMAIL,
+                password: DEMO_TEACHER_PASS,
+            });
+
+            if (!signInErr && signInData?.session) {
+                // Always ensure grade is set to 'Demo' (fix accounts created with grade: null)
+                await client.from('profiles').update({ grade: 'Demo' }).eq('id', signInData.session.user.id);
+                log(`  ✓ Signed in as existing demo teacher (${DEMO_TEACHER_EMAIL})`, 'ok');
+                setPhase('teacher', 'done', 'signed in');
+                sep();
+                return signInData.session;
+            }
+
+            // Account doesn't exist yet — create it
+            log(`  Creating demo teacher account…`, 'info');
+            const { data: signUpData, error: signUpErr } = await client.auth.signUp({
+                email: DEMO_TEACHER_EMAIL,
+                password: DEMO_TEACHER_PASS,
+                options: {
+                    data: { name: 'Demo Teacher', username: 'demo.teacher', role: 'teacher', grade: 'Demo', subjects: 'Accounts, Commerce' }
+                }
+            });
+
+            if (signUpErr || !signUpData?.session) {
+                log(`  ✗ Could not create demo teacher: ${signUpErr?.message || 'no session returned'}`, 'err');
+                log(`  If email confirmation is ON in Supabase, turn it OFF (Auth → Providers → Email → Confirm email).`, 'err');
+                setPhase('teacher', 'error', 'failed');
+                return null;
+            }
+
+            // Ensure profile row is correct
+            if (signUpData.user?.id) {
+                await client.from('profiles').upsert({
+                    id: signUpData.user.id,
+                    name: 'Demo Teacher',
+                    username: 'demo.teacher',
+                    role: 'teacher',
+                    subjects: 'Accounts, Commerce',
+                    grade: 'Demo',
+                });
+            }
+
+            log(`  ✓ Demo teacher created and signed in (${DEMO_TEACHER_EMAIL})`, 'ok');
+            setPhase('teacher', 'done', 'created');
+            sep();
+            return signUpData.session;
+        }
+
+        // ── Phase 1: Students ─────────────────────────────────────────────────────────
+        async function seedStudents(grade, gradeSuffix, teacherSession) {
+            setPhase('students', 'running', 'running…');
+            log('▶ PHASE 1 — STUDENTS', 'info');
+
+            const STUDENTS = STUDENT_NAMES.map(s => ({
+                name: s.name,
+                username: `${s.base}.${gradeSuffix}`,
+                grade,
+                subjects: 'Accounts, Commerce',
+            }));
+
+            // Delete existing profiles for this grade
+            const { data: existing } = await client.from('profiles').select('id,username').eq('role','student').eq('grade', grade);
+            if (existing && existing.length > 0) {
+                log(`Removing ${existing.length} existing ${grade} students…`, 'info');
+                for (const s of existing) {
+                    await client.from('profiles').delete().eq('id', s.id);
+                    await delay(100);
+                }
+            }
+
+            let ok = 0, fail = 0;
+            for (let i = 0; i < STUDENTS.length; i++) {
+                const s = STUDENTS[i];
+                setProgress(`Phase 1/5 — creating student ${i + 1} of ${STUDENTS.length}: ${s.name}`);
+                const email = `${s.username}@msgt.internal`;
+
+                try {
+                    const { data, error } = await client.auth.signUp({
+                        email,
+                        password: DEFAULT_PASSWORD,
+                        options: { data: { name: s.name, username: s.username, grade: s.grade, subjects: s.subjects, role: 'student', phone: '9769767219', father_phone: '9769767219' } }
+                    });
+
+                    await client.auth.setSession({ access_token: teacherSession.access_token, refresh_token: teacherSession.refresh_token });
+
+                    if (error) {
+                        log(`  ✗ ${s.name} — ${error.message}`, 'err');
+                        fail++;
+                        continue;
+                    }
+
+                    if (data?.user?.id) {
+                        await client.from('profiles').upsert({ id: data.user.id, name: s.name, username: s.username, grade: s.grade, subjects: s.subjects, role: 'student', phone: '9769767219', father_phone: '9769767219' });
+                    }
+
+                    log(`  ✓ ${s.name} (${s.username})`, 'ok');
+                    ok++;
+                } catch (e) {
+                    await client.auth.setSession({ access_token: teacherSession.access_token, refresh_token: teacherSession.refresh_token });
+                    log(`  ✗ ${s.name} — ${e.message}`, 'err');
+                    fail++;
+                }
+
+                await delay(600);
+            }
+
+            setPhase('students', fail > 0 ? 'done' : 'done', `${ok} created`);
+            log(`  Students done: ${ok} ok, ${fail} failed`, 'info');
+            sep();
+        }
+
+        // ── Phase 2+3: Batches & Classes ──────────────────────────────────────────────
+        async function seedBatchesAndClasses(grade, gradeSuffix, teacherId) {
+            setPhase('batches', 'running', 'running…');
+            setPhase('classes', 'running', 'running…');
+            log('▶ PHASE 2+3 — BATCHES & CLASSES', 'info');
+
+            // Fetch username→id map
+            const { data: allStudents } = await client.from('profiles').select('id,username').eq('role','student').eq('grade', grade);
+            if (!allStudents || allStudents.length === 0) {
+                log('  ✗ No students found — run students phase first.', 'err');
+                setPhase('batches', 'error', 'skipped'); setPhase('classes', 'error', 'skipped');
+                return;
+            }
+            const usernameToId = {};
+            allStudents.forEach(s => { usernameToId[s.username] = s.id; });
+
+            let batchCount = 0, classCount = 0;
+
+            for (const subject of ['Accounts', 'Commerce']) {
+                log(`  Subject: ${subject}`, 'info');
+
+                // Wipe existing batches for this grade+subject
+                const { data: existing } = await client.from('batches').select('id').eq('grade', grade).eq('subject', subject);
+                if (existing && existing.length > 0) {
+                    const ids = existing.map(b => b.id);
+                    const { data: existingClasses } = await client.from('classes').select('id').in('batch_id', ids);
+                    if (existingClasses && existingClasses.length > 0) {
+                        const cids = existingClasses.map(c => c.id);
+                        await client.from('attendance').delete().in('class_id', cids);
+                        await client.from('classes').delete().in('batch_id', ids);
+                    }
+                    await client.from('batch_students').delete().in('batch_id', ids);
+                    await client.from('batches').delete().in('id', ids);
+                    log(`  Wiped ${existing.length} existing ${subject} batch(es).`, 'ok');
+                }
+
+                for (const batchDef of BATCH_TEMPLATES[subject]) {
+                    setProgress(`Phase 2+3/5 — creating ${subject} batch ${batchDef.name}…`);
+
+                    const { data: batchData, error: batchErr } = await client
+                        .from('batches')
+                        .insert({ name: batchDef.name, grade, subject, created_by: teacherId })
+                        .select('id').single();
+
+                    if (batchErr || !batchData) { log(`  ✗ Batch ${batchDef.name} (${subject}): ${batchErr?.message}`, 'err'); continue; }
+
+                    const batchId = batchData.id;
+                    log(`  ✓ Batch "${batchDef.name}" (${subject})`, 'ok');
+                    batchCount++;
+
+                    // Enroll students
+                    const rows = batchDef.studentBases.map(base => {
+                        const username = `${base}.${gradeSuffix}`;
+                        return usernameToId[username] ? { batch_id: batchId, student_id: usernameToId[username] } : null;
+                    }).filter(Boolean);
+
+                    if (rows.length > 0) {
+                        const { error: bsErr } = await client.from('batch_students').insert(rows);
+                        if (bsErr) log(`    ✗ Enrollment failed: ${bsErr.message}`, 'err');
+                        else log(`    ✓ ${rows.length} students enrolled`, 'ok');
+                    }
+
+                    // Create regular classes (one per day)
+                    const groupId = crypto.randomUUID();
+                    const title = `${grade} – ${batchDef.name} – ${subject}`;
+                    const classRows = batchDef.days.map(day => ({
+                        batch_id: batchId, title, type: 'regular', day_of_week: day,
+                        start_time: CLASS_START, end_time: CLASS_END, class_group_id: groupId,
+                        created_by: teacherId, notes: null,
+                    }));
+
+                    const { error: clsErr } = await client.from('classes').insert(classRows);
+                    if (clsErr) log(`    ✗ Classes failed: ${clsErr.message}`, 'err');
+                    else {
+                        const days = batchDef.days.map(d => DAY_NAMES[d]).join(' + ');
+                        log(`    ✓ Classes: ${days} @ 5:00–6:30 PM`, 'ok');
+                        classCount += classRows.length;
+                    }
+
+                    await delay(200);
+                }
+            }
+
+            setPhase('batches', 'done', `${batchCount} created`);
+            setPhase('classes', 'done', `${classCount} created`);
+            log(`  Batches done: ${batchCount} | Classes done: ${classCount}`, 'info');
+            sep();
+        }
+
+        // ── Phase 4: Tests ────────────────────────────────────────────────────────────
+        async function seedTests(grade, teacherId) {
+            setPhase('tests', 'running', 'running…');
+            log('▶ PHASE 4 — TESTS', 'info');
+
+            // Remove existing dummy tests for this grade
+            const { data: existing } = await client.from('tests').select('id,title').ilike('title','Test %').eq('grade', grade);
+            if (existing && existing.length > 0) {
+                log(`  Removing ${existing.length} existing dummy tests…`, 'info');
+                for (const t of existing) {
+                    await client.from('tests').delete().eq('id', t.id);
+                    await delay(100);
+                }
+            }
+
+            const NUM = 15;
+            let ok = 0;
+            for (let i = 1; i <= NUM; i++) {
+                setProgress(`Phase 4/5 — creating test ${i} of ${NUM}…`);
+                const subject = i % 2 === 0 ? 'Accounts' : 'Commerce';
+                const d = new Date(); d.setDate(d.getDate() - (NUM - i) * 2);
+                const { error } = await client.from('tests').insert({
+                    title: `Test ${i}`, grade, subject,
+                    date: d.toISOString().split('T')[0],
+                    max_marks: 50, scheduled_by: teacherId,
+                });
+                if (error) log(`  ✗ Test ${i}: ${error.message}`, 'err');
+                else { log(`  ✓ Test ${i} — ${grade} ${subject}`, 'ok'); ok++; }
+                await delay(400);
+            }
+
+            setPhase('tests', 'done', `${ok} created`);
+            log(`  Tests done: ${ok} of ${NUM}`, 'info');
+            sep();
+        }
+
+        // ── Phase 5: Marks ────────────────────────────────────────────────────────────
+        async function seedMarks(grade) {
+            setPhase('marks', 'running', 'running…');
+            log('▶ PHASE 5 — MARKS', 'info');
+
+            const { data: tests } = await client.from('tests').select('id,title,max_marks').ilike('title','Test %').eq('grade', grade);
+            const { data: students } = await client.from('profiles').select('id,name').eq('role','student').eq('grade', grade);
+
+            if (!tests || tests.length === 0) { log('  ✗ No tests found.', 'err'); setPhase('marks', 'error', 'no tests'); return; }
+            if (!students || students.length === 0) { log('  ✗ No students found.', 'err'); setPhase('marks', 'error', 'no students'); return; }
+
+            const testIds = tests.map(t => t.id);
+            await client.from('marks').delete().in('test_id', testIds);
+
+            let ok = 0;
+            for (let i = 0; i < tests.length; i++) {
+                const test = tests[i];
+                setProgress(`Phase 5/5 — assigning marks for ${test.title} (${i + 1}/${tests.length})…`);
+
+                const rows = students.map(s => {
+                    const max = test.max_marks || 50;
+                    const min = Math.floor(max * 0.5);
+                    return { test_id: test.id, student_id: s.id, marks_obtained: Math.floor(Math.random() * (max - min + 1)) + min };
+                });
+
+                const { error } = await client.from('marks').insert(rows);
+                if (error) log(`  ✗ ${test.title}: ${error.message}`, 'err');
+                else { log(`  ✓ ${test.title} — ${rows.length} students`, 'ok'); ok++; }
+
+                await delay(400);
+            }
+
+            setPhase('marks', 'done', `${ok} tests`);
+            log(`  Marks done: ${ok} tests × ${students.length} students`, 'info');
+            sep();
+        }
+
+        // ── Main orchestrator ─────────────────────────────────────────────────────────
+        async function runAll() {
+            const btn = document.getElementById('btnRun');
+            btn.disabled = true;
+            document.getElementById('log').innerHTML = '';
+            ['teacher','students','batches','classes','tests','marks'].forEach(id => setPhase(id, '', 'pending'));
+
+            const grade = document.getElementById('gradeSelect').value;
+            const gradeSuffix = grade === 'Demo' ? 'demo' : grade.replace('th', '');
+
+            // Phase 0: sign in as demo teacher (creates account on first run)
+            const session = await seedTeacher();
+            if (!session) {
+                btn.disabled = false;
+                return;
+            }
+
+            const teacherId = session.user.id;
+            log(`Running as demo teacher (${session.user.email}) — seeding grade ${grade}…`, 'info');
+            sep();
+
+            await seedStudents(grade, gradeSuffix, session);
+            await seedBatchesAndClasses(grade, gradeSuffix, teacherId);
+            await seedTests(grade, teacherId);
+            await seedMarks(grade);
+
+            setProgress('✅ All phases complete.');
+            log('Done! Open teacher_dashboard.html to explore the data.', 'info');
+            log(`Teacher login:  ${DEMO_TEACHER_EMAIL}  /  ${DEMO_TEACHER_PASS}`, 'info');
+            log(`Student login:  <username>@msgt.internal  /  ${DEFAULT_PASSWORD}`, 'info');
+
+            btn.disabled = false;
+            btn.textContent = 'Run Again';
+        }
+    </script>
+
+</body>
+
+</html>

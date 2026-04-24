@@ -3430,13 +3430,59 @@ a.dash-sidebar__item {
 
 /* Today's Classes */
 .classes-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
 }
 
-/* Today's Classes & Tests — shared landing-pill style */
-.class-item,
+.classes-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (max-width: 480px) {
+    .classes-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Today's Classes — card style */
+.class-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-top: 3px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: var(--transition);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    text-align: left;
+    color: inherit;
+}
+
+.class-item--grade-11 {
+    border-top-color: var(--grade-11);
+    background: rgba(255, 68, 51, 0.04);
+}
+
+.class-item--grade-12 {
+    border-top-color: var(--grade-12);
+    background: rgba(0, 163, 108, 0.04);
+}
+
+.class-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+}
+
+/* Tests — keep original pill style */
 .test-preview-item {
     display: flex;
     align-items: center;
@@ -3454,7 +3500,6 @@ a.dash-sidebar__item {
     color: inherit;
 }
 
-.class-item:hover,
 .test-preview-item:hover {
     transform: translateY(-3px);
     border-color: var(--primary);
@@ -3482,6 +3527,47 @@ a.dash-sidebar__item {
 .class-item__badge--extra {
     background: rgba(255, 191, 0, 0.15);
     color: var(--amber);
+}
+
+.class-item__top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.class-item__grade {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.class-item__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.class-item__batch-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(115, 147, 179, 0.12);
+    padding: 0.15rem 0.6rem;
+    border-radius: var(--radius-full);
+}
+
+.class-item--grade-11 .class-item__batch-name {
+    color: var(--grade-11);
+    background: rgba(255, 68, 51, 0.1);
+}
+
+.class-item--grade-12 .class-item__batch-name {
+    color: var(--grade-12);
+    background: rgba(0, 163, 108, 0.1);
 }
 
 .test-preview-item--past .test-preview-item__badge {
