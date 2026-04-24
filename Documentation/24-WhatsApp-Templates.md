@@ -197,16 +197,9 @@ Defined in `supabase/functions/send-whatsapp/index.ts` → `resolveAttendanceTem
 | `mssc_attendance_present_student` | `[studentName, dayDate, batchName, classTimeDisplay, punchDisplay]` |
 | `mssc_test_result_parent` | `[parentName, studentName, testTitle, subject, score, total, average, studentName]` |
 | `mssc_test_result_student` | `[studentName, testTitle, subject, score, total, average]` |
-
----
-
-## Old Templates (to delete once new ones are working)
-
-- `mssc_attendance_absent` — replaced by `*_parent` and `*_student` variants
-- `mssc_attendance_late` — replaced
-- `mssc_attendance_present` — replaced
-
----
+| `mssc_announcement` | `[recipientName, body]` where `body = title ? "*title* — message" : message` (newlines stripped) |
+| `mssc_test_missed_parent` | `[parentName, studentName, testTitle, subject, date, studentName]` |
+| `mssc_test_missed_student` | `[studentName, testTitle, subject, date]` |
 
 ## Test Result Templates
 
@@ -276,6 +269,70 @@ Keep working hard and giving your best in every class!
 
 ---
 
+## Test Not Given Templates
+
+### 11. `mssc_test_missed_parent` ❌ Not yet submitted
+
+**Header:** Test Not Attempted
+
+**Body:**
+```
+Dear {{1}},
+
+We wish to inform you that {{2}} did not appear for the following test.
+
+Test: _{{3}}_
+Subject: {{4}}
+Date: {{5}}
+
+Kindly ensure {{6}} attempts this test at the earliest.
+```
+
+**Footer:** — Mitesh Sir's Study Circle
+
+**Button:** Visit website → https://www.miteshbhatt.in
+
+**Variable samples:**
+- {{1}} → Anshuman Misraa (parent name)
+- {{2}} → Ribhhu (student name)
+- {{3}} → Redemption of Debentures (test title)
+- {{4}} → Accounts (subject)
+- {{5}} → 2026-04-24 (test date)
+- {{6}} → Ribhhu (student name again)
+
+---
+
+### 12. `mssc_test_missed_student` ❌ Not yet submitted
+
+**Header:** Test Not Attempted
+
+**Body:**
+```
+Dear {{1}},
+
+We wish to inform you that you did not appear for the following test.
+
+Test: _{{2}}_
+Subject: {{3}}
+Date: {{4}}
+
+Kindly attempt this test at the earliest.
+```
+
+**Footer:** — Mitesh Sir's Study Circle
+
+**Button:** Visit website → https://www.miteshbhatt.in
+
+**Variable samples:**
+- {{1}} → Ribhhu (student name)
+- {{2}} → Redemption of Debentures (test title)
+- {{3}} → Accounts (subject)
+- {{4}} → 2026-04-24 (test date)
+
+**Sent from:** Manage Marks page → "Notify Not Given via WhatsApp" button (appears after saving marks, targets all students with no mark entered, sends to both student and parents)
+
+---
+
 ## Login Credentials Template
 
 ### 9. `mssc_welcome_student` ❌ Not yet created
@@ -311,7 +368,7 @@ Use the link below to log in and get started.
 
 ## Announcement Template
 
-### 10. `mssc_announcement` ❌ Not yet created
+### 10. `mssc_announcement` ✅ Submitted
 
 **Header:** Announcement
 
@@ -319,13 +376,12 @@ Use the link below to log in and get started.
 ```
 Dear {{1}},
 
-We have an important update from Mitesh Sir's Study Circle.
+Do note:
 
 {{2}}
 
-If you have any questions, feel free to reach out to us.
-
-Thank you for your continued support.
+Thank you for your support.
+Do reach out if you need any clarification.
 ```
 
 **Footer:** — Mitesh Sir's Study Circle
@@ -333,10 +389,11 @@ Thank you for your continued support.
 **Button:** Visit website → https://www.miteshbhatt.in
 
 **Variable samples:**
-- {{1}} → Parent / Student (recipient name)
-- {{2}} → Classes will be suspended on Monday, 21 April 2026 due to a public holiday. Classes resume Tuesday as per the regular schedule.
+- {{1}} → Anshuman (recipient name)
+- {{2}} → Classes will be suspended on Monday, 21 April 2026 due to a public holiday. Classes resume Tuesday.
 
 **Notes:**
-- {{2}} supports multi-line text up to ~1024 chars; newlines in the variable value are preserved by Meta
+- {{2}} cannot contain newlines or tabs — Meta returns error #132018 if it does. The edge function strips them automatically; the UI shows a warning.
+- Keep {{2}} under ~900 chars (total rendered body must be ≤1024 chars including fixed template text)
 - Send to parents, students, or both depending on context
-- Category: UTILITY
+- Category: MARKETING (auto-assigned by Meta)

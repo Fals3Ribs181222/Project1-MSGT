@@ -303,7 +303,7 @@
 
             // --- Today's Classes ---
             const classesRes = await window.api.get(
-                'classes', {}, '*, batches(name, subject)',
+                'classes', {}, '*, batches(name, subject, grade)',
                 { order: 'start_time', ascending: true }
             );
             const todaysList = document.getElementById('todaysClassesList');
@@ -312,19 +312,33 @@
                     c.class_date === todayIso || (!c.class_date && c.day_of_week === todayDow)
                 );
                 if (todays.length) {
-                    todaysList.innerHTML = todays.map(c => {
+                    const renderCard = c => {
                         const timeStr = window.formatTime ? window.formatTime(c.start_time) : c.start_time;
                         const isExtra = c.type === 'extra';
                         const type = isExtra ? 'Extra' : 'Regular';
+                        const grade = c.batches?.grade || '';
+                        const gradeClass = grade === window._Grade11 ? ' class-item--grade-11' : grade === window._Grade12 ? ' class-item--grade-12' : '';
                         return `
-                        <div class="class-item" data-class-id="${c.id}" data-batch-id="${c.batch_id}" data-title="${(c.title || '').replace(/"/g, '&quot;')}" data-batch-name="${(c.batches?.name || '').replace(/"/g, '&quot;')}" data-time="${timeStr}">
-                            <span class="class-item__badge${isExtra ? ' class-item__badge--extra' : ''}">${type}</span>
+                        <div class="class-item${gradeClass}" data-class-id="${c.id}" data-batch-id="${c.batch_id}" data-title="${(c.title || '').replace(/"/g, '&quot;')}" data-batch-name="${(c.batches?.name || '').replace(/"/g, '&quot;')}" data-time="${timeStr}">
+                            <div class="class-item__top-row">
+                                <span class="class-item__badge${isExtra ? ' class-item__badge--extra' : ''}">${type}</span>
+                                ${grade ? `<span class="class-item__grade">${window.esc(grade)}</span>` : ''}
+                            </div>
                             <div class="class-item__body">
-                                <strong>${c.batches?.subject || 'Class'}</strong>
-                                <span class="text-muted">${c.batches?.name || ''} &bull; ${timeStr}</span>
+                                <strong>${window.esc(c.batches?.name || 'Class')}</strong>
+                                <div class="class-item__meta">
+                                    <span class="text-muted">${window.esc(c.batches?.subject || '')}</span>
+                                    <span class="text-muted">${timeStr}</span>
+                                </div>
                             </div>
                         </div>`;
-                    }).join('');
+                    };
+                    const col11 = todays.filter(c => c.batches?.grade === window._Grade11);
+                    const col12 = todays.filter(c => c.batches?.grade === window._Grade12);
+                    todaysList.innerHTML = `
+                        <div class="classes-col">${col11.map(renderCard).join('') || '<p class="loading-text">No 11th classes today.</p>'}</div>
+                        <div class="classes-col">${col12.map(renderCard).join('') || '<p class="loading-text">No 12th classes today.</p>'}</div>
+                    `;
                     todaysList.querySelectorAll('.class-item[data-class-id]').forEach(item => {
                         item.addEventListener('click', async () => {
                             await window.loadTab('panel-attendance');

@@ -13,8 +13,9 @@ const corsHeaders = {
 
 // ── Meta Cloud API sender — free-form text ────────────────────
 async function sendViaMetaAPI(to: string, message: string) {
-    // Normalise to E.164 — strip leading 0, prepend 91 if not already there
-    const normalised = to.startsWith('91') ? to : `91${to.replace(/^0/, '')}`;
+    // Normalise to E.164: strip non-digits, then prepend 91 if not already a 12-digit Indian number
+    const digits = to.replace(/\D/g, '');
+    const normalised = digits.startsWith('91') && digits.length === 12 ? digits : `91${digits.replace(/^0/, '')}`;
 
     const response = await fetch(
         `https://graph.facebook.com/v19.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
@@ -43,7 +44,8 @@ async function sendViaMetaAPI(to: string, message: string) {
 
 // ── Meta Cloud API sender — approved template ─────────────────
 async function sendTemplateViaMetaAPI(to: string, templateName: string, params: string[]) {
-    const normalised = to.startsWith('91') ? to : `91${to.replace(/^0/, '')}`;
+    const digits = to.replace(/\D/g, '');
+    const normalised = digits.startsWith('91') && digits.length === 12 ? digits : `91${digits.replace(/^0/, '')}`;
 
     const response = await fetch(
         `https://graph.facebook.com/v19.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
@@ -138,6 +140,7 @@ async function logMessage(
     preview: string,
     sentBy: string | null,
     classId: string | null = null,
+    testId: string | null = null,
 ) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -150,6 +153,7 @@ async function logMessage(
         preview: preview,
         sent_by: sentBy,
         class_id: classId,
+        test_id: testId,
     }]);
 }
 
@@ -175,8 +179,14 @@ function renderTemplatePreview(name: string, params: string[]): string {
             return `Dear ${p(0)},\n\nWe are writing to share the latest test result for your child ${p(1)}.\n\nTest: ${p(2)}\nSubject: ${p(3)}\nMarks: ${p(4)}/${p(5)}\nClass Average: ${p(6)}\n\nThank you for your continued support in ${p(7)}'s learning journey.${footer}`;
         case 'mssc_test_result_student':
             return `Dear ${p(0)},\n\nYour latest test result is now available.\n\nTest: ${p(1)}\nSubject: ${p(2)}\nMarks: ${p(3)}/${p(4)}\nClass Average: ${p(5)}\n\nKeep working hard and giving your best in every class!${footer}`;
+        case 'mssc_test_missed_parent':
+            return `Dear ${p(0)},\n\nWe wish to inform you that ${p(1)} did not appear for the following test.\n\nTest: ${p(2)}\nSubject: ${p(3)}\nDate: ${p(4)}\n\nKindly ensure ${p(5)} attempts this test at the earliest.${footer}`;
+        case 'mssc_test_missed_student':
+            return `Dear ${p(0)},\n\nWe wish to inform you that you did not appear for the following test.\n\nTest: ${p(1)}\nSubject: ${p(2)}\nDate: ${p(3)}\n\nKindly attempt this test at the earliest.${footer}`;
         case 'mssc_welcome_student':
             return `Dear ${p(0)},\n\nWelcome to Mitesh Sir's Study Circle!\n\nUsername: ${p(1)}\nPassword: ${p(2)}${footer}`;
+        case 'mssc_announcement':
+            return `Dear ${p(0)},\n\nDo note:\n\n${p(1)}\n\nThank you for your support.\nDo reach out if you need any clarification.${footer}`;
         default:
             return `[${name}] ${params.join(' | ')}`;
     }
@@ -272,7 +282,7 @@ Deno.serve(async (req: Request) => {
 
     try {
         const body = await req.json();
-        const { type, recipients, payload, sent_by, class_id } = body;
+        const { type, recipients, payload, sent_by, class_id, test_id } = body;
 
         if (!type || !recipients || !Array.isArray(recipients) || recipients.length === 0) {
             return new Response(JSON.stringify({ error: 'Missing type or recipients' }), {
@@ -282,28 +292,20 @@ Deno.serve(async (req: Request) => {
         }
 
         const message = buildMessage(type, payload || {});
-        const results: Array<{ phone: string; success: boolean; error?: string }> = [];
-        let logPreview = message;
 
-        for (const recipient of recipients) {
+        async function sendToRecipient(recipient: typeof recipients[number]): Promise<{ phone: string; success: boolean; error?: string }> {
             const phone = recipient.phone;
-            if (!phone) {
-                results.push({ phone: 'missing', success: false, error: 'No phone number' });
-                continue;
-            }
+            if (!phone) return { phone: 'missing', success: false, error: 'No phone number' };
 
             try {
+                let logPreview: string;
+
                 if (type === 'attendance') {
-                    // Resolve per-recipient: inject role + name so correct template is chosen
                     const attendanceTemplate = resolveAttendanceTemplate(
                         { ...(payload || {}), recipient_role: recipient.role || 'parent' },
                         recipient.name,
                     );
-                    // Empty name = within grace period → no notification
-                    if (!attendanceTemplate.name) {
-                        results.push({ phone, success: true });
-                        continue;
-                    }
+                    if (!attendanceTemplate.name) return { phone, success: true };
                     await sendTemplateViaMetaAPI(phone, attendanceTemplate.name, attendanceTemplate.params);
                     logPreview = renderTemplatePreview(attendanceTemplate.name, attendanceTemplate.params);
                 } else if (type === 'score') {
@@ -317,17 +319,36 @@ Deno.serve(async (req: Request) => {
                     const average    = p.class_average || 'N/A';
                     if (isParent) {
                         const parentName = recipient.name || 'Parent';
-                        // mssc_test_result_parent: {{1}} parent {{2}} student {{3}} test {{4}} subject {{5}} score {{6}} total {{7}} average {{8}} student
                         await sendTemplateViaMetaAPI(phone, 'mssc_test_result_parent', [parentName, studentName, testTitle, subject, score, total, average, studentName]);
                         logPreview = renderTemplatePreview('mssc_test_result_parent', [parentName, studentName, testTitle, subject, score, total, average, studentName]);
                     } else {
-                        // mssc_test_result_student: {{1}} student {{2}} test {{3}} subject {{4}} score {{5}} total {{6}} average
                         await sendTemplateViaMetaAPI(phone, 'mssc_test_result_student', [studentName, testTitle, subject, score, total, average]);
                         logPreview = renderTemplatePreview('mssc_test_result_student', [studentName, testTitle, subject, score, total, average]);
                     }
+                } else if (type === 'test_missed') {
+                    const p = payload || {};
+                    const isParent = (recipient.role || 'parent') === 'parent';
+                    const studentName = p.student_name || 'Student';
+                    const testTitle   = p.test_title   || 'Test';
+                    const subject     = p.subject       || '';
+                    const date        = p.date          || '';
+                    if (isParent) {
+                        const parentName = recipient.name || 'Parent';
+                        await sendTemplateViaMetaAPI(phone, 'mssc_test_missed_parent', [parentName, studentName, testTitle, subject, date, studentName]);
+                        logPreview = renderTemplatePreview('mssc_test_missed_parent', [parentName, studentName, testTitle, subject, date, studentName]);
+                    } else {
+                        await sendTemplateViaMetaAPI(phone, 'mssc_test_missed_student', [studentName, testTitle, subject, date]);
+                        logPreview = renderTemplatePreview('mssc_test_missed_student', [studentName, testTitle, subject, date]);
+                    }
+                } else if (type === 'announcement') {
+                    const recipientName = recipient.name || 'Parent';
+                    const title = payload?.title;
+                    const msg   = (payload?.message || '').replace(/[\n\r\t]/g, ' ');
+                    const body  = title ? `*${title}* — ${msg}` : msg;
+                    await sendTemplateViaMetaAPI(phone, 'mssc_announcement', [recipientName, body]);
+                    logPreview = renderTemplatePreview('mssc_announcement', [recipientName, body]);
                 } else if (type === 'login') {
                     const p = payload || {};
-                    // mssc_welcome_student: {{1}} student_name {{2}} username {{3}} password
                     await sendTemplateViaMetaAPI(phone, 'mssc_welcome_student', [
                         p.student_name || 'Student',
                         p.username     || '',
@@ -348,14 +369,20 @@ Deno.serve(async (req: Request) => {
                     logPreview,
                     sent_by || null,
                     class_id || null,
+                    test_id || null,
                 );
 
-                results.push({ phone, success: true });
+                return { phone, success: true };
             } catch (err) {
                 console.error(`Failed to send to ${phone}:`, err.message);
-                results.push({ phone, success: false, error: err.message });
+                return { phone, success: false, error: err.message };
             }
         }
+
+        const settled = await Promise.allSettled(recipients.map(sendToRecipient));
+        const results = settled.map(r =>
+            r.status === 'fulfilled' ? r.value : { phone: 'unknown', success: false, error: (r as PromiseRejectedResult).reason?.message }
+        );
 
         const sent = results.filter(r => r.success).length;
         const failed = results.filter(r => !r.success).length;

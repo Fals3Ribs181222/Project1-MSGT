@@ -46,6 +46,31 @@ function attachAnnouncementListeners() {
     window.populateGradeSelect('noticeGrade');
     window.lockGradeSelect('noticeGrade');
 
+    const textarea = document.getElementById('noticeMessage');
+    const waCheckbox = document.getElementById('noticeWhatsApp');
+    const waHint = document.getElementById('waMessageHint');
+    const waCount = document.getElementById('waCharCount');
+
+    function updateWaHints() {
+        if (!waCheckbox?.checked) {
+            if (waHint) waHint.style.display = 'none';
+            if (waCount) waCount.style.display = 'none';
+            return;
+        }
+        const val = textarea?.value || '';
+        const hasNewlines = /[\n\r]/.test(val);
+        const len = val.length;
+        if (waHint) waHint.style.display = hasNewlines ? 'block' : 'none';
+        if (waCount) {
+            waCount.style.display = 'block';
+            waCount.textContent = `${len} / 900`;
+            waCount.style.color = len > 900 ? 'var(--color-error, #dc2626)' : 'var(--text-muted)';
+        }
+    }
+
+    textarea?.addEventListener('input', updateWaHints);
+    waCheckbox?.addEventListener('change', updateWaHints);
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnNotice');
@@ -59,7 +84,8 @@ function attachAnnouncementListeners() {
 
         const title = document.getElementById('noticeTitle').value;
         const message = document.getElementById('noticeMessage').value;
-        const grade = document.getElementById('noticeGrade').value;
+        const gradeEl = document.getElementById('noticeGrade');
+        const grade = gradeEl.dataset.gradeLocked ? (user?.grade || null) : (gradeEl.value || null);
         const sendWhatsApp = document.getElementById('noticeWhatsApp')?.checked;
 
         const response = await window.api.post('announcements', {
@@ -94,11 +120,16 @@ function attachAnnouncementListeners() {
                     const { data: students } = await query;
 
                     if (students && students.length > 0) {
-                        // Resolve parent recipients
+                        // Resolve parent recipients, deduplicated by phone
+                        const seen = new Set();
                         const recipients = [];
                         students.forEach(s => {
-                            const r = window.whatsapp.resolveRecipients(s, 'both');
-                            recipients.push(...r);
+                            window.whatsapp.resolveRecipients(s, 'both').forEach(r => {
+                                if (r.phone && !seen.has(r.phone)) {
+                                    seen.add(r.phone);
+                                    recipients.push(r);
+                                }
+                            });
                         });
 
                         if (recipients.length > 0) {

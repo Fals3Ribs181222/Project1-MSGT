@@ -106,6 +106,8 @@
                                             <th scope="col">Username</th>
                                             <th scope="col">Marks Obtained</th>
                                             <th scope="col">Percentage</th>
+                                            <th scope="col" style="width:5rem; text-align:center;">Score</th>
+                                            <th scope="col" style="width:5rem; text-align:center;">Missed</th>
                                         </tr>
                                     </thead>
                                     <tbody id="marksTableBody">
@@ -114,11 +116,15 @@
                                 </table>
                                 <div class="text-right" style="display:flex; gap:0.75rem; justify-content:flex-end; align-items:center; flex-wrap:wrap; margin-top:1rem;">
                                     <button type="submit" class="btn btn--primary" id="btnSaveMarks">Save All Marks</button>
-                                    <button type="button" class="btn btn--outline" id="btnSendScores" style="display:none; background:rgba(37,211,102,0.1); border-color:#25D366; color:#25D366;">
-                                        <i class="ri-whatsapp-line"></i> Send Scores via WhatsApp
+                                    <button type="button" class="btn btn--outline" id="btnSendMarks" style="display:none; background:rgba(37,211,102,0.1); border-color:#25D366; color:#25D366;">
+                                        📱 Send Marks (0)
+                                    </button>
+                                    <button type="button" class="btn btn--outline" id="btnSendNotAttempted" style="display:none; background:rgba(37,211,102,0.1); border-color:#25D366; color:#25D366;">
+                                        📱 Send Not Attempted (0)
                                     </button>
                                 </div>
-                                <div id="sendScoresStatus" class="status" style="display:none; margin-top:0.75rem;"></div>
+                                <div id="sendMarksStatus" class="status" style="display:none; margin-top:0.75rem;"></div>
+                                <div id="sendNotAttemptedStatus" class="status" style="display:none; margin-top:0.75rem;"></div>
                             </form>
                         </div>
 
