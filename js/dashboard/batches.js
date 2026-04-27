@@ -14,8 +14,7 @@ async function loadBatches() {
     btnRefresh.textContent = 'Refreshing...';
     window.tableLoading('batchesTableBody', 6, 'Loading batches...');
 
-    const batchFilter = user && user.grade ? { grade: user.grade } : {};
-    const batchRes = await window.api.get('batches', batchFilter, '*, classes(type, day_of_week, class_date, start_time)');
+    const batchRes = await window.api.get('batches', {}, '*, classes(type, day_of_week, class_date, start_time)');
 
     btnRefresh.disabled = false;
     btnRefresh.textContent = 'Refresh List';

@@ -245,16 +245,12 @@ document.getElementById('marksForm').addEventListener('submit', async (e) => {
     const inputs = document.querySelectorAll('.student-mark-input');
 
     const marksPayload = Array.from(inputs)
-        .map(i => {
-            const row = {
-                test_id: testId,
-                student_id: i.dataset.studentId,
-                marks_obtained: i.value.trim()
-            };
-            // If we have an existing mark ID, include it for upsert
-            if (i.dataset.markId) row.id = i.dataset.markId;
-            return row;
-        })
+        .map(i => ({
+            id: i.dataset.markId || crypto.randomUUID(),
+            test_id: testId,
+            student_id: i.dataset.studentId,
+            marks_obtained: i.value.trim()
+        }))
         .filter(m => m.marks_obtained !== '');
 
     if (marksPayload.length === 0) {
