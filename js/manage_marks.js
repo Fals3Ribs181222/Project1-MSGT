@@ -190,7 +190,7 @@ function markMissedSent(studentId) {
     if (!card) return;
     card.classList.add('mark-missed--sent');
     const cell = card.querySelector('.missed-status-cell');
-    if (cell) cell.innerHTML = `<span style="display:inline-block;padding:0.15rem 0.4rem;border-radius:3px;font-size:0.7rem;font-weight:600;background:rgba(180,83,9,0.12);color:#b45309;">✓ NA</span>`;
+    if (cell) cell.innerHTML = `<span style="display:inline-block;padding:0.15rem 0.4rem;border-radius:3px;font-size:0.7rem;font-weight:600;background:rgba(210,43,43,0.1);color:#D22B2B;">✓ Not Attempted</span>`;
 }
 
 async function applySentState() {
