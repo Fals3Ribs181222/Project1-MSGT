@@ -16,7 +16,7 @@
      * @param {string} [opts.sentBy] - teacher user ID
      * @returns {Promise<{success:boolean, sent:number, failed:number, results:Array}>}
      */
-    async function send({ type, recipients, payload, sentBy, classId, testId }) {
+    async function send({ type, recipients, payload, sentBy, sessionId, testId }) {
         const token = window.CONFIG.SUPABASE_ANON_KEY;
 
         const response = await fetch(SEND_WA_URL, {
@@ -30,7 +30,7 @@
                 recipients,
                 payload,
                 sent_by: sentBy || window.auth?.getUser()?.id || null,
-                class_id: classId || null,
+                session_id: sessionId || null,
                 test_id: testId || null,
             }),
         });

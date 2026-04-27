@@ -139,7 +139,7 @@ async function logMessage(
     recipientType: string,
     preview: string,
     sentBy: string | null,
-    classId: string | null = null,
+    sessionId: string | null = null,
     testId: string | null = null,
 ) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -152,7 +152,7 @@ async function logMessage(
         recipient_type: recipientType,
         preview: preview,
         sent_by: sentBy,
-        class_id: classId,
+        session_id: sessionId,
         test_id: testId,
     }]);
 }
@@ -187,6 +187,8 @@ function renderTemplatePreview(name: string, params: string[]): string {
             return `Dear ${p(0)},\n\nWelcome to Mitesh Sir's Study Circle!\n\nUsername: ${p(1)}\nPassword: ${p(2)}${footer}`;
         case 'mssc_announcement':
             return `Dear ${p(0)},\n\nDo note:\n\n${p(1)}\n\nThank you for your support.\nDo reach out if you need any clarification.${footer}`;
+        case 'mssc_class_update':
+            return `Dear ${p(0)},\n\nDo note:\n\n${p(1)}\n\nPlease save this notice for your reference.\nDo reach out if you need any clarification.${footer}`;
         default:
             return `[${name}] ${params.join(' | ')}`;
     }
@@ -282,7 +284,7 @@ Deno.serve(async (req: Request) => {
 
     try {
         const body = await req.json();
-        const { type, recipients, payload, sent_by, class_id, test_id } = body;
+        const { type, recipients, payload, sent_by, session_id, test_id } = body;
 
         if (!type || !recipients || !Array.isArray(recipients) || recipients.length === 0) {
             return new Response(JSON.stringify({ error: 'Missing type or recipients' }), {
@@ -345,8 +347,8 @@ Deno.serve(async (req: Request) => {
                     const title = payload?.title;
                     const msg   = (payload?.message || '').replace(/[\n\r\t]/g, ' ');
                     const body  = title ? `*${title}* — ${msg}` : msg;
-                    await sendTemplateViaMetaAPI(phone, 'mssc_announcement', [recipientName, body]);
-                    logPreview = renderTemplatePreview('mssc_announcement', [recipientName, body]);
+                    await sendTemplateViaMetaAPI(phone, 'mssc_class_update', [recipientName, body]);
+                    logPreview = renderTemplatePreview('mssc_class_update', [recipientName, body]);
                 } else if (type === 'login') {
                     const p = payload || {};
                     await sendTemplateViaMetaAPI(phone, 'mssc_welcome_student', [
@@ -368,7 +370,7 @@ Deno.serve(async (req: Request) => {
                     recipient.role || 'student',
                     logPreview,
                     sent_by || null,
-                    class_id || null,
+                    session_id || null,
                     test_id || null,
                 );
 

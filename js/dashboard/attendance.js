@@ -1,6 +1,8 @@
 const user = window.auth.getUser();
 
 let currentAttendanceClass = null;
+let currentAttendanceSession = null;
+let currentAttendanceDate = null;
 let currentAttendanceBatch = null;
 let currentBatchName = '';
 let currentClassTime = ''; // "HH:MM" 24h
@@ -48,13 +50,13 @@ async function loadTodaysClasses() {
     grid.querySelectorAll('.landing-pill').forEach(pill => {
         pill.addEventListener('click', () => {
             const t = pill.dataset;
-            openAttendanceGrid(t.classId, t.batchId, t.title, t.batchName, t.time);
+            openAttendanceGrid(t.classId, t.batchId, t.title, t.batchName, t.time, dateStr);
         });
     });
 }
 
 window.openAttendanceGrid = openAttendanceGrid;
-async function openAttendanceGrid(classId, batchId, title, batchName, time) {
+async function openAttendanceGrid(classId, batchId, title, batchName, time, sessionDate) {
     currentAttendanceClass = classId;
     currentAttendanceBatch = batchId;
     currentBatchName = batchName;
@@ -72,6 +74,25 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
     document.getElementById('attendanceSaveStatus').style.display = 'none';
     resetSendCheckedBtn();
 
+    // Get or create the session row for this class occurrence
+    const dateStr = sessionDate || new Date().toISOString().split('T')[0];
+    currentAttendanceDate = dateStr;
+    {
+        // Insert with minimal return to avoid PostgREST RLS read-back 409
+        await window.supabaseClient
+            .from('class_sessions')
+            .insert({ class_id: classId, session_date: dateStr });
+        // Always SELECT to get the id (works regardless of whether INSERT was new or conflict)
+        const { data: sessionData, error: sessionErr } = await window.supabaseClient
+            .from('class_sessions')
+            .select('id')
+            .eq('class_id', classId)
+            .eq('session_date', dateStr)
+            .single();
+        if (sessionErr) console.warn('[session select]', sessionErr.message, sessionErr.code);
+        currentAttendanceSession = sessionData?.id ?? null;
+    }
+
     const res = await window.api.get('batch_students', { batch_id: batchId }, '*, profiles:student_id(id, name)');
 
     if (!res.success) {
@@ -87,8 +108,7 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
         return;
     }
 
-    const dateStr = new Date().toISOString().split('T')[0];
-    const attRes = await window.api.get('attendance', { class_id: classId, date: dateStr });
+    const attRes = await window.api.get('attendance', { session_id: currentAttendanceSession });
 
     const statusMap = {};
     if (attRes.success && attRes.data) {
@@ -122,16 +142,16 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time) {
 
     await mergeTransferredGuests(batchId, classId, statusMap);
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    const sentRes = await window.supabaseClient
-        .from('whatsapp_log')
-        .select('student_id')
-        .eq('message_type', 'attendance')
-        .gte('sent_at', todayStr + 'T00:00:00')
-        .or(`class_id.eq.${classId},class_id.is.null`);
-    if (sentRes.data) {
-        const sentIds = new Set(sentRes.data.map(r => r.student_id));
-        sentIds.forEach(id => markRowAsSent(id));
+    if (currentAttendanceSession) {
+        const sentRes = await window.supabaseClient
+            .from('whatsapp_log')
+            .select('student_id')
+            .eq('message_type', 'attendance')
+            .eq('session_id', currentAttendanceSession);
+        if (sentRes.data) {
+            const sentIds = new Set(sentRes.data.map(r => r.student_id));
+            sentIds.forEach(id => markRowAsSent(id));
+        }
     }
 
     updateSendCheckedBtn();
@@ -206,18 +226,19 @@ async function saveAndSendOne(studentId) {
     if (!radioChecked) return { ok: false, msg: 'No status selected' };
 
     const status = radioChecked.value;
-    const dateStr = new Date().toISOString().split('T')[0];
+    const dateStr = currentAttendanceDate;
 
     const { error } = await window.supabaseClient
         .from('attendance')
         .upsert([{
             class_id: currentAttendanceClass,
+            session_id: currentAttendanceSession,
             batch_id: currentAttendanceBatch,
             student_id: studentId,
             date: dateStr,
             status,
             marked_by: user.id
-        }], { onConflict: 'class_id, student_id, date' });
+        }], { onConflict: 'session_id, student_id' });
 
     if (error) return { ok: false, msg: error.message };
 
@@ -244,7 +265,7 @@ async function saveAndSendOne(studentId) {
                 date: dateStr,
             },
             sentBy: user.id,
-            classId: currentAttendanceClass,
+            sessionId: currentAttendanceSession,
         });
         return { ok: true };
     } catch (err) {
@@ -343,6 +364,7 @@ export function init() {
             const isOpen = form.style.display !== 'none';
             form.style.display = isOpen ? 'none' : 'block';
             if (isOpen) return;
+            setTimeout(() => form.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 
             if (guestListLoadedForBatch === currentAttendanceBatch) return;
 
@@ -520,7 +542,7 @@ export function init() {
     const btnSaveAttendance = document.getElementById('btnSaveAttendance');
     if (btnSaveAttendance) {
         btnSaveAttendance.addEventListener('click', async () => {
-            if (!currentAttendanceClass || !currentAttendanceBatch) return;
+            if (!currentAttendanceClass || !currentAttendanceBatch || !currentAttendanceSession) return;
 
             btnSaveAttendance.disabled = true;
             btnSaveAttendance.textContent = 'Saving...';
@@ -528,11 +550,12 @@ export function init() {
             const statusText = document.getElementById('attendanceSaveStatus');
             statusText.style.display = 'none';
 
-            const dateStr = new Date().toISOString().split('T')[0];
+            const dateStr = currentAttendanceDate;
             const studentRadios = document.querySelectorAll('#attendanceTableBody input[type="radio"]:checked');
 
             const records = Array.from(studentRadios).map(r => ({
                 class_id: currentAttendanceClass,
+                session_id: currentAttendanceSession,
                 batch_id: currentAttendanceBatch,
                 student_id: r.getAttribute('data-student'),
                 date: dateStr,
@@ -542,7 +565,7 @@ export function init() {
 
             const { error } = await window.supabaseClient
                 .from('attendance')
-                .upsert(records, { onConflict: 'class_id, student_id, date' })
+                .upsert(records, { onConflict: 'session_id, student_id' })
                 .select();
 
             btnSaveAttendance.disabled = false;

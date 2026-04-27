@@ -1,33 +1,51 @@
 <form id="noticeForm">
-    <div class="form__group">
-        <label class="form__label" for="noticeTitle">Announcement Title</label>
-        <input type="text" id="noticeTitle" class="form__control" required placeholder="e.g. Important Notice">
-    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start;">
 
-    <div class="form__group">
-        <label class="form__label" for="noticeGrade">Grade</label>
-        <select id="noticeGrade" class="form__control"></select>
-    </div>
+        <!-- Left: form fields -->
+        <div>
+            <div class="form__group">
+                <label class="form__label" for="noticeTitle">Announcement Title</label>
+                <input type="text" id="noticeTitle" class="form__control" required placeholder="e.g. Important Notice">
+            </div>
 
-    <div class="form__group">
-        <label class="form__label" for="noticeMessage">Message Content</label>
-        <textarea id="noticeMessage" class="form__control" rows="6" required
-            placeholder="Type your announcement here..."></textarea>
-    </div>
+            <div class="form__group">
+                <label class="form__label" for="noticeGrade">Grade</label>
+                <select id="noticeGrade" class="form__control"></select>
+            </div>
 
-    <div id="waMessageHint" style="display:none; font-size:0.8rem; color:var(--color-warning, #b45309); margin-top:0.25rem;">
-        &#9888; WhatsApp messages must be a single paragraph — no line breaks. Keep under 900 characters for best delivery.
-    </div>
-    <div id="waCharCount" style="display:none; font-size:0.78rem; color:var(--text-muted); text-align:right; margin-top:0.15rem;">0 / 900</div>
+            <div class="form__group">
+                <label class="form__label" for="noticeMessage">Message Content</label>
+                <textarea id="noticeMessage" class="form__control" rows="8" required
+                    placeholder="Type your announcement here..."></textarea>
+            </div>
 
-    <div class="form__group" style="display:flex; align-items:center; gap:0.65rem; margin-top:0.25rem;">
-        <input type="checkbox" id="noticeWhatsApp" style="width:18px; height:18px; accent-color:#25D366;">
-        <label for="noticeWhatsApp" style="font-size:0.9rem; color:var(--text-main); cursor:pointer;">
-            Also send via WhatsApp to parents
-        </label>
-    </div>
+            <div id="waCharCount" style="display:none; font-size:0.78rem; color:var(--text-muted); text-align:right; margin-top:-0.5rem; margin-bottom:0.5rem;">0 / 900</div>
+            <div id="waMessageHint" style="display:none; font-size:0.8rem; color:var(--color-warning, #b45309); margin-bottom:0.75rem;">
+                &#9888; Line breaks are stripped before sending — the message will be sent as a single paragraph.
+            </div>
 
-    <button type="submit" class="btn btn--primary btn--full" id="btnNotice">Post Announcement</button>
-    <div id="noticeStatus" class="status"></div>
-    <div id="noticeWhatsAppStatus" class="status" style="display:none;"></div>
+            <button type="submit" class="btn btn--primary btn--full" id="btnNotice">Post Announcement</button>
+            <div id="noticeStatus" class="status"></div>
+            <div id="noticeWhatsAppStatus" class="status" style="display:none;"></div>
+        </div>
+
+        <!-- Right: WhatsApp preview -->
+        <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem;">WhatsApp preview</div>
+            <div style="background:#ece5dd; border-radius:8px; padding:1rem;">
+                <div id="waPreviewBubble" style="
+                    background:#d9fdd3;
+                    border-radius:0 10px 10px 10px;
+                    padding:0.65rem 0.85rem;
+                    font-size:0.85rem;
+                    line-height:1.6;
+                    white-space:pre-wrap;
+                    word-break:break-word;
+                    box-shadow:0 1px 2px rgba(0,0,0,.12);
+                    font-family:inherit;
+                "></div>
+            </div>
+        </div>
+
+    </div>
 </form>

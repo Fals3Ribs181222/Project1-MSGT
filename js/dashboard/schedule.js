@@ -103,14 +103,15 @@ async function renderCalendar() {
                 type: c.type,
                 notes: c.notes,
                 batch_id: c.batch_id,
-                relatedDays: relatedDays
+                relatedDays: relatedDays,
+                date: dateString
             });
 
             pill.addEventListener('click', async (e) => {
                 const data = JSON.parse(e.currentTarget.dataset.classData);
                 await window.loadTab('panel-attendance');
                 if (window.openAttendanceGrid) {
-                    window.openAttendanceGrid(data.id, data.batch_id, data.title, data.batchName, data.startTime);
+                    window.openAttendanceGrid(data.id, data.batch_id, data.title, data.batchName, data.startTime, data.date);
                 }
             });
 

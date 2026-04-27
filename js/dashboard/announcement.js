@@ -46,20 +46,24 @@ function attachAnnouncementListeners() {
     window.populateGradeSelect('noticeGrade');
     window.lockGradeSelect('noticeGrade');
 
+    const titleInput = document.getElementById('noticeTitle');
     const textarea = document.getElementById('noticeMessage');
-    const waCheckbox = document.getElementById('noticeWhatsApp');
     const waHint = document.getElementById('waMessageHint');
     const waCount = document.getElementById('waCharCount');
+    const waPreviewBubble = document.getElementById('waPreviewBubble');
 
-    function updateWaHints() {
-        if (!waCheckbox?.checked) {
-            if (waHint) waHint.style.display = 'none';
-            if (waCount) waCount.style.display = 'none';
-            return;
+    function updateWaPreview() {
+        const rawMsg = textarea?.value || '';
+        const title  = titleInput?.value?.trim() || '';
+        const body   = title ? `*${title}* — ${rawMsg.replace(/[\n\r]/g, ' ')}` : rawMsg.replace(/[\n\r]/g, ' ');
+        const hasNewlines = /[\n\r]/.test(rawMsg);
+        const len = rawMsg.length;
+
+        if (waPreviewBubble) {
+            const footer = '— Mitesh Sir\'s Study Circle';
+            waPreviewBubble.textContent =
+                `Dear [Recipient Name],\n\nDo note:\n\n${body}\n\nPlease save this notice for your reference.\nDo reach out if you need any clarification.\n\n${footer}`;
         }
-        const val = textarea?.value || '';
-        const hasNewlines = /[\n\r]/.test(val);
-        const len = val.length;
         if (waHint) waHint.style.display = hasNewlines ? 'block' : 'none';
         if (waCount) {
             waCount.style.display = 'block';
@@ -68,8 +72,9 @@ function attachAnnouncementListeners() {
         }
     }
 
-    textarea?.addEventListener('input', updateWaHints);
-    waCheckbox?.addEventListener('change', updateWaHints);
+    textarea?.addEventListener('input', updateWaPreview);
+    titleInput?.addEventListener('input', updateWaPreview);
+    updateWaPreview();
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -86,7 +91,6 @@ function attachAnnouncementListeners() {
         const message = document.getElementById('noticeMessage').value;
         const gradeEl = document.getElementById('noticeGrade');
         const grade = gradeEl.dataset.gradeLocked ? (user?.grade || null) : (gradeEl.value || null);
-        const sendWhatsApp = document.getElementById('noticeWhatsApp')?.checked;
 
         const response = await window.api.post('announcements', {
             title,
@@ -98,8 +102,7 @@ function attachAnnouncementListeners() {
         if (response.success) {
             window.showStatus('noticeStatus', 'Announcement posted successfully!', 'success');
 
-            // Send via WhatsApp if checked
-            if (sendWhatsApp && window.whatsapp) {
+            if (window.whatsapp) {
                 try {
                     if (waStatus) {
                         waStatus.textContent = 'Sending WhatsApp messages...';
@@ -107,20 +110,16 @@ function attachAnnouncementListeners() {
                         waStatus.style.display = 'block';
                     }
 
-                    // Fetch student profiles for the grade
                     let query = window.supabaseClient
                         .from('profiles')
                         .select('id, name, phone, father_phone, mother_phone')
                         .eq('role', 'student');
 
-                    if (grade) {
-                        query = query.eq('grade', grade);
-                    }
+                    if (grade) query = query.eq('grade', grade);
 
                     const { data: students } = await query;
 
                     if (students && students.length > 0) {
-                        // Resolve parent recipients, deduplicated by phone
                         const seen = new Set();
                         const recipients = [];
                         students.forEach(s => {
@@ -147,7 +146,7 @@ function attachAnnouncementListeners() {
                             }
                         } else {
                             if (waStatus) {
-                                waStatus.textContent = 'No mother/father phone numbers found.';
+                                waStatus.textContent = 'No phone numbers found.';
                                 waStatus.className = 'status status--error';
                                 waStatus.style.display = 'block';
                             }

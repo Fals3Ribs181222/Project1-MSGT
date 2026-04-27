@@ -197,7 +197,7 @@ Defined in `supabase/functions/send-whatsapp/index.ts` → `resolveAttendanceTem
 | `mssc_attendance_present_student` | `[studentName, dayDate, batchName, classTimeDisplay, punchDisplay]` |
 | `mssc_test_result_parent` | `[parentName, studentName, testTitle, subject, score, total, average, studentName]` |
 | `mssc_test_result_student` | `[studentName, testTitle, subject, score, total, average]` |
-| `mssc_announcement` | `[recipientName, body]` where `body = title ? "*title* — message" : message` (newlines stripped) |
+| `mssc_class_update` | `[recipientName, body]` where `body = title ? "*title* — message" : message` (newlines stripped); used for `type: 'announcement'` |
 | `mssc_test_missed_parent` | `[parentName, studentName, testTitle, subject, date, studentName]` |
 | `mssc_test_missed_student` | `[studentName, testTitle, subject, date]` |
 
@@ -271,7 +271,7 @@ Keep working hard and giving your best in every class!
 
 ## Test Not Given Templates
 
-### 11. `mssc_test_missed_parent` ❌ Not yet submitted
+### 11. `mssc_test_missed_parent` ✅ Submitted
 
 **Header:** Test Not Attempted
 
@@ -302,7 +302,7 @@ Kindly ensure {{6}} attempts this test at the earliest.
 
 ---
 
-### 12. `mssc_test_missed_student` ❌ Not yet submitted
+### 12. `mssc_test_missed_student` ✅ Submitted
 
 **Header:** Test Not Attempted
 
@@ -333,7 +333,7 @@ Kindly attempt this test at the earliest.
 
 ---
 
-## Login Credentials Template
+
 
 ### 9. `mssc_welcome_student` ❌ Not yet created
 
@@ -368,9 +368,9 @@ Use the link below to log in and get started.
 
 ## Announcement Template
 
-### 10. `mssc_announcement` ✅ Submitted
+### 10. `mssc_class_update` ✅ Submitted *(replaces `mssc_announcement`)*
 
-**Header:** Announcement
+**Header:** None
 
 **Body:**
 ```
@@ -380,20 +380,20 @@ Do note:
 
 {{2}}
 
-Thank you for your support.
+Please save this notice for your reference.
 Do reach out if you need any clarification.
 ```
 
 **Footer:** — Mitesh Sir's Study Circle
 
-**Button:** Visit website → https://www.miteshbhatt.in
+**Button:** None
 
 **Variable samples:**
-- {{1}} → Anshuman (recipient name)
+- {{1}} → Anshuman Misraa (recipient name)
 - {{2}} → Classes will be suspended on Monday, 21 April 2026 due to a public holiday. Classes resume Tuesday.
 
 **Notes:**
 - {{2}} cannot contain newlines or tabs — Meta returns error #132018 if it does. The edge function strips them automatically; the UI shows a warning.
 - Keep {{2}} under ~900 chars (total rendered body must be ≤1024 chars including fixed template text)
 - Send to parents, students, or both depending on context
-- Category: MARKETING (auto-assigned by Meta)
+- Edge function type: `announcement`

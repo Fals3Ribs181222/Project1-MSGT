@@ -4,6 +4,7 @@ let testId = null;
 let currentTest = null;
 let allStudents = [];
 let existingMarks = [];
+let eligibleStudents = [];
 
 // Async initialization wrapper
 (async () => {
@@ -63,7 +64,7 @@ function renderPage() {
     const targetGrade = String(currentTest.grade).trim();
     const targetSubject = String(currentTest.subject).trim().toLowerCase();
 
-    const eligibleStudents = allStudents.filter(s => {
+    eligibleStudents = allStudents.filter(s => {
         const sGrade = String(s.grade).trim();
         const sSubjects = String(s.subjects || '').toLowerCase();
         return sGrade === targetGrade && sSubjects.includes(targetSubject);
@@ -71,44 +72,48 @@ function renderPage() {
 
     document.getElementById('studentCount').textContent = `${eligibleStudents.length} Students found`;
 
-    const tbody = document.getElementById('marksTableBody');
+    const grid = document.getElementById('marksGrid');
     const marksMap = {};
     existingMarks.forEach(m => {
         marksMap[m.student_id] = { id: m.id, marks: m.marks_obtained };
     });
 
     if (eligibleStudents.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="loading-text">No students found matching this Grade and Subject.</td></tr>';
+        grid.innerHTML = '<p class="loading-text">No students found matching this Grade and Subject.</p>';
     } else {
-        tbody.innerHTML = eligibleStudents.map(s => {
+        const max = Number(currentTest.max_marks) || 100;
+        grid.innerHTML = eligibleStudents.map(s => {
             const markData = marksMap[s.id] || {};
             const existingMark = markData.marks;
-            const maxM = Number(currentTest.max_marks) || 100;
-            const pct = existingMark !== undefined && existingMark !== '' ? ((Number(existingMark) / maxM) * 100).toFixed(1) + '%' : '-';
+            const pct = existingMark !== undefined && existingMark !== ''
+                ? ((Number(existingMark) / max) * 100).toFixed(1) + '%' : '—';
             return `
-            <tr class="data-table__row" data-student-id="${s.id}">
-                <td class="data-table__td--main">${s.name}</td>
-                <td class="data-table__td">${s.username || '-'}</td>
-                <td class="data-table__td">
+            <div class="mark-card" data-student-id="${s.id}" data-name="${window.esc(s.name)}">
+                <div class="mark-card__name">${window.esc(s.name)}</div>
+                <div class="mark-card__input-row">
                     <input type="number"
-                        class="form__control form__control--narrow student-mark-input"
+                        class="form__control student-mark-input"
                         data-student-id="${s.id}"
                         data-mark-id="${markData.id || ''}"
                         value="${existingMark !== undefined ? existingMark : ''}"
                         min="0"
                         max="${currentTest.max_marks}"
-                        placeholder="Max: ${currentTest.max_marks}"
+                        placeholder="–"
                     >
-                </td>
-                <td class="data-table__td pct-cell">${pct}</td>
-                <td class="data-table__td score-status-cell" style="text-align:center;"></td>
-                <td class="data-table__td missed-status-cell" style="text-align:center;"></td>
-            </tr>
+                    <span class="mark-card__max">/ ${currentTest.max_marks}</span>
+                    <span class="mark-card__pct pct-cell">${pct}</span>
+                </div>
+                <div class="mark-card__badges">
+                    <span class="score-status-cell"></span>
+                    <span class="missed-status-cell"></span>
+                </div>
+            </div>
         `}).join('');
     }
 
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('marksTableContainer').hidden = false;
+    document.getElementById('marksStickyBar').hidden = false;
 
     updatePerformanceSummary();
 }
@@ -124,8 +129,16 @@ function updatePerformanceSummary() {
     const pctCells = document.querySelectorAll('.pct-cell');
     inputs.forEach((input, idx) => {
         const val = input.value.trim();
-        if (pctCells[idx]) {
-            pctCells[idx].textContent = val !== '' ? ((Number(val) / max) * 100).toFixed(1) + '%' : '-';
+        if (!pctCells[idx]) return;
+        if (val !== '') {
+            const pct = (Number(val) / max) * 100;
+            pctCells[idx].textContent = pct.toFixed(1) + '%';
+            pctCells[idx].style.color = pct >= 60 ? 'var(--secondary)' : pct >= 40 ? '#b45309' : 'var(--cadmium-red)';
+            pctCells[idx].style.fontWeight = '600';
+        } else {
+            pctCells[idx].textContent = '-';
+            pctCells[idx].style.color = '';
+            pctCells[idx].style.fontWeight = '';
         }
     });
 
@@ -134,6 +147,8 @@ function updatePerformanceSummary() {
         document.getElementById('statHighest').textContent = '-';
         document.getElementById('statLowest').textContent = '-';
         document.getElementById('statAvgPercent').textContent = '-';
+        const progressEl = document.getElementById('marksProgress');
+        if (progressEl) progressEl.textContent = inputs.length > 0 ? `0 / ${inputs.length} entered` : '';
         return;
     }
 
@@ -146,34 +161,36 @@ function updatePerformanceSummary() {
     document.getElementById('statHighest').textContent = high;
     document.getElementById('statLowest').textContent = low;
     document.getElementById('statAvgPercent').textContent = avgPercent.toFixed(1) + '%';
+
+    const progressEl = document.getElementById('marksProgress');
+    if (progressEl) {
+        const total = inputs.length;
+        progressEl.textContent = total > 0 ? `${marksValues.length} / ${total} entered` : '';
+    }
 }
 
 const SENT_BADGE = 'display:inline-block;padding:0.15rem 0.4rem;border-radius:3px;font-size:0.7rem;font-weight:600;background:rgba(37,211,102,0.15);color:#1a9e52;';
 
 function markScoreSent(studentId) {
-    const row = document.querySelector(`#marksTableBody tr.data-table__row[data-student-id="${studentId}"]`);
-    if (!row || row.classList.contains('mark-row--sent')) return;
-    row.classList.add('mark-row--sent');
-    row.style.background = 'rgba(37,211,102,0.12)';
-    row.style.borderLeft = '3px solid #25D366';
-    const chk = row.querySelector('.row-send-chk');
-    if (chk) { chk.checked = false; chk.disabled = true; }
-    const cell = row.querySelector('.score-status-cell');
-    if (cell) cell.innerHTML = `<span style="${SENT_BADGE}">✓ Sent</span>`;
+    const card = document.querySelector(`.mark-card[data-student-id="${studentId}"]`);
+    if (!card || card.classList.contains('mark-row--sent')) return;
+    card.classList.add('mark-row--sent');
+    const cell = card.querySelector('.score-status-cell');
+    if (cell) cell.innerHTML = `<span style="${SENT_BADGE}">✓ Score</span>`;
     updateSendBtns();
 }
 
 function markMissedSent(studentId) {
-    const row = document.querySelector(`#marksTableBody tr.data-table__row[data-student-id="${studentId}"]`);
-    if (!row) return;
-    row.classList.add('mark-missed--sent');
-    const cell = row.querySelector('.missed-status-cell');
-    if (cell) cell.innerHTML = `<span style="${SENT_BADGE}">✓ Sent</span>`;
+    const card = document.querySelector(`.mark-card[data-student-id="${studentId}"]`);
+    if (!card) return;
+    card.classList.add('mark-missed--sent');
+    const cell = card.querySelector('.missed-status-cell');
+    if (cell) cell.innerHTML = `<span style="display:inline-block;padding:0.15rem 0.4rem;border-radius:3px;font-size:0.7rem;font-weight:600;background:rgba(180,83,9,0.12);color:#b45309;">✓ NA</span>`;
 }
 
 async function applySentState() {
     if (!currentTest) return;
-    const eligibleIds = Array.from(document.querySelectorAll('[data-student-id]')).map(r => r.dataset.studentId).filter(Boolean);
+    const eligibleIds = Array.from(document.querySelectorAll('.mark-card[data-student-id]')).map(r => r.dataset.studentId).filter(Boolean);
     if (!eligibleIds.length) return;
 
     const { data } = await window.supabaseClient
@@ -189,15 +206,15 @@ async function applySentState() {
 }
 
 function updateSendBtns() {
-    const marksCount = Array.from(document.querySelectorAll('#marksTableBody tr.data-table__row:not(.mark-row--sent)'))
-        .filter(row => {
-            const input = row.querySelector('.student-mark-input');
+    const marksCount = Array.from(document.querySelectorAll('#marksGrid .mark-card:not(.mark-row--sent)'))
+        .filter(card => {
+            const input = card.querySelector('.student-mark-input');
             return input && input.value.trim() !== '';
         }).length;
 
-    const missedCount = Array.from(document.querySelectorAll('#marksTableBody tr.data-table__row:not(.mark-missed--sent)'))
-        .filter(row => {
-            const input = row.querySelector('.student-mark-input');
+    const missedCount = Array.from(document.querySelectorAll('#marksGrid .mark-card:not(.mark-missed--sent)'))
+        .filter(card => {
+            const input = card.querySelector('.student-mark-input');
             return input && input.value.trim() === '';
         }).length;
 
@@ -264,6 +281,7 @@ document.getElementById('marksForm').addEventListener('submit', async (e) => {
                 document.getElementById('btnSendMarks').style.display = 'inline-flex';
                 document.getElementById('btnSendNotAttempted').style.display = 'inline-flex';
                 updateSendBtns();
+                document.getElementById('marksStickyBar').hidden = false;
             }
         } else {
             throw new Error(response.error || 'Failed to save marks.');
@@ -285,8 +303,8 @@ document.getElementById('btnSendMarks')?.addEventListener('click', async () => {
     if (!btn || !currentTest) return;
 
     const allInputs = document.querySelectorAll('.student-mark-input');
-    const marksData = Array.from(document.querySelectorAll('#marksTableBody tr.data-table__row:not(.mark-row--sent)'))
-        .map(row => ({ studentId: row.dataset.studentId, marks: row.querySelector('.student-mark-input')?.value.trim() }))
+    const marksData = Array.from(document.querySelectorAll('#marksGrid .mark-card:not(.mark-row--sent)'))
+        .map(card => ({ studentId: card.dataset.studentId, marks: card.querySelector('.student-mark-input')?.value.trim() }))
         .filter(m => m.marks !== '' && m.marks !== undefined);
 
     if (marksData.length === 0) return;
@@ -359,12 +377,12 @@ document.getElementById('btnSendNotAttempted')?.addEventListener('click', async 
     const statusEl = document.getElementById('sendNotAttemptedStatus');
     if (!btn || !currentTest) return;
 
-    const absentIds = Array.from(document.querySelectorAll('#marksTableBody tr.data-table__row:not(.mark-missed--sent)'))
-        .filter(row => {
-            const input = row.querySelector('.student-mark-input');
+    const absentIds = Array.from(document.querySelectorAll('#marksGrid .mark-card:not(.mark-missed--sent)'))
+        .filter(card => {
+            const input = card.querySelector('.student-mark-input');
             return input && input.value.trim() === '';
         })
-        .map(row => row.dataset.studentId);
+        .map(card => card.dataset.studentId);
 
     if (absentIds.length === 0) return;
 
@@ -420,6 +438,97 @@ document.getElementById('btnSendNotAttempted')?.addEventListener('click', async 
     } finally {
         btn.disabled = false;
         updateSendBtns();
+    }
+});
+
+// ── Leaderboard Modal ─────────────────────────────────────────
+function openLeaderboardModal() {
+    const modal = document.getElementById('leaderboardModal');
+    const tbody = document.getElementById('lbModalBody');
+    const titleEl = document.getElementById('lbModalTitle');
+    const metaEl = document.getElementById('lbModalMeta');
+    const max = Number(currentTest.max_marks) || 100;
+
+    titleEl.textContent = `${currentTest.title} — Leaderboard`;
+    metaEl.textContent = `${currentTest.subject} · Grade ${currentTest.grade} · Max: ${max}`;
+
+    const savedMap = {};
+    existingMarks.forEach(m => { savedMap[m.student_id] = m.marks_obtained; });
+
+    const withMarks = eligibleStudents
+        .filter(s => savedMap[s.id] !== undefined && savedMap[s.id] !== '')
+        .map(s => ({ name: s.name, marks: Number(savedMap[s.id]) }))
+        .sort((a, b) => b.marks - a.marks);
+
+    const withoutMarks = eligibleStudents
+        .filter(s => savedMap[s.id] === undefined || savedMap[s.id] === '');
+
+    if (withMarks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="loading-text">No marks recorded yet. Save marks first.</td></tr>';
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        return;
+    }
+
+    const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+    let rank = 1;
+    let prevMarks = null;
+
+    tbody.innerHTML = [
+        ...withMarks.map((s, i) => {
+            if (s.marks !== prevMarks) rank = i + 1;
+            prevMarks = s.marks;
+            const pctNum = (s.marks / max) * 100;
+            const pct = pctNum.toFixed(1);
+            const color = pctNum >= 60 ? 'var(--secondary)' : pctNum >= 40 ? '#b45309' : 'var(--cadmium-red)';
+            return `<tr class="data-table__row">
+                <td class="data-table__td" style="font-weight:700;">${medals[rank] ? medals[rank] + ' ' : ''}${rank}</td>
+                <td class="data-table__td--main">${window.esc(s.name)}</td>
+                <td class="data-table__td">${s.marks}/${max}</td>
+                <td class="data-table__td" style="font-weight:600;color:${color};">${pct}%</td>
+            </tr>`;
+        }),
+        ...withoutMarks.map(s => `<tr class="data-table__row" style="opacity:0.5;">
+            <td class="data-table__td">—</td>
+            <td class="data-table__td--main">${window.esc(s.name)}</td>
+            <td class="data-table__td">—</td>
+            <td class="data-table__td">—</td>
+        </tr>`)
+    ].join('');
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLeaderboardModal() {
+    document.getElementById('leaderboardModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+document.getElementById('btnOpenLeaderboard')?.addEventListener('click', openLeaderboardModal);
+document.getElementById('btnOpenLeaderboard')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLeaderboardModal(); }
+});
+document.getElementById('lbModalClose')?.addEventListener('click', closeLeaderboardModal);
+document.getElementById('leaderboardModal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeLeaderboardModal();
+});
+
+// ── Search filter ─────────────────────────────────────────────
+document.getElementById('marksSearch')?.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('#marksGrid .mark-card').forEach(card => {
+        card.style.display = (card.dataset.name || '').toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+
+// ── Keyboard nav: Enter moves to next input ───────────────────
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.classList.contains('student-mark-input')) {
+        e.preventDefault();
+        const inputs = Array.from(document.querySelectorAll('.student-mark-input'));
+        const idx = inputs.indexOf(e.target);
+        if (idx < inputs.length - 1) inputs[idx + 1].focus();
     }
 });
 

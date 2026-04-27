@@ -148,6 +148,75 @@ Detailed documentation in [Documentation/](Documentation/) (25 markdown files):
 - `24-WhatsApp-Templates.md` — approved Meta message templates and parameter mapping
 - `00-CSS-Data.md` — design system & CSS variables
 
+## Database Schema
+
+Supabase project ID: `tksruuqtzxflgglnljef`
+
+> All users (students, teachers, admins) are in `profiles`. There is no `students` table.
+
+### profiles
+`id` (uuid PK), `name`, `username`, `role` (teacher/student/admin), `grade`, `subjects`, `phone`, `email`, `father_name`, `father_phone`, `mother_name`, `mother_phone`, `teacher_notes`, `created_at`
+
+### batches
+`id` (uuid PK), `name`, `description`, `subject`, `grade`, `schedule`, `created_by` (→ profiles), `created_at`
+
+### batch_students
+`id` (uuid PK), `batch_id` (→ batches), `student_id` (→ profiles), `added_at`
+
+### batch_transfers
+`id` (uuid PK), `student_id`, `from_batch_id`, `to_batch_id`, `transfer_date`, `end_date`, `reason`, `created_by`, `created_at`
+
+### classes
+`id` (uuid PK), `batch_id`, `title`, `type`, `day_of_week` (int), `class_date`, `start_time`, `end_time`, `notes`, `class_group_id`, `created_by`, `created_at`
+
+### attendance
+`id` (uuid PK), `batch_id`, `class_id`, `student_id`, `date`, `status`, `marked_by`, `created_at`
+
+### tests
+`id` (uuid PK), `title`, `grade`, `subject`, `date`, `max_marks` (int), `scheduled_by`, `created_at`
+
+### marks
+`id` (uuid PK), `test_id` (→ tests), `student_id` (→ profiles), `marks_obtained` (text), `created_at`
+
+### announcements
+`id` (uuid PK), `title`, `grade`, `message`, `posted_by` (→ profiles), `created_at`
+
+### files
+`id` (uuid PK), `title`, `grade`, `subject`, `file_url`, `upload_type`, `uploaded_by`, `created_at`
+
+### material_chunks
+`id` (uuid PK), `file_id` (→ files), `chunk_index` (int), `content`, `embedding` (vector), `subject`, `grade`, `teacher_id`, `created_at`
+
+### question_bank
+`id` (uuid PK), `year` (int), `subject`, `grade`, `section`, `marks` (int), `question_type`, `cog_level`, `topic_tags` (array), `question_text`, `answer_text`, `embedding` (vector), `uploaded_by`, `created_at`
+
+### student_rankings *(view)*
+`student_id`, `name`, `grade`, `subject`, `avg_percentage`, `tests_taken`, `class_avg`, `final_score`, `rank`
+
+### rank_history
+`id` (uuid PK), `student_id`, `rank` (int), `avg_percentage`, `snapshot_date`, `created_at`
+
+### board_results
+`id` (uuid PK), `student_name`, `subject`, `marks_obtained` (int), `max_marks` (int), `passing_year` (int), `created_by`, `created_at`
+
+### testimonials
+`id` (uuid PK), `student_name`, `testimonial_text`, `subject`, `year`, `media_url`, `media_type`, `youtube_video_id`, `created_at`
+
+### whatsapp_log
+`id` (uuid PK), `student_id`, `message_type`, `preview`, `sent_by`, `sent_at`, `recipient_phone`, `recipient_name`, `recipient_type`, `class_id`, `test_id`
+
+### whatsapp_incoming
+`id` (uuid PK), `event_type`, `from_number`, `message_text`, `raw_payload` (jsonb), `created_at`
+
+### feature_flags
+`key` (PK), `enabled` (bool), `label`, `description`, `updated_at`
+
+### doubt_cache
+`id` (uuid PK), `question_hash`, `subject`, `grade`, `question_text`, `answer`, `sources` (jsonb), `suggestions` (jsonb), `created_at`
+
+### doubt_feedback
+`id` (uuid PK), `user_id`, `question`, `answer`, `subject`, `grade`, `rating`, `created_at`
+
 ## Environment Variables
 
 Edge functions require these secrets (set via `supabase secrets set`):
