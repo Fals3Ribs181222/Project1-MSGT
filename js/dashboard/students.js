@@ -223,6 +223,8 @@ function attachAddStudentListeners() {
         const subjectCheckboxes = document.querySelectorAll('input[name="studentSubjects"]:checked');
         const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
 
+        const school = document.getElementById('studentSchool').value || null;
+
         if (!name || !grade || !username || !password) {
             status.textContent = 'Please fill in all required fields.';
             status.className = 'status status--error';
@@ -239,7 +241,7 @@ function attachAddStudentListeners() {
             const { data: sessionData } = await window.supabaseClient.auth.getSession();
             const token = sessionData?.session?.access_token;
 
-            const meta = { name, username, grade, subjects, phone, email, father_name, father_phone, mother_name, mother_phone, role: 'student' };
+            const meta = { name, username, grade, subjects, phone, email, father_name, father_phone, mother_name, mother_phone, school, role: 'student' };
 
             const res = await fetch(`${window.CONFIG.SUPABASE_URL}/functions/v1/admin-api`, {
                 method: 'POST',

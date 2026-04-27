@@ -155,14 +155,30 @@
                         textList.appendChild(card);
                     });
 
-                    // Initialize Masonry after rendering text cards
-                    setTimeout(() => {
-                        new Masonry('#textList', {
-                            itemSelector: '.testimonials__card',
-                            gutter: 24,
-                            percentPosition: true
-                        });
-                    }, 100);
+                    // Initialize Masonry only on wider screens — on mobile it
+                    // overrides width:100% with a narrow inline style, causing
+                    // text to wrap word-by-word.
+                    let masonryInstance = null;
+                    function initMasonryLayout() {
+                        if (window.innerWidth > 768) {
+                            if (!masonryInstance) {
+                                masonryInstance = new Masonry('#textList', {
+                                    itemSelector: '.testimonials__card',
+                                    gutter: 24,
+                                    percentPosition: true
+                                });
+                            } else {
+                                masonryInstance.layout();
+                            }
+                        } else {
+                            if (masonryInstance) {
+                                masonryInstance.destroy();
+                                masonryInstance = null;
+                            }
+                        }
+                    }
+                    setTimeout(initMasonryLayout, 100);
+                    window.addEventListener('resize', initMasonryLayout);
                 } else {
                     textList.innerHTML = '<p class="empty-state">No text testimonials yet.</p>';
                 }
