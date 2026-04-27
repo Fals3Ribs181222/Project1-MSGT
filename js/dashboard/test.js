@@ -9,7 +9,7 @@ async function loadTestsList() {
 
     btnRefresh.disabled = true;
     btnRefresh.textContent = 'Refreshing...';
-    window.tableLoading('testsListTableBody', 5, 'Loading tests...');
+    window.tableLoading('testsListTableBody', 6, 'Loading tests...');
 
     const response = await window.api.get('tests', {}, '*', { order: 'date', ascending: true });
 
@@ -18,19 +18,24 @@ async function loadTestsList() {
 
     if (response.success) {
         if (response.data && response.data.length > 0) {
-            tbody.innerHTML = response.data.map(test => `
+            tbody.innerHTML = response.data.map(test => {
+                const schools = Array.isArray(test.schools) && test.schools.length > 0
+                    ? test.schools.join(', ')
+                    : 'All';
+                return `
                 <tr class="data-table__row">
                     <td class="data-table__td--main">${window.esc(test.title) || '-'}</td>
                     <td class="data-table__td">${test.subject || '-'}</td>
                     <td class="data-table__td">${test.grade || '-'}</td>
+                    <td class="data-table__td">${window.esc(schools)}</td>
                     <td class="data-table__td">${test.date || '-'}</td>
                     <td class="data-table__td">
                         <a href="manage_marks?testId=${test.id}" class="btn btn--primary btn--sm">Manage Marks</a>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         } else {
-            window.tableLoading('testsListTableBody', 5, 'No tests scheduled yet.');
+            window.tableLoading('testsListTableBody', 6, 'No tests scheduled yet.');
         }
     } else {
         document.getElementById('testsListTableBody').innerHTML = '';
@@ -61,13 +66,17 @@ function attachTestListeners() {
         const subjectCheckboxes = document.querySelectorAll('input[name="testSubjects"]:checked');
         const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
 
+        const schoolCheckboxes = document.querySelectorAll('input[name="testSchools"]:checked');
+        const schools = Array.from(schoolCheckboxes).map(cb => cb.value);
+
         const response = await window.api.post('tests', {
             title: document.getElementById('testTitle').value,
             subject: subjects,
             grade: document.getElementById('schedTestGrade').value,
             date: document.getElementById('testDate').value,
             max_marks: document.getElementById('testMaxMarks').value,
-            scheduled_by: user.id
+            scheduled_by: user.id,
+            schools,
         });
 
         btn.disabled = false;

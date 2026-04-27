@@ -2066,8 +2066,12 @@ button:disabled {
 @media (max-width: 768px) {
     .content-split {
         flex-direction: column;
+        align-items: stretch;
     }
     .video-section {
+        width: 100%;
+    }
+    .text-section {
         width: 100%;
     }
 }
@@ -2138,6 +2142,7 @@ button:disabled {
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     padding: 1.5rem;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -2269,17 +2274,45 @@ button:disabled {
 
 @media (max-width: 768px) {
     .testimonials__card {
-        width: 100%;
+        width: 100% !important;
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+    }
+
+    /* Without Masonry, stack cards as a flex column */
+    .masonry-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .testimonials__text {
+        overflow-wrap: break-word;
+        word-break: break-word;
     }
 
     .hero-interactive {
-        height: 50vh;
-        min-height: 400px;
+        height: 40vh;
+        min-height: 280px;
     }
 
+    /* Hide floating parallax elements on small phones to reduce clutter */
     .hero-interactive__element {
-        width: 100px;
-        height: 140px;
+        width: 80px;
+        height: 110px;
+    }
+
+    .hero-interactive__content {
+        padding: 0 1rem;
+    }
+
+    .hero-interactive__title {
+        font-size: clamp(1.6rem, 6vw, 2.4rem);
+    }
+
+    .hero-interactive__subtitle {
+        font-size: 0.95rem;
     }
 
     /* ============================================================

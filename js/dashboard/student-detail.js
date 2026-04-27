@@ -38,6 +38,8 @@ export function openStudentDetail(student, callbacks) {
     document.getElementById('studentDetailUsername').textContent = student.username || '-';
     document.getElementById('studentDetailGrade').textContent = student.grade || '-';
     document.getElementById('studentDetailSubjects').textContent = student.subjects || '-';
+    const sdSchool = document.getElementById('studentDetailSchool');
+    if (sdSchool) sdSchool.textContent = student.school || '-';
 
     // Student phone
     const sdStudentPhone = document.getElementById('sdStudentPhone');

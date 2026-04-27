@@ -64,10 +64,15 @@ function renderPage() {
     const targetGrade = String(currentTest.grade).trim();
     const targetSubject = String(currentTest.subject).trim().toLowerCase();
 
+    const testSchools = Array.isArray(currentTest.schools) ? currentTest.schools : [];
+    const schoolRestricted = testSchools.length > 0;
+
     eligibleStudents = allStudents.filter(s => {
         const sGrade = String(s.grade).trim();
         const sSubjects = String(s.subjects || '').toLowerCase();
-        return sGrade === targetGrade && sSubjects.includes(targetSubject);
+        if (sGrade !== targetGrade || !sSubjects.includes(targetSubject)) return false;
+        if (schoolRestricted) return testSchools.includes(s.school);
+        return true;
     }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
     document.getElementById('studentCount').textContent = `${eligibleStudents.length} Students found`;
