@@ -14,6 +14,144 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
     <script defer src="/_vercel/insights/script.js"></script>
+    <style>
+        /* ── Bulk Add: Common Config Bar ── */
+        .bulk-config-bar {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            background: var(--bg-surface-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .bulk-config-bar__field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            flex: 1;
+            min-width: 130px;
+        }
+        .bulk-config-bar__label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .bulk-config-bar__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--primary);
+            background: rgba(30, 58, 95, 0.08);
+            border: 1px solid rgba(30, 58, 95, 0.15);
+            border-radius: 4px;
+            padding: 0.2rem 0.55rem;
+            align-self: flex-end;
+            margin-bottom: 0.1rem;
+            white-space: nowrap;
+        }
+
+        /* ── Student Rows ── */
+        .bulk-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .bulk-row {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.625rem 0.875rem;
+            transition: border-color 0.2s;
+        }
+        .bulk-row:focus-within {
+            border-color: var(--primary);
+        }
+        .bulk-row__num {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            min-width: 1.5rem;
+            text-align: center;
+        }
+        .bulk-row__name {
+            flex: 2;
+            min-width: 0;
+        }
+        .bulk-row__marks {
+            flex: 0 0 110px;
+        }
+        .bulk-row__remove {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: none;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            font-size: 1rem;
+        }
+        .bulk-row__remove:hover {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+        }
+        .bulk-row .form__control {
+            margin: 0;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        /* ── Footer actions ── */
+        .bulk-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .btn--add-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: none;
+            border: 1.5px dashed var(--border-color);
+            color: var(--text-muted);
+            border-radius: var(--radius-md);
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
+        }
+        .btn--add-row:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(30, 58, 95, 0.04);
+        }
+
+        @media (max-width: 600px) {
+            .bulk-config-bar { flex-direction: column; }
+            .bulk-row__marks { flex: 0 0 90px; }
+            .bulk-config-bar__field { min-width: 100%; }
+        }
+    </style>
 </head>
 <body>
 <main class="container section">
@@ -22,37 +160,52 @@
         <p style="color:var(--text-muted);">Add or delete ISC board results shown on the public Results page.</p>
     </header>
 
-    <!-- Add Form -->
+    <!-- Bulk Add Form -->
     <section class="panel" style="margin-bottom:2rem;">
-        <header class="panel__header"><h2>Add Board Result</h2></header>
-        <form id="boardResultForm">
-            <div class="form__group">
-                <label class="form__label">Student Name *</label>
-                <input type="text" id="brName" class="form__control" required placeholder="e.g. Rahul Sharma">
+        <header class="panel__header">
+            <h2>Add Board Results</h2>
+            <span class="bulk-config-bar__badge">
+                <i class="ri-stack-line"></i> Bulk Mode
+            </span>
+        </header>
+
+        <!-- Common config bar -->
+        <div class="bulk-config-bar">
+            <div class="bulk-config-bar__field">
+                <label class="bulk-config-bar__label" for="bcYear">Passing Year *</label>
+                <input type="number" id="bcYear" class="form__control" min="2000" max="2099" placeholder="e.g. 2026">
             </div>
-            <div class="form__group">
-                <label class="form__label">Subject *</label>
-                <select id="brSubject" class="form__control" required>
+            <div class="bulk-config-bar__field">
+                <label class="bulk-config-bar__label" for="bcSubject">Subject *</label>
+                <select id="bcSubject" class="form__control">
                     <option value="">Select Subject</option>
                     <option value="Accounts">Accounts</option>
                     <option value="Commerce">Commerce</option>
                 </select>
             </div>
-            <div class="form__group">
-                <label class="form__label">Marks Obtained *</label>
-                <input type="number" id="brMarks" class="form__control" required min="0" placeholder="e.g. 95">
+            <div class="bulk-config-bar__field">
+                <label class="bulk-config-bar__label" for="bcSchool">School</label>
+                <input type="text" id="bcSchool" class="form__control" placeholder="e.g. St. Xavier's">
             </div>
-            <div class="form__group">
-                <label class="form__label">Maximum Marks *</label>
-                <input type="number" id="brMaxMarks" class="form__control" required min="1" value="100">
+            <div class="bulk-config-bar__field" style="flex:0 0 130px;">
+                <label class="bulk-config-bar__label" for="bcMaxMarks">Max Marks *</label>
+                <input type="number" id="bcMaxMarks" class="form__control" min="1" value="100">
             </div>
-            <div class="form__group">
-                <label class="form__label">Passing Year *</label>
-                <input type="number" id="brYear" class="form__control" required min="2000" max="2099" placeholder="e.g. 2026">
-            </div>
-            <button type="submit" class="btn btn--primary" id="btnAdd">Add Result</button>
-            <div id="addStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
-        </form>
+        </div>
+
+        <!-- Dynamic student rows -->
+        <div class="bulk-rows" id="bulkRows"></div>
+
+        <!-- Footer: add row + submit -->
+        <div class="bulk-footer">
+            <button type="button" class="btn--add-row" id="btnAddRow">
+                <i class="ri-add-line"></i> Add Student
+            </button>
+            <button type="button" class="btn btn--primary" id="btnSubmitBulk">
+                <i class="ri-save-line"></i>&ensp;<span id="submitLabel">Add 1 Result</span>
+            </button>
+        </div>
+        <div id="bulkStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
     </section>
 
     <!-- Filter + List -->
@@ -79,6 +232,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Subject</th>
+                        <th>School</th>
                         <th>Marks</th>
                         <th>Max</th>
                         <th>%</th>
@@ -87,7 +241,7 @@
                     </tr>
                 </thead>
                 <tbody id="listBody">
-                    <tr><td colspan="7" class="loading-text">Loading...</td></tr>
+                    <tr><td colspan="8" class="loading-text">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -99,12 +253,143 @@
 <script>
 const client = window.supabaseClient;
 let allResults = [];
+let rowCounter = 0;
+
+/* ─── Row Management ─── */
+
+function createRow() {
+    rowCounter++;
+    const idx = rowCounter;
+    const div = document.createElement('div');
+    div.className = 'bulk-row';
+    div.dataset.rowId = idx;
+    div.innerHTML = `
+        <span class="bulk-row__num">${document.querySelectorAll('.bulk-row').length + 1}</span>
+        <div class="bulk-row__name">
+            <input type="text" class="form__control row-name" placeholder="Student name" autocomplete="off">
+        </div>
+        <div class="bulk-row__marks">
+            <input type="number" class="form__control row-marks" placeholder="Marks" min="0">
+        </div>
+        <button type="button" class="bulk-row__remove" title="Remove row" aria-label="Remove row">
+            <i class="ri-close-line"></i>
+        </button>
+    `;
+
+    div.querySelector('.bulk-row__remove').addEventListener('click', () => {
+        div.remove();
+        reNumberRows();
+        updateSubmitLabel();
+    });
+
+    div.querySelector('.row-name').addEventListener('input', updateSubmitLabel);
+    div.querySelector('.row-marks').addEventListener('input', updateSubmitLabel);
+
+    return div;
+}
+
+function reNumberRows() {
+    document.querySelectorAll('.bulk-row').forEach((row, i) => {
+        row.querySelector('.bulk-row__num').textContent = i + 1;
+    });
+}
+
+function updateSubmitLabel() {
+    const filled = [...document.querySelectorAll('.bulk-row')].filter(row => {
+        const name = row.querySelector('.row-name').value.trim();
+        const marks = row.querySelector('.row-marks').value.trim();
+        return name && marks !== '';
+    }).length;
+    const label = document.getElementById('submitLabel');
+    label.textContent = filled === 1 ? 'Add 1 Result' : `Add ${filled || 0} Results`;
+}
+
+function addRow() {
+    const container = document.getElementById('bulkRows');
+    container.appendChild(createRow());
+    updateSubmitLabel();
+    // Focus the new row's name input
+    const rows = container.querySelectorAll('.bulk-row');
+    rows[rows.length - 1].querySelector('.row-name').focus();
+}
+
+/* ─── Bulk Submit ─── */
+
+document.getElementById('btnSubmitBulk').addEventListener('click', async () => {
+    const year = parseInt(document.getElementById('bcYear').value);
+    const subject = document.getElementById('bcSubject').value;
+    const school = document.getElementById('bcSchool').value.trim();
+    const maxMarks = parseInt(document.getElementById('bcMaxMarks').value);
+    const status = document.getElementById('bulkStatus');
+    const btn = document.getElementById('btnSubmitBulk');
+
+    if (!year || !subject || !maxMarks) {
+        status.textContent = 'Please fill in Year, Subject, and Max Marks in the common bar.';
+        status.className = 'status status--error';
+        status.style.display = 'block';
+        return;
+    }
+
+    const rows = [...document.querySelectorAll('.bulk-row')];
+    const records = rows
+        .map(row => ({
+            name: row.querySelector('.row-name').value.trim(),
+            marks: row.querySelector('.row-marks').value.trim()
+        }))
+        .filter(r => r.name && r.marks !== '');
+
+    if (!records.length) {
+        status.textContent = 'Add at least one student with a name and marks.';
+        status.className = 'status status--error';
+        status.style.display = 'block';
+        return;
+    }
+
+    const payload = records.map(r => ({
+        student_name: r.name,
+        subject,
+        marks_obtained: parseInt(r.marks),
+        max_marks: maxMarks,
+        passing_year: year,
+        ...(school && { school })
+    }));
+
+    btn.disabled = true;
+    document.getElementById('submitLabel').textContent = 'Saving…';
+    status.style.display = 'none';
+
+    try {
+        const { error } = await client.from('board_results').insert(payload);
+        if (error) throw error;
+
+        status.textContent = `${payload.length} result${payload.length !== 1 ? 's' : ''} added successfully.`;
+        status.className = 'status status--success';
+        status.style.display = 'block';
+
+        // Clear rows and reset
+        document.getElementById('bulkRows').innerHTML = '';
+        rowCounter = 0;
+        addRow();
+        loadList();
+    } catch (err) {
+        status.textContent = 'Error: ' + err.message;
+        status.className = 'status status--error';
+        status.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        updateSubmitLabel();
+    }
+});
+
+document.getElementById('btnAddRow').addEventListener('click', addRow);
+
+/* ─── List Load / Filter ─── */
 
 async function loadList() {
     const tbody = document.getElementById('listBody');
     const status = document.getElementById('listStatus');
     status.style.display = 'none';
-    tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="loading-text">Loading...</td></tr>';
 
     const { data, error } = await client
         .from('board_results')
@@ -121,7 +406,6 @@ async function loadList() {
 
     allResults = data || [];
 
-    // Populate year filter
     const years = [...new Set(allResults.map(r => r.passing_year))].sort((a, b) => b - a);
     const yearSel = document.getElementById('filterYear');
     const currentYear = yearSel.value;
@@ -144,7 +428,7 @@ function applyFilters() {
     document.getElementById('listCount').textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`;
 
     if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="loading-text">No results found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="loading-text">No results found.</td></tr>';
         return;
     }
 
@@ -154,6 +438,7 @@ function applyFilters() {
         <tr>
             <td>${r.student_name || '—'}</td>
             <td>${r.subject || '—'}</td>
+            <td>${r.school || '—'}</td>
             <td>${r.marks_obtained ?? '—'}</td>
             <td>${r.max_marks ?? '—'}</td>
             <td>${pct}%</td>
@@ -170,43 +455,12 @@ window.deleteRow = async function(id) {
     loadList();
 };
 
-document.getElementById('boardResultForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btnAdd');
-    const status = document.getElementById('addStatus');
-    btn.disabled = true;
-    btn.textContent = 'Adding...';
-    status.style.display = 'none';
-
-    try {
-        const { error } = await client.from('board_results').insert([{
-            student_name: document.getElementById('brName').value.trim(),
-            subject: document.getElementById('brSubject').value,
-            marks_obtained: parseInt(document.getElementById('brMarks').value),
-            max_marks: parseInt(document.getElementById('brMaxMarks').value),
-            passing_year: parseInt(document.getElementById('brYear').value)
-        }]);
-        if (error) throw error;
-
-        status.textContent = 'Board result added!';
-        status.className = 'status status--success';
-        status.style.display = 'block';
-        e.target.reset();
-        document.getElementById('brMaxMarks').value = '100';
-        loadList();
-    } catch (err) {
-        status.textContent = 'Error: ' + err.message;
-        status.className = 'status status--error';
-        status.style.display = 'block';
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Add Result';
-    }
-});
-
 document.getElementById('btnRefresh').addEventListener('click', loadList);
 document.getElementById('filterSubject').addEventListener('change', applyFilters);
 document.getElementById('filterYear').addEventListener('change', applyFilters);
+
+// Init
+addRow();
 loadList();
 </script>
 </body>
