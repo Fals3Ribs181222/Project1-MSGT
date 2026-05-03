@@ -225,3 +225,21 @@ Edge functions require these secrets (set via `supabase secrets set`):
 - `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN` — Meta Cloud API (WhatsApp Business)
 - `WHATSAPP_VERIFY_TOKEN` — self-defined token for Meta webhook verification (`whatsapp-webhook` function)
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase access from edge functions
+
+## Skill routing
+
+When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
+
+Key routing rules:
+- Product ideas/brainstorming → invoke /office-hours
+- Strategy/scope → invoke /plan-ceo-review
+- Architecture → invoke /plan-eng-review
+- Design system/plan review → invoke /design-consultation or /plan-design-review
+- Full review pipeline → invoke /autoplan
+- Bugs/errors → invoke /investigate
+- QA/testing site behavior → invoke /qa or /qa-only
+- Code review/diff check → invoke /review
+- Visual polish → invoke /design-review
+- Ship/deploy/PR → invoke /ship or /land-and-deploy
+- Save progress → invoke /context-save
+- Resume context → invoke /context-restore
