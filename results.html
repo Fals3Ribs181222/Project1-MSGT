@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -28,14 +28,775 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
     <script defer src="/_vercel/insights/script.js"></script>
+
+    <style>
+        /* ── Results page ── */
+
+        /* Hero */
+        .results-hero {
+            position: relative;
+            text-align: center;
+            padding: 4rem 0 3rem;
+            overflow: hidden;
+            animation: fadeUp 0.7s ease both;
+        }
+
+        .results-hero::before,
+        .results-hero::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .results-hero::before {
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, rgba(30, 58, 95, 0.09) 0%, transparent 65%);
+            top: -180px;
+            right: -80px;
+        }
+
+        .results-hero::after {
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(176, 80, 40, 0.08) 0%, transparent 65%);
+            bottom: -100px;
+            left: -60px;
+        }
+
+        .results-hero > * { position: relative; z-index: 1; }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(30, 58, 95, 0.08);
+            border: 1px solid rgba(30, 58, 95, 0.14);
+            border-radius: var(--radius-full);
+            padding: 0.35rem 1rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.25rem;
+        }
+
+        .results-hero h1 { margin-bottom: 1rem; }
+
+        .results-hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .results-hero p {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.75;
+        }
+
+        /* Stats */
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            animation: fadeUp 0.7s 0.1s ease both;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .results-stat {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .results-stat::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .results-stat:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.09); }
+        .results-stat:hover::after { opacity: 1; }
+
+        .results-stat__icon {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .results-stat__value {
+            font-family: var(--font-heading);
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 0.35rem;
+        }
+
+        .results-stat__label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        /* Filters */
+        .results-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 2rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 1.25rem 1.5rem;
+            animation: fadeUp 0.7s 0.15s ease both;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            flex: 1;
+            min-width: 130px;
+        }
+
+        .filter-group--search { flex: 2; min-width: 200px; }
+
+        .filter-group label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .filter-group select,
+        .search-input-wrap input {
+            background: var(--bg-surface-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.65rem 1rem;
+            font-family: var(--font-main);
+            font-size: 0.88rem;
+            color: var(--text-main);
+            width: 100%;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            cursor: pointer;
+        }
+
+        .search-input-wrap { position: relative; }
+
+        .search-input-wrap i {
+            position: absolute;
+            left: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        .search-input-wrap input { padding-left: 2.4rem; cursor: text; }
+
+        .filter-group select:focus,
+        .search-input-wrap input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+        }
+
+        /* Podium */
+        .results-podium {
+            margin-bottom: 2.5rem;
+            animation: fadeUp 0.7s 0.2s ease both;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .podium-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.12fr 1fr;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .podium-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 1.75rem 1.25rem 1.5rem;
+            text-align: center;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: default;
+            overflow: hidden;
+        }
+
+        .podium-card:hover { transform: translateY(-5px); }
+
+        .podium-card--1 {
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 4px 24px rgba(245, 158, 11, 0.12), 0 0 0 1px rgba(245, 158, 11, 0.08);
+            padding-top: 2rem;
+        }
+
+        .podium-card--1:hover {
+            box-shadow: 0 14px 38px rgba(245, 158, 11, 0.18), 0 0 0 1px rgba(245, 158, 11, 0.15);
+        }
+
+        .podium-card--2 {
+            border-color: rgba(148, 163, 184, 0.25);
+            box-shadow: 0 4px 16px rgba(148, 163, 184, 0.1);
+        }
+
+        .podium-card--3 {
+            border-color: rgba(205, 124, 58, 0.25);
+            box-shadow: 0 4px 16px rgba(205, 124, 58, 0.1);
+        }
+
+        .podium-ribbon {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .podium-card--1 .podium-ribbon { background: linear-gradient(90deg, #F59E0B, #D97706); }
+        .podium-card--2 .podium-ribbon { background: linear-gradient(90deg, #94A3B8, #64748B); }
+        .podium-card--3 .podium-ribbon { background: linear-gradient(90deg, #CD7C3A, #A05C22); }
+
+        .podium-rank-badge {
+            position: absolute;
+            top: 0.9rem; right: 0.9rem;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .podium-rank-badge--gold   { background: linear-gradient(135deg, #F59E0B, #D97706); color: #fff; }
+        .podium-rank-badge--silver { background: linear-gradient(135deg, #94A3B8, #64748B); color: #fff; }
+        .podium-rank-badge--bronze { background: linear-gradient(135deg, #CD7C3A, #A05C22); color: #fff; }
+
+        .podium-year-tag {
+            position: absolute;
+            top: 0.9rem; left: 0.9rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: var(--bg-surface-hover);
+            padding: 0.15rem 0.5rem;
+            border-radius: var(--radius-full);
+        }
+
+        .podium-avatar {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: var(--font-main);
+            margin: 0 auto 0.9rem;
+            border: 2px solid rgba(255,255,255,0.6);
+        }
+
+        .podium-card--1 .podium-avatar {
+            width: 66px; height: 66px;
+            font-size: 1.4rem;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15), 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .podium-name {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: var(--text-main);
+            margin-bottom: 0.4rem;
+            line-height: 1.3;
+        }
+
+        .podium-card--1 .podium-name { font-size: 1rem; }
+
+        .podium-subject {
+            display: inline-block;
+            background: rgba(30, 58, 95, 0.08);
+            color: var(--primary);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.18rem 0.6rem;
+            border-radius: var(--radius-full);
+            margin-bottom: 0.9rem;
+        }
+
+        .podium-score {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 0.2rem;
+        }
+
+        .podium-card--1 .podium-score {
+            font-size: 2.4rem;
+            background: linear-gradient(135deg, #D97706, #F59E0B);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .podium-raw {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 0.6rem;
+        }
+
+        /* Result Cards */
+        .results-section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            animation: fadeUp 0.7s 0.25s ease both;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .results-section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        .results-count-badge {
+            background: var(--bg-surface-hover);
+            color: var(--text-muted);
+            border-radius: var(--radius-full);
+            padding: 0.12rem 0.55rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(256px, 1fr));
+            gap: 1rem;
+            animation: fadeUp 0.7s 0.28s ease both;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .result-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+        }
+
+        .result-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rank-medal {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            font-size: 0.72rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .rank-medal--gold   { background: linear-gradient(135deg, #F59E0B, #D97706); color: #fff; box-shadow: 0 2px 7px rgba(245,158,11,0.45); }
+        .rank-medal--silver { background: linear-gradient(135deg, #94A3B8, #64748B); color: #fff; box-shadow: 0 2px 7px rgba(100,116,139,0.35); }
+        .rank-medal--bronze { background: linear-gradient(135deg, #CD7C3A, #A05C22); color: #fff; box-shadow: 0 2px 7px rgba(160,92,34,0.35); }
+
+        .rank-num {
+            width: 28px; height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-surface-hover);
+            border-radius: 50%;
+        }
+
+        .result-card__year {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: var(--bg-surface-hover);
+            padding: 0.18rem 0.5rem;
+            border-radius: var(--radius-full);
+        }
+
+        .result-card__body {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .result-avatar {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 800;
+            font-family: var(--font-main);
+            flex-shrink: 0;
+            border: 2px solid rgba(255,255,255,0.55);
+        }
+
+        .result-card__info { min-width: 0; }
+
+        .result-card__name {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.28rem;
+        }
+
+        .result-subject-pill {
+            display: inline-block;
+            background: rgba(30, 58, 95, 0.08);
+            color: var(--primary);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 0.16rem 0.52rem;
+            border-radius: var(--radius-full);
+            white-space: nowrap;
+        }
+
+        /* Score ring */
+        .result-card__score-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .score-ring {
+            --pct: 0;
+            --ring-color: var(--primary);
+            width: 66px; height: 66px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--ring-color) calc(var(--pct) * 1%),
+                var(--bg-surface-hover) 0%
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            padding: 5px;
+        }
+
+        .score-ring__inner {
+            width: 100%;
+            height: 100%;
+            background: #FDFAF6;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+        }
+
+        .score-ring__pct {
+            font-family: var(--font-main);
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .score-ring__raw {
+            font-size: 0.58rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            line-height: 1;
+        }
+
+        .score-detail { flex: 1; min-width: 0; }
+
+        .score-detail__marks {
+            font-family: var(--font-heading);
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1;
+            margin-bottom: 0.18rem;
+        }
+
+        .score-detail__out-of {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+        }
+
+        /* Achievement badges */
+        .achievement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.63rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.15rem 0.5rem;
+            border-radius: var(--radius-full);
+        }
+
+        .achievement-badge--perfect {
+            background: rgba(245, 158, 11, 0.13);
+            color: #A07010;
+            border: 1px solid rgba(245, 158, 11, 0.28);
+        }
+
+        .achievement-badge--distinction {
+            background: rgba(16, 185, 129, 0.1);
+            color: #0A6B47;
+            border: 1px solid rgba(16, 185, 129, 0.22);
+        }
+
+        .achievement-badge--merit {
+            background: rgba(30, 58, 95, 0.07);
+            color: var(--primary);
+            border: 1px solid rgba(30, 58, 95, 0.14);
+        }
+
+        /* Skeleton cards */
+        .skel-card {
+            height: 176px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(90deg,
+                rgba(0,0,0,0.05) 25%,
+                rgba(0,0,0,0.025) 50%,
+                rgba(0,0,0,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Empty state */
+        .results-empty {
+            grid-column: 1 / -1;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .results-empty__icon {
+            font-size: 2.8rem;
+            color: var(--text-muted);
+            opacity: 0.28;
+            display: block;
+            margin-bottom: 0.9rem;
+        }
+
+        .results-empty__title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.4rem;
+        }
+
+        .results-empty__sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* CTA banner */
+        .results-cta {
+            margin-top: 3.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #2D5A8E 100%);
+            border-radius: var(--radius-lg);
+            padding: 2.75rem 2rem;
+            text-align: center;
+            animation: fadeUp 0.7s 0.4s ease both;
+            opacity: 0;
+            animation-fill-mode: forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .results-cta::before {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+            top: -100px; right: -60px;
+            pointer-events: none;
+        }
+
+        .results-cta h2 {
+            font-size: clamp(1.3rem, 3vw, 1.75rem);
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.6rem;
+            position: relative;
+        }
+
+        .results-cta p {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.92rem;
+            margin: 0 auto 1.5rem;
+            max-width: 400px;
+            line-height: 1.65;
+            position: relative;
+        }
+
+        .results-cta__btn {
+            background: #fff;
+            color: var(--primary);
+            font-weight: 700;
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: var(--radius-full);
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+        }
+
+        .results-cta__btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.22);
+        }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            .results-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 620px) {
+            .results-filters { flex-direction: column; }
+
+            .filter-group,
+            .filter-group--search { min-width: 100%; }
+
+            .podium-grid { grid-template-columns: 1fr; }
+
+            .results-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .results-hero, .results-stats, .results-filters,
+            .results-podium, .results-section-header, .results-grid, .results-cta {
+                animation: none;
+                opacity: 1;
+            }
+        }
+    </style>
 </head>
 
 <body>
     <!-- Navigation -->
     <nav class="navbar" aria-label="Main navigation">
         <div class="navbar__container" style="padding: 0 2rem;">
-            <button class="navbar__toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
-            <a href="index" class="navbar__logo"><img src="logo.png" alt="Mitesh Sir's Study Circle"><span>Mitesh Sir's Study Circle</span></a>
+            <button class="navbar__toggle" aria-label="Toggle navigation" aria-expanded="false">
+                <i class="ri-menu-3-line" aria-hidden="true"></i>
+            </button>
+            <a href="index" class="navbar__logo">
+                <img src="logo.png" alt="Mitesh Sir's Study Circle">
+                <span>Mitesh Sir's Study Circle</span>
+            </a>
             <ul class="navbar__links" style="background:none;border:none;padding:0;gap:0.25rem;">
                 <li><a href="index" class="navbar__link">Home</a></li>
                 <li><a href="about" class="navbar__link">About</a></li>
@@ -46,7 +807,7 @@
         </div>
     </nav>
 
-    <!-- Mobile slide-in nav sidebar -->
+    <!-- Mobile sidebar -->
     <aside class="dash-sidebar dash-sidebar--floating" id="dashSidebar">
         <div class="dash-sidebar__top">
             <span class="dash-sidebar__brand"><i class="ri-book-2-line" aria-hidden="true"></i> TuteFlow</span>
@@ -61,51 +822,91 @@
     </aside>
     <div class="dash-sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <main class="container section">
-        <header class="section__header">
-            <h1 class="section__title">Outstanding Results</h1>
-            <p>We are proud of our students' achievements. Browse through our top performers.</p>
-        </header>
+    <main class="container" style="padding-top: 1rem; padding-bottom: 5rem;">
 
-        <div class="filter-bar" role="search" aria-label="Filter results">
-            <div class="filter-bar__group">
-                <label for="filterSubject">Subject:</label>
-                <select id="filterSubject" class="filter-bar__control">
+        <!-- Hero -->
+        <div class="results-hero">
+            <div class="hero-eyebrow" aria-hidden="true">
+                <i class="ri-trophy-line"></i>
+                Wall of Excellence
+            </div>
+            <h1>Outstanding <span class="gradient-text">Results</span></h1>
+            <p>Every mark tells a story of dedication and discipline. Celebrating the achievements of students at Mitesh Sir's Study Circle.</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="results-stats" aria-label="Institution statistics">
+            <div class="results-stat">
+                <i class="ri-user-star-line results-stat__icon" aria-hidden="true"></i>
+                <div class="results-stat__value" data-count="5000" data-suffix="+">5,000+</div>
+                <div class="results-stat__label">Students Guided</div>
+            </div>
+            <div class="results-stat">
+                <i class="ri-shield-check-line results-stat__icon" aria-hidden="true"></i>
+                <div class="results-stat__value" data-count="100" data-suffix="%">100%</div>
+                <div class="results-stat__label">Pass Rate</div>
+            </div>
+            <div class="results-stat">
+                <i class="ri-trophy-line results-stat__icon" aria-hidden="true"></i>
+                <div class="results-stat__value" data-count="22" data-suffix="">22</div>
+                <div class="results-stat__label">Years of Excellence</div>
+            </div>
+            <div class="results-stat">
+                <i class="ri-map-pin-line results-stat__icon" aria-hidden="true"></i>
+                <div class="results-stat__value">#1</div>
+                <div class="results-stat__label">ISC Coaching Mumbai</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="results-filters" role="search" aria-label="Filter results">
+            <div class="filter-group">
+                <label for="filterSubject">
+                    <i class="ri-book-open-line" aria-hidden="true"></i> Subject
+                </label>
+                <select id="filterSubject" aria-label="Filter by subject">
                     <option value="">All Subjects</option>
                 </select>
             </div>
-            <div class="filter-bar__group">
-                <label for="filterYear">Year:</label>
-                <select id="filterYear" class="filter-bar__control">
+            <div class="filter-group">
+                <label for="filterYear">
+                    <i class="ri-calendar-line" aria-hidden="true"></i> Year
+                </label>
+                <select id="filterYear" aria-label="Filter by year">
                     <option value="">All Years</option>
                 </select>
             </div>
-            <div class="filter-bar__group">
-                <label for="searchName">Search:</label>
-                <input type="search" id="searchName" class="filter-bar__control" placeholder="Student name...">
+            <div class="filter-group filter-group--search">
+                <label for="searchName">
+                    <i class="ri-search-line" aria-hidden="true"></i> Search Student
+                </label>
+                <div class="search-input-wrap">
+                    <i class="ri-search-line" aria-hidden="true"></i>
+                    <input type="search" id="searchName" placeholder="Type a name…" aria-label="Search by student name">
+                </div>
             </div>
         </div>
 
-        <div class="data-table">
-            <table aria-label="Student results">
-                <thead>
-                    <tr>
-                        <th scope="col">Student Name</th>
-                        <th scope="col">Subject</th>
-                        <th scope="col">Marks</th>
-                        <th scope="col">Overall</th>
-                        <th scope="col">Year</th>
-                    </tr>
-                </thead>
-                <tbody id="resultsBody">
-                    <tr>
-                        <td colspan="5" class="empty-state" id="loadingMsg">Loading results...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </main>
+        <!-- Podium -->
+        <div id="resultsPodium" class="results-podium" aria-label="Top performers" hidden></div>
 
+        <!-- Grid header -->
+        <div class="results-section-header">
+            <span class="results-section-label">All Results</span>
+            <span id="resultsCountBadge" class="results-count-badge">…</span>
+        </div>
+
+        <!-- Cards grid -->
+        <div id="resultsGrid" class="results-grid" aria-label="Student results"></div>
+
+        <!-- CTA -->
+        <div class="results-cta">
+            <h2>Ready to write your own success story?</h2>
+            <p>Join thousands of students who've achieved their best with Mitesh Sir's expert guidance.</p>
+            <a href="index" class="results-cta__btn">Join the Circle</a>
+        </div>
+
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/utils.js"></script>

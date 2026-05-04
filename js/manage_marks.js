@@ -103,6 +103,7 @@ function renderPage() {
                         value="${existingMark !== undefined ? existingMark : ''}"
                         min="0"
                         max="${currentTest.max_marks}"
+                        step="any"
                         placeholder="–"
                     >
                     <span class="mark-card__max">/ ${currentTest.max_marks}</span>

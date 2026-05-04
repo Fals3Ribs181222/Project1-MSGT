@@ -1311,9 +1311,6 @@ button:disabled {
 .skeleton--card { height: 5rem; border-radius: var(--radius-md); margin-bottom: 0.75rem; }
 .skeleton--row { height: 2.4rem; border-radius: var(--radius-md); margin-bottom: 0.5rem; }
 
-@media (prefers-reduced-motion: reduce) {
-    .skeleton { animation: none; }
-}
 
 .visually-hidden {
     position: absolute;

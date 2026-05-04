@@ -300,24 +300,21 @@
                 container.appendChild(el);
             });
 
-            // GSAP Hover Scale Logic — skipped when user prefers reduced motion
-            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (!prefersReducedMotion) {
-                gsap.utils.toArray('.hero-interactive__element').forEach(el => {
-                    const currentTransform = el.style.transform;
-                    const baseScale = currentTransform.includes('scale(')
-                        ? parseFloat(currentTransform.split('scale(')[1])
-                        : 1;
+            // GSAP Hover Scale Logic
+            gsap.utils.toArray('.hero-interactive__element').forEach(el => {
+                const currentTransform = el.style.transform;
+                const baseScale = currentTransform.includes('scale(')
+                    ? parseFloat(currentTransform.split('scale(')[1])
+                    : 1;
 
-                    el.addEventListener('mouseenter', () => {
-                        gsap.to(el, { scale: baseScale * 1.15, duration: 0.3, ease: 'power2.out', zIndex: 100 });
-                    });
-
-                    el.addEventListener('mouseleave', () => {
-                        gsap.to(el, { scale: baseScale, duration: 0.3, ease: 'power2.out', zIndex: 1 });
-                    });
+                el.addEventListener('mouseenter', () => {
+                    gsap.to(el, { scale: baseScale * 1.15, duration: 0.3, ease: 'power2.out', zIndex: 100 });
                 });
-            }
+
+                el.addEventListener('mouseleave', () => {
+                    gsap.to(el, { scale: baseScale, duration: 0.3, ease: 'power2.out', zIndex: 1 });
+                });
+            });
         }
     </script>
 </body>
