@@ -246,15 +246,20 @@ document.getElementById('marksForm').addEventListener('submit', async (e) => {
     const inputs = document.querySelectorAll('.student-mark-input');
 
     const marksPayload = Array.from(inputs)
+        .filter(i => i.value.trim() !== '')
         .map(i => ({
             id: i.dataset.markId || crypto.randomUUID(),
             test_id: testId,
             student_id: i.dataset.studentId,
             marks_obtained: i.value.trim()
-        }))
-        .filter(m => m.marks_obtained !== '');
+        }));
 
-    if (marksPayload.length === 0) {
+    // Blank inputs with an existing DB record → delete those rows
+    const idsToDelete = Array.from(inputs)
+        .filter(i => i.value.trim() === '' && i.dataset.markId)
+        .map(i => i.dataset.markId);
+
+    if (marksPayload.length === 0 && idsToDelete.length === 0) {
         status.textContent = 'Please enter at least one mark.';
         status.className = 'status status--error';
         status.style.display = 'block';
@@ -266,8 +271,17 @@ document.getElementById('marksForm').addEventListener('submit', async (e) => {
     status.style.display = 'none';
 
     try {
-        // Upsert handles both new and existing marks
-        const response = await api.upsert('marks', marksPayload);
+        // Delete cleared marks and upsert filled marks in parallel
+        const ops = [];
+        if (idsToDelete.length > 0) {
+            ops.push(...idsToDelete.map(id => api.delete('marks', id)));
+        }
+        if (marksPayload.length > 0) {
+            ops.push(api.upsert('marks', marksPayload));
+        }
+        const results = await Promise.all(ops);
+        const failed = results.find(r => !r.success);
+        const response = failed ? failed : { success: true };
 
         if (response.success) {
             status.textContent = 'All marks saved successfully!';
