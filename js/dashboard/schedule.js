@@ -63,7 +63,7 @@ async function renderCalendar() {
 
         const activeGrade = window.getActiveGrade();
         const dayClasses = classes.filter(c => {
-            if (activeGrade && c.batches?.grade !== activeGrade) return false;
+            if (activeGrade && (c.grade || c.batches?.grade) !== activeGrade) return false;
             if (c.type === 'regular' && c.day_of_week === cellDayOfWeek) return true;
             if (c.type === 'extra' && c.class_date === dateString) return true;
             return false;
