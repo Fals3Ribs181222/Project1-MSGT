@@ -77,9 +77,10 @@ async function renderCalendar() {
         dayClasses.forEach(c => {
             const pill = document.createElement('div');
             const batchGrade = c.grade || c.batches?.grade || '';
-            const gradeClass = batchGrade.includes('11') ? 'calendar__pill--grade-11'
+            const gradeClass = c.type === 'extra' ? 'calendar__pill--extra'
+                : batchGrade.includes('11') ? 'calendar__pill--grade-11'
                 : batchGrade.includes('12') ? 'calendar__pill--grade-12'
-                : `calendar__pill--${c.type}`;
+                : 'calendar__pill--regular';
             pill.className = `calendar__pill ${gradeClass}`;
             const batchSubject = c.batches?.subject || '';
             const batchName = c.batches?.name || 'Open Class';
