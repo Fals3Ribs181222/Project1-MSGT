@@ -4828,6 +4828,123 @@ a.dash-sidebar__item {
 
 #marksStickyStatus .status { margin: 0; }
 
+/* ============================================================
+   DATE PICKER (multi-select inline calendar for test form)
+   ============================================================ */
+.date-picker {
+    background: var(--bg-surface-hover);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    user-select: none;
+}
 
+.date-picker__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
 
+.date-picker__month {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
 
+.date-picker__nav {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 0.4rem;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.date-picker__nav:hover {
+    color: var(--primary);
+    background: var(--glass-bg);
+}
+
+.date-picker__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.date-picker__day-name {
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 0.25rem 0;
+}
+
+.date-picker__cell {
+    text-align: center;
+    padding: 0.45rem 0;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.date-picker__cell:hover:not(.date-picker__cell--empty) {
+    background: var(--glass-bg);
+    color: var(--primary);
+}
+
+.date-picker__cell--today {
+    font-weight: 700;
+    color: var(--primary);
+    box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.date-picker__cell--selected {
+    background: var(--secondary) !important;
+    color: #fff !important;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.date-picker__cell--empty {
+    cursor: default;
+}
+
+/* ── Selected date chips ── */
+.date-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+}
+
+.date-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-full);
+}
+
+.date-chip__remove {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.1s;
+}
+
+.date-chip__remove:hover {
+    color: #fff;
+}

@@ -1,5 +1,35 @@
 const user = window.auth.getUser();
 
+async function deleteFile(fileId, fileUrl, uploadType) {
+    if (!confirm('Delete this file? This cannot be undone.')) return;
+
+    try {
+        // Extract storage path from public URL
+        const urlObj = new URL(fileUrl);
+        const storagePath = decodeURIComponent(urlObj.pathname.split('/object/public/materials/')[1]);
+
+        // For AI materials, delete associated chunks first
+        if (uploadType === 'ai') {
+            await window.api.deleteMany('material_chunks', { file_id: fileId });
+        }
+
+        // Delete from storage
+        await window.supabaseClient.storage.from('materials').remove([storagePath]);
+
+        // Delete from files table
+        const result = await window.api.delete('files', fileId);
+        if (!result.success) throw new Error(result.error);
+
+        // Refresh the appropriate list
+        if (uploadType === 'student') loadMaterials();
+        else if (uploadType === 'ai') loadAiMaterials();
+        else if (uploadType === 'test') loadTests();
+    } catch (err) {
+        console.error('Delete error:', err);
+        alert('Failed to delete: ' + (err.message || 'Unknown error'));
+    }
+}
+
 // Generic table loader for files filtered by upload_type
 async function loadFileList({ tbodyId, btnRefreshId, uploadType, emptyMsg }) {
     const tbody = document.getElementById(tbodyId);
@@ -7,7 +37,7 @@ async function loadFileList({ tbodyId, btnRefreshId, uploadType, emptyMsg }) {
     if (!tbody) return;
 
     if (btnRefresh) { btnRefresh.disabled = true; btnRefresh.textContent = 'Refreshing...'; }
-    window.tableLoading(tbodyId, 5, `Loading…`);
+    window.tableLoading(tbodyId, 6, `Loading…`);
 
     const response = await window.api.get('files', { upload_type: uploadType });
 
@@ -19,14 +49,22 @@ async function loadFileList({ tbodyId, btnRefreshId, uploadType, emptyMsg }) {
 
     tbody.innerHTML = files.length > 0
         ? files.map(file => `
-        <tr class="data-table__row">
+        <tr class="data-table__row" data-file-id="${window.esc(file.id)}" data-file-url="${window.esc(file.file_url)}" data-upload-type="${window.esc(file.upload_type)}">
             <td class="data-table__td--main">${window.esc(file.title) || '-'}</td>
             <td class="data-table__td">${file.subject || '-'}</td>
             <td class="data-table__td">${file.grade || 'All'}</td>
             <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
             <td class="data-table__td"><a href="${window.safeUrl(file.file_url)}" target="_blank" class="navbar__link">View</a></td>
+            <td class="data-table__td"><button class="btn btn--danger btn--sm btn-delete-file">Delete</button></td>
         </tr>`).join('')
-        : `<tr><td colspan="5" class="loading-text">${emptyMsg}</td></tr>`;
+        : `<tr><td colspan="6" class="loading-text">${emptyMsg}</td></tr>`;
+
+    tbody.querySelectorAll('.btn-delete-file').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const row = btn.closest('tr');
+            deleteFile(row.dataset.fileId, row.dataset.fileUrl, row.dataset.uploadType);
+        });
+    });
 }
 
 async function loadMaterials() {

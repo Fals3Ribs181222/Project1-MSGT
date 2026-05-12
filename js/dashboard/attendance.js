@@ -109,6 +109,12 @@ async function openAttendanceGrid(classId, batchId, title, batchName, time, sess
             tbody.innerHTML = '<tr><td colspan="2" class="loading-text">No students enrolled in this batch.</td></tr>';
             return;
         }
+    } else if (currentClassGrade) {
+        // Batchless class (e.g. test class) — load all students of this grade
+        const res = await window.api.get('profiles', { role: 'student', grade: currentClassGrade }, 'id, name');
+        if (res.success) {
+            students = (res.data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        }
     }
 
     const attRes = await window.api.get('attendance', { session_id: currentAttendanceSession });
@@ -561,7 +567,7 @@ export function init() {
     const btnSaveAttendance = document.getElementById('btnSaveAttendance');
     if (btnSaveAttendance) {
         btnSaveAttendance.addEventListener('click', async () => {
-            if (!currentAttendanceClass || !currentAttendanceBatch || !currentAttendanceSession) return;
+            if (!currentAttendanceClass || !currentAttendanceSession) return;
 
             btnSaveAttendance.disabled = true;
             btnSaveAttendance.textContent = 'Saving...';
