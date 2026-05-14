@@ -8,6 +8,45 @@ export function initImportSection(getAllStudents, onImportComplete) {
     document.getElementById('btnDownloadCsvTemplate')?.addEventListener('click', downloadCsvTemplate);
     document.getElementById('btnPreviewCsv')?.addEventListener('click', () => previewCsvImport(getAllStudents));
     document.getElementById('btnImportAll')?.addEventListener('click', () => importAllStudents(getAllStudents, onImportComplete));
+
+    // Update filename display when file is chosen via browser dialog
+    const fileInput = document.getElementById('importCsvFile');
+    fileInput?.addEventListener('change', e => {
+        const file = e.target.files[0];
+        const nameEl = document.getElementById('csvFileName');
+        if (nameEl) nameEl.textContent = file ? file.name : 'No file selected';
+    });
+
+    // Drag-and-drop support on the drop zone
+    const dropZone = document.getElementById('csvDropZone');
+    if (dropZone) {
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+            dropZone.style.borderColor = 'var(--primary)';
+            dropZone.style.background = 'rgba(30,58,95,0.06)';
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+            dropZone.style.borderColor = '';
+            dropZone.style.background = '';
+        });
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            dropZone.style.borderColor = '';
+            dropZone.style.background = '';
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) {
+                const input = document.getElementById('importCsvFile');
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                input.files = dt.files;
+                const nameEl = document.getElementById('csvFileName');
+                if (nameEl) nameEl.textContent = file.name;
+            }
+        });
+    }
 }
 
 function downloadCsvTemplate() {
@@ -130,6 +169,8 @@ function previewCsvImport(getAllStudents) {
         }
 
         document.getElementById('importPreviewCount').textContent = `${importRows.length} student${importRows.length !== 1 ? 's' : ''} ready to import`;
+        const progressLabel = document.getElementById('importProgressLabel');
+        if (progressLabel) progressLabel.style.display = 'none';
         renderImportPreview();
         previewSection.style.display = 'block';
         statusEl.style.display = 'none';
@@ -141,7 +182,7 @@ function renderImportPreview() {
     const tbody = document.getElementById('importPreviewBody');
     tbody.innerHTML = importRows.map((r, i) => {
         const statusBadge = r.status === 'done'
-            ? '<span style="color:var(--success-color,green);font-weight:600;">✓ Done</span>'
+            ? '<span style="color:var(--success-color,green);font-weight:600;display:inline-flex;align-items:center;gap:0.25rem;"><i class="ri-check-line"></i> Done</span>'
             : r.status === 'error'
             ? `<span style="color:var(--danger-color,red);font-size:0.8rem;">${window.esc(r.errorMsg || 'Error')}</span>`
             : '<span style="color:var(--text-muted);">Pending</span>';
@@ -150,6 +191,7 @@ function renderImportPreview() {
             <td class="data-table__td">${i + 1}</td>
             <td class="data-table__td--main">${window.esc(r.name)}</td>
             <td class="data-table__td">${window.esc(r.grade)}</td>
+            <td class="data-table__td">${window.esc(r.subjects) || '<span style="color:var(--text-muted);font-size:0.82rem;">—</span>'}</td>
             <td class="data-table__td">${window.esc(r.phone)}</td>
             <td class="data-table__td">${window.esc(r.email)}</td>
             <td class="data-table__td">
@@ -170,11 +212,14 @@ function renderImportPreview() {
 
 async function importAllStudents(getAllStudents, onImportComplete) {
     const btn = document.getElementById('btnImportAll');
+    const progressLabel = document.getElementById('importProgressLabel');
     btn.disabled = true;
-    btn.textContent = 'Importing...';
+    btn.textContent = 'Importing…';
     document.getElementById('importStatus').style.display = 'none';
+    if (progressLabel) { progressLabel.style.display = 'block'; progressLabel.textContent = ''; }
 
     let done = 0, failed = 0;
+    const total = importRows.filter(r => r.status !== 'done').length;
 
     const { data: sessionData } = await window.supabaseClient.auth.getSession();
     const token = sessionData?.session?.access_token;
@@ -182,6 +227,10 @@ async function importAllStudents(getAllStudents, onImportComplete) {
     for (let i = 0; i < importRows.length; i++) {
         const r = importRows[i];
         if (r.status === 'done') { done++; continue; }
+
+        if (progressLabel) {
+            progressLabel.textContent = `Importing ${done + failed + 1} of ${total}…`;
+        }
 
         const email = `${r.username}@msgt.internal`;
         const meta = {
@@ -217,6 +266,7 @@ async function importAllStudents(getAllStudents, onImportComplete) {
 
     btn.disabled = false;
     btn.textContent = 'Import All Students';
+    if (progressLabel) progressLabel.style.display = 'none';
 
     const msg = `Import complete: ${done} succeeded${failed ? `, ${failed} failed` : ''}.`;
     window.showStatus('importStatus', msg, failed ? 'error' : 'success');

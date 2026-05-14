@@ -52,16 +52,16 @@ function renderStudentsTable(students) {
         return;
     }
 
+    const countEl = document.getElementById('studentsCount');
+    if (countEl) countEl.textContent = `${students.length} student${students.length !== 1 ? 's' : ''}`;
+
     tbody.innerHTML = students.map(student => `
         <tr class="data-table__row" data-student-id="${student.id}">
             <td class="data-table__td--main">${window.esc(student.name) || '-'}</td>
             <td class="data-table__td">${window.esc(student.username) || '-'}</td>
             <td class="data-table__td">${window.esc(student.subjects) || '-'}</td>
-            <td class="data-table__td" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                <button class="btn btn--primary btn--sm" data-action="detail" data-id="${student.id}">Manage Student</button>
-                <button class="btn btn--sm" data-action="send-login" data-id="${student.id}" style="background:var(--color-whatsapp,#25d366);color:#fff;border:none;" ${student.phone ? '' : 'disabled title="No phone number"'}>
-                    <i class="ri-whatsapp-line"></i> Send Welcome
-                </button>
+            <td class="data-table__td">
+                <button class="btn btn--outline btn--sm" data-action="detail" data-id="${student.id}">Details</button>
             </td>
         </tr>
     `).join('');
@@ -160,6 +160,15 @@ function attachAddStudentListeners() {
         passwordInput.value = generated;
     });
 
+    const btnToggle = document.getElementById('btnTogglePassword');
+    const eyeIcon = document.getElementById('passwordEyeIcon');
+    btnToggle?.addEventListener('click', () => {
+        const isHidden = passwordInput.type === 'password';
+        passwordInput.type = isHidden ? 'text' : 'password';
+        eyeIcon.className = isHidden ? 'ri-eye-off-line' : 'ri-eye-line';
+        btnToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -249,6 +258,19 @@ export function init() {
     const btnRefresh = document.getElementById('btnRefreshStudents');
     if (btnRefresh) btnRefresh.addEventListener('click', loadStudents);
 
+    const searchInput = document.getElementById('studentsSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.toLowerCase();
+            const filtered = q
+                ? allStudents.filter(s =>
+                    (s.name || '').toLowerCase().includes(q) ||
+                    (s.username || '').toLowerCase().includes(q))
+                : allStudents;
+            renderStudentsTable(filtered);
+        });
+    }
+
 
     const pillView = document.getElementById('pillViewStudents');
     const pillAdd = document.getElementById('pillAddStudent');
@@ -258,17 +280,19 @@ export function init() {
     const importContainer = document.getElementById('importStudentsContainer');
     const studentDetailCtr = document.getElementById('studentDetailContainer');
 
+    const panelTitle = document.getElementById('studentsPanelTitle');
     function switchStudentsView(active) {
         [pillView, pillAdd, pillImport].forEach(p => p?.classList.remove('pill-toggle__btn--active'));
         [listContainer, addContainer, importContainer, studentDetailCtr].forEach(c => { if (c) c.style.display = 'none'; });
         active.pill?.classList.add('pill-toggle__btn--active');
         if (active.container) active.container.style.display = 'block';
-        if (btnRefresh) btnRefresh.style.display = active.showRefresh ? 'inline-block' : 'none';
+        if (btnRefresh) btnRefresh.style.display = active.showRefresh ? 'inline-flex' : 'none';
+        if (panelTitle && active.title) panelTitle.textContent = active.title;
     }
 
-    pillView?.addEventListener('click', () => switchStudentsView({ pill: pillView, container: listContainer, showRefresh: true }));
-    pillAdd?.addEventListener('click', () => switchStudentsView({ pill: pillAdd, container: addContainer, showRefresh: false }));
-    pillImport?.addEventListener('click', () => switchStudentsView({ pill: pillImport, container: importContainer, showRefresh: false }));
+    pillView?.addEventListener('click', () => switchStudentsView({ pill: pillView, container: listContainer, showRefresh: true, title: 'Student List' }));
+    pillAdd?.addEventListener('click', () => switchStudentsView({ pill: pillAdd, container: addContainer, showRefresh: false, title: 'Enroll Student' }));
+    pillImport?.addEventListener('click', () => switchStudentsView({ pill: pillImport, container: importContainer, showRefresh: false, title: 'Import CSV' }));
 
     // Table row delegation — opens detail view
     const tbody = document.getElementById('studentsTableBody');
@@ -305,7 +329,7 @@ export function init() {
                 try {
                     const recipients = window.whatsapp.resolveRecipients(student, 'student');
                     if (recipients.length === 0) {
-                        alert('No phone number on record for this student.');
+                        window.showStatus('studentsListStatus', 'No phone number on record for this student.', 'error');
                         return;
                     }
                     // Password is always set to username by default (CSV import + manual add)
@@ -319,9 +343,12 @@ export function init() {
                         },
                         sentBy: window.auth.getUser()?.id,
                     });
-                    alert(`Sent: ${result.sent}, Failed: ${result.failed}`);
+                    const msg = result.failed > 0
+                        ? `Sent to ${result.sent}, failed: ${result.failed}.`
+                        : `Welcome message sent to ${result.sent} recipient${result.sent !== 1 ? 's' : ''}.`;
+                    window.showStatus('studentsListStatus', msg, result.failed > 0 ? 'error' : 'success');
                 } catch (err) {
-                    alert('Failed to send: ' + err.message);
+                    window.showStatus('studentsListStatus', 'Failed to send: ' + err.message, 'error');
                 } finally {
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = '<i class="ri-whatsapp-line"></i> Send Welcome';

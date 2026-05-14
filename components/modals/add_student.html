@@ -1,22 +1,86 @@
-<div style="margin-bottom:1.5rem;">
-    <h3 style="margin-bottom:0.5rem;">Register New Student</h3>
-    <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.6;margin:0;">Fill out the details below to create a student account. Username and password are auto-generated from the student's name — edit if needed.</p>
-</div>
+<style>
+#addStudentForm .subject-pills { display: flex; }
+#addStudentForm .subject-pill { flex: 1; }
+#addStudentForm .subject-pill__label { display: block; text-align: center; }
+</style>
 
-<form id="addStudentForm" style="max-width:520px;">
-    <div class="form__group">
-        <label class="form__label" for="studentName">Student Full Name</label>
-        <input type="text" id="studentName" class="form__control" required placeholder="e.g. Rahul Sharma">
+<form id="addStudentForm">
+
+    <!-- ── 5-col grid: [Student×2] [divider] [Father] [Mother] ── -->
+    <div class="form__group" style="display:grid;grid-template-columns:1fr 1fr auto 1fr 1fr;grid-template-rows:auto auto auto;gap:0.75rem;align-items:start;">
+
+        <!-- Column headers -->
+        <p style="grid-column:1/3;font-size:0.82rem;font-weight:600;color:var(--text-muted);margin:0 0 0.25rem;">Student</p>
+        <div style="grid-column:3;grid-row:1/4;width:1px;background:var(--border-color);align-self:stretch;justify-self:center;"></div>
+        <p style="font-size:0.82rem;font-weight:600;color:var(--text-muted);margin:0 0 0.25rem;">Father</p>
+        <p style="font-size:0.82rem;font-weight:600;color:var(--text-muted);margin:0 0 0.25rem;">Mother</p>
+
+        <!-- Name row -->
+        <div style="grid-column:1/3;">
+            <label class="form__label" for="studentName">Name</label>
+            <input type="text" id="studentName" class="form__control" required placeholder="e.g. Rahul Sharma">
+        </div>
+        <div>
+            <label class="form__label" for="studentFatherName">Name</label>
+            <input type="text" id="studentFatherName" class="form__control" placeholder="Father's Name">
+        </div>
+        <div>
+            <label class="form__label" for="studentMotherName">Name</label>
+            <input type="text" id="studentMotherName" class="form__control" placeholder="Mother's Name">
+        </div>
+
+        <!-- Phone / Email row -->
+        <div>
+            <label class="form__label" for="studentPhone">Phone</label>
+            <input type="tel" id="studentPhone" class="form__control" placeholder="9876543210">
+        </div>
+        <div>
+            <label class="form__label" for="studentEmail">Email</label>
+            <input type="email" id="studentEmail" class="form__control" placeholder="student@gmail.com">
+        </div>
+        <div>
+            <label class="form__label" for="studentFatherPhone">Phone</label>
+            <input type="tel" id="studentFatherPhone" class="form__control" placeholder="Father's Phone">
+        </div>
+        <div>
+            <label class="form__label" for="studentMotherPhone">Phone</label>
+            <input type="tel" id="studentMotherPhone" class="form__control" placeholder="Mother's Phone">
+        </div>
+
     </div>
 
-    <div class="form__group">
-        <label class="form__label">Grade</label>
-        <div class="subject-pills" id="studentGrade"></div>
+    <hr style="border:none;border-top:1px solid var(--border-color);margin:0.25rem 0 1rem;">
+
+    <!-- ── Username / Password ── -->
+    <div class="form__group" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div>
+            <label class="form__label" for="studentUsername">Username</label>
+            <input type="text" id="studentUsername" class="form__control" required placeholder="e.g. rahul.sharma">
+        </div>
+        <div>
+            <label class="form__label" for="studentPassword">Password</label>
+            <div style="position:relative;">
+                <input type="password" id="studentPassword" class="form__control" required placeholder="Auto-filled"
+                    minlength="6" style="padding-right:2.75rem;">
+                <button type="button" id="btnTogglePassword"
+                    style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;font-size:1.1rem;line-height:1;display:flex;align-items:center;"
+                    aria-label="Show password">
+                    <i class="ri-eye-line" id="passwordEyeIcon"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="form__group">
-        <label class="form__label">Subjects</label>
-        <div class="subject-pills">
+    <hr style="border:none;border-top:1px solid var(--border-color);margin:0.25rem 0 1rem;">
+
+    <!-- ── Grade / Subjects / School ── -->
+    <div class="form__group" style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto;column-gap:1.25rem;row-gap:0.4rem;">
+        <label class="form__label" style="margin:0;">Grade</label>
+        <label class="form__label" style="margin:0;">Subjects</label>
+        <label class="form__label" for="studentSchool" style="margin:0;">School</label>
+
+        <div class="subject-pills" id="studentGrade" style="margin-top:0;width:100%;"></div>
+        <div class="subject-pills" style="margin-top:0;width:100%;">
             <label class="subject-pill">
                 <input type="checkbox" name="studentSubjects" value="Accounts">
                 <span class="subject-pill__label">Accounts</span>
@@ -26,60 +90,18 @@
                 <span class="subject-pill__label">Commerce</span>
             </label>
         </div>
-    </div>
-
-    <div class="form__group">
-        <label class="form__label" for="studentSchool">School</label>
-        <select id="studentSchool" class="form__control">
-            <option value="">— Not set —</option>
+        <select id="studentSchool" style="width:100%;background:var(--bg-surface-hover);border:1px solid var(--border-color);border-radius:var(--radius-full);padding:0.25rem 0.75rem;font-family:var(--font-main);font-size:0.9rem;color:var(--text-main);cursor:pointer;">
+            <option value="" disabled selected>Not set</option>
             <option value="Jamnabai Narsee School">Jamnabai Narsee School</option>
             <option value="CNMS">CNMS</option>
             <option value="Podar">Podar</option>
         </select>
     </div>
 
-    <div class="form__group">
-        <label class="form__label" for="studentUsername">Username</label>
-        <input type="text" id="studentUsername" class="form__control" required placeholder="e.g. rahul.sharma">
-    </div>
-
-    <div class="form__group">
-        <label class="form__label" for="studentPassword">Password</label>
-        <input type="text" id="studentPassword" class="form__control" required placeholder="Auto-filled from name"
-            minlength="6">
-    </div>
-
-    <div class="form__group">
-        <label class="form__label" for="studentPhone">Student Phone (WhatsApp)</label>
-        <input type="tel" id="studentPhone" class="form__control" placeholder="e.g. 9876543210">
-        <small class="form__help">10-digit number without +91</small>
-    </div>
-
-    <div class="form__group">
-        <label class="form__label" for="studentEmail">Student Email <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
-        <input type="email" id="studentEmail" class="form__control" placeholder="e.g. student@gmail.com">
-    </div>
-
-    <div class="form__group" style="margin-top:1.25rem;">
-        <label class="form__label">Father's Details</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-            <input type="text" id="studentFatherName" class="form__control" placeholder="Father's Name">
-            <input type="tel" id="studentFatherPhone" class="form__control" placeholder="Father's Phone">
-        </div>
-    </div>
-
-    <div class="form__group">
-        <label class="form__label">Mother's Details</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-            <input type="text" id="studentMotherName" class="form__control" placeholder="Mother's Name">
-            <input type="tel" id="studentMotherPhone" class="form__control" placeholder="Mother's Phone">
-        </div>
-    </div>
-
-    <button type="submit" class="btn btn--primary btn--full" id="btnAddStudent">
+    <button type="submit" class="btn btn--primary btn--full" id="btnAddStudent" style="margin-top:0.25rem;">
         <span id="btnAddStudentText">Register Student</span>
         <span class="spinner" id="btnAddStudentSpinner" style="display:none;" aria-hidden="true"></span>
     </button>
 
-    <div id="addStudentStatus" class="status" style="display:none;"></div>
+    <div id="addStudentStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
 </form>

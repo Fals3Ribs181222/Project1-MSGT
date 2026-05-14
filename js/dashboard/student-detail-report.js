@@ -12,10 +12,10 @@ export function setReportButtonState(state) {
     if (!btn) return;
     if (state === 'loading') {
         btn.disabled = true;
-        btn.textContent = 'Generating...';
+        btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Generating...';
     } else {
         btn.disabled = (state === 'idle');
-        btn.textContent = '✨ Generate Report';
+        btn.innerHTML = '<i class="ri-sparkling-line"></i> Generate Progress Report';
     }
 }
 
@@ -87,7 +87,7 @@ async function generateReport(studentReportData) {
         }
 
         if (text) text.textContent = result.report;
-        if (copyBtn) copyBtn.style.display = 'inline-block';
+        if (copyBtn) copyBtn.style.display = 'inline-flex';
 
         const whatsAppBtn = document.getElementById('btnSendWhatsappReport');
         if (whatsAppBtn) whatsAppBtn.style.display = 'inline-flex';
@@ -159,9 +159,9 @@ function copyReportToClipboard() {
     navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('btnCopyReport');
         if (btn) {
-            const original = btn.textContent;
-            btn.textContent = 'Copied!';
-            setTimeout(() => { btn.textContent = original; }, 2000);
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="ri-check-line"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = original; }, 2000);
         }
     }).catch(() => {
         const ta = document.createElement('textarea');

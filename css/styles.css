@@ -49,7 +49,11 @@ body {
     flex-direction: column;
     overflow-x: hidden;
     position: relative;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
+
+body::-webkit-scrollbar { display: none; }
 
 /* ============================================================
    TYPOGRAPHY
@@ -3889,7 +3893,11 @@ a.dash-sidebar__item {
     min-width: 0;
     display: flex;
     flex-direction: column;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
+
+.dash-main::-webkit-scrollbar { display: none; }
 
 .dash-main .panels-container {
     flex: 1;
