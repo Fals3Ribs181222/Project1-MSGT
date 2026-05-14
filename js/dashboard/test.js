@@ -152,7 +152,7 @@ function attachTestListeners() {
     pickerYear  = new Date().getFullYear();
     pickerMonth = new Date().getMonth();
 
-    window.populateGradeSelect('schedTestGrade', false);
+    window.populateGradePills('schedTestGrade', false);
     renderDatePicker();
     renderDateChips();
 
@@ -177,7 +177,7 @@ function attachTestListeners() {
         const schools = Array.from(schoolCheckboxes).map(cb => cb.value);
 
         const title      = document.getElementById('testTitle').value;
-        const grade      = document.getElementById('schedTestGrade').value;
+        const grade      = window.getSelectedGrade('schedTestGrade');
         const sortedDates = [...selectedDates].sort();
 
         const response = await window.api.post('tests', {

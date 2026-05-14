@@ -46,7 +46,7 @@ function attachAnnouncementListeners() {
     const form = document.getElementById('noticeForm');
     if (!form) return;
 
-    window.populateGradeSelect('noticeGrade');
+    window.populateGradePills('noticeGrade', true);
 
     const titleInput = document.getElementById('noticeTitle');
     const textarea = document.getElementById('noticeMessage');
@@ -91,8 +91,7 @@ function attachAnnouncementListeners() {
 
         const title = document.getElementById('noticeTitle').value;
         const message = document.getElementById('noticeMessage').value;
-        const gradeEl = document.getElementById('noticeGrade');
-        const grade = gradeEl.dataset.gradeLocked ? (user?.grade || null) : (gradeEl.value || null);
+        const grade = window.getSelectedGrade('noticeGrade') || null;
 
         const response = await window.api.post('announcements', {
             title,

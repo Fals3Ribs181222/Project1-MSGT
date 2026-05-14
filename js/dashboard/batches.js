@@ -75,7 +75,7 @@ async function loadBatchComponent() {
 function attachBatchFormListeners() {
     const form = document.getElementById('batchForm');
     if (!form) return;
-    window.populateGradeSelect('batchGrade', false);
+    window.populateGradePills('batchGrade', false);
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -95,7 +95,7 @@ function attachBatchFormListeners() {
         const response = await window.api.post('batches', {
             name: document.getElementById('batchName').value.trim(),
             subject: subjects,
-            grade: document.getElementById('batchGrade').value,
+            grade: window.getSelectedGrade('batchGrade'),
             created_by: user.id
         });
 

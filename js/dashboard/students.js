@@ -7,7 +7,6 @@ import { openStudentDetail } from './student-detail.js';
 import { initImportSection } from './student-import.js';
 
 let allStudents = [];
-let studentBatchMap = {}; // studentId → [batchId, ...]
 const user = window.auth.getUser();
 
 const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://tksruuqtzxflgglnljef.supabase.co';
@@ -37,27 +36,7 @@ export async function loadStudents() {
         const activeGrade = window.getActiveGrade();
         if (activeGrade) students = students.filter(s => s.grade === activeGrade);
         allStudents = students;
-
-        // Load batches + memberships in parallel, then populate filter
-        const [batchesRes, membershipsRes] = await Promise.all([
-            window.api.get('batches', {}, 'id, name'),
-            window.api.get('batch_students', {}, 'student_id, batch_id'),
-        ]);
-        const batches = batchesRes.data || [];
-        const memberships = membershipsRes.data || [];
-        studentBatchMap = {};
-        memberships.forEach(m => {
-            if (!studentBatchMap[m.student_id]) studentBatchMap[m.student_id] = [];
-            studentBatchMap[m.student_id].push(m.batch_id);
-        });
-        const batchFilter = document.getElementById('studentBatchFilter');
-        if (batchFilter) {
-            const sortedBatches = batches.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            batchFilter.innerHTML = '<option value="">All Batches</option>' +
-                sortedBatches.map(b => `<option value="${window.esc(b.id)}">${window.esc(b.name)}</option>`).join('');
-        }
-
-        filterStudents();
+        renderStudentsTable(allStudents);
     } else {
         tbody.innerHTML = '';
         window.showStatus('studentsListStatus', response.error || 'Failed to load students.', 'error');
@@ -66,13 +45,10 @@ export async function loadStudents() {
 
 function renderStudentsTable(students) {
     const tbody = document.getElementById('studentsTableBody');
-    const countEl = document.getElementById('studentsCount');
     if (!tbody) return;
 
-    if (countEl) countEl.textContent = `Showing ${students.length} of ${allStudents.length}`;
-
     if (students.length === 0) {
-        window.tableLoading('studentsTableBody', 5, 'No students match your filters.');
+        window.tableLoading('studentsTableBody', 5, 'No students found.');
         return;
     }
 
@@ -92,21 +68,7 @@ function renderStudentsTable(students) {
 }
 
 function filterStudents() {
-    const searchVal = (document.getElementById('studentSearchInput')?.value || '').toLowerCase();
-    const gradeVal = document.getElementById('studentGradeFilter')?.value || '';
-    const subjectVal = document.getElementById('studentSubjectFilter')?.value || '';
-    const batchVal = document.getElementById('studentBatchFilter')?.value || '';
-
-    let filtered = allStudents;
-    if (searchVal) filtered = filtered.filter(s =>
-        (s.name || '').toLowerCase().includes(searchVal) ||
-        (s.username || '').toLowerCase().includes(searchVal)
-    );
-    if (gradeVal) filtered = filtered.filter(s => s.grade === gradeVal);
-    if (subjectVal) filtered = filtered.filter(s => (s.subjects || '').includes(subjectVal));
-    if (batchVal) filtered = filtered.filter(s => (studentBatchMap[s.id] || []).includes(batchVal));
-
-    renderStudentsTable(filtered);
+    renderStudentsTable(allStudents);
 }
 
 
@@ -186,7 +148,7 @@ function attachAddStudentListeners() {
     const form = document.getElementById('addStudentForm');
     if (!form) return;
 
-    window.populateGradeSelect('studentGrade', false);
+    window.populateGradePills('studentGrade', false);
 
     const nameInput = document.getElementById('studentName');
     const usernameInput = document.getElementById('studentUsername');
@@ -207,7 +169,7 @@ function attachAddStudentListeners() {
         const btnSpinner = document.getElementById('btnAddStudentSpinner');
 
         const name = document.getElementById('studentName').value.trim();
-        const grade = document.getElementById('studentGrade').value;
+        const grade = window.getSelectedGrade('studentGrade');
         const username = document.getElementById('studentUsername').value.trim().toLowerCase();
         const password = document.getElementById('studentPassword').value;
         const phone = document.getElementById('studentPhone').value.trim();
@@ -287,20 +249,6 @@ export function init() {
     const btnRefresh = document.getElementById('btnRefreshStudents');
     if (btnRefresh) btnRefresh.addEventListener('click', loadStudents);
 
-    const studentSearchInput = document.getElementById('studentSearchInput');
-    const studentGradeFilter = document.getElementById('studentGradeFilter');
-    const studentSubjectFilter = document.getElementById('studentSubjectFilter');
-
-    window.populateGradeSelect('studentGradeFilter');
-
-    const studentBatchFilter = document.getElementById('studentBatchFilter');
-
-    if (studentSearchInput) studentSearchInput.addEventListener('input', filterStudents);
-    if (studentGradeFilter) studentGradeFilter.addEventListener('change', filterStudents);
-    if (studentSubjectFilter) studentSubjectFilter.addEventListener('change', filterStudents);
-    if (studentBatchFilter) studentBatchFilter.addEventListener('change', filterStudents);
-
-    if (studentGradeFilter) studentGradeFilter.style.display = 'none';
 
     const pillView = document.getElementById('pillViewStudents');
     const pillAdd = document.getElementById('pillAddStudent');

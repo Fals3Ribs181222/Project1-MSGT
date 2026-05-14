@@ -132,7 +132,7 @@ function attachAIToolListeners() {
     document.getElementById('btnAskDoubt')?.addEventListener('click', async () => {
         const question = document.getElementById('doubtQuestion').value.trim();
         const subject  = document.getElementById('doubtSubject').value;
-        const grade    = document.getElementById('doubtGrade').value;
+        const grade    = window.getSelectedGrade('doubtGrade');
         const btn      = document.getElementById('btnAskDoubt');
         const answerBox = document.getElementById('doubtAnswerBox');
         const answerEl  = document.getElementById('doubtAnswer');
@@ -235,7 +235,7 @@ function attachAIToolListeners() {
                 question: lastQuestion,
                 answer: lastAnswer,
                 subject: document.getElementById('doubtSubject').value,
-                grade: document.getElementById('doubtGrade').value,
+                grade: window.getSelectedGrade('doubtGrade'),
                 rating,
             });
             const fbUp = document.getElementById('btnFeedbackUp');
@@ -365,7 +365,7 @@ function attachAIToolListeners() {
     document.getElementById('btnGenerateTest')?.addEventListener('click', async () => {
         const topic    = document.getElementById('testTopic').value.trim();
         const subject  = document.getElementById('testSubject').value;
-        const grade    = document.getElementById('testGrade').value;
+        const grade    = window.getSelectedGrade('testGrade');
         const cogFocus = document.getElementById('cogFocusValue')?.value ?? 'balanced';
         const fileId   = document.getElementById('testMaterial')?.value || undefined;
         const { secAMarks, secBMarks, secCMarks, sections, marksTarget } = getSectionValues();
@@ -615,7 +615,7 @@ function attachAIToolListeners() {
         const outputEl = document.getElementById('testOutput');
         const topic    = document.getElementById('testTopic').value.trim();
         const subject  = document.getElementById('testSubject').value;
-        const grade    = document.getElementById('testGrade').value;
+        const grade    = window.getSelectedGrade('testGrade');
         const btn      = document.getElementById('btnSaveToMaterials');
 
         const title    = topic || `${subject} ${grade} Test`;
@@ -700,7 +700,7 @@ async function populateMaterialDropdown() {
 function filterMaterialDropdown() {
     const sel = document.getElementById('testMaterial');
     if (!sel) return;
-    const grade   = document.getElementById('testGrade')?.value || '';
+    const grade   = window.getSelectedGrade('testGrade');
     const subject = document.getElementById('testSubject')?.value || '';
 
     // Keep current selection if still valid
@@ -723,8 +723,8 @@ function filterMaterialDropdown() {
 }
 
 export function init() {
-    window.populateGradeSelect('doubtGrade');
-    window.populateGradeSelect('testGrade', false);
+    window.populateGradePills('doubtGrade', true);
+    window.populateGradePills('testGrade', false);
     attachAIToolListeners();
     populateMaterialDropdown();
 }

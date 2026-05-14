@@ -104,8 +104,7 @@ window.openPlaylist = function (playlistId) {
     document.getElementById('recDetailView').style.display = 'block';
     document.getElementById('recPageTitle').textContent = currentPlaylist.name;
     document.getElementById('recDetailDesc').textContent = currentPlaylist.description || '';
-    document.getElementById('btnNewPlaylist').style.display = 'none';
-    if (isTeacher) document.getElementById('btnAddVideos').style.display = 'inline-flex';
+    setDetailView();
 
     renderDetailGrid();
 };
@@ -171,23 +170,25 @@ function goBackToPlaylists() {
     document.getElementById('recDetailView').style.display = 'none';
     document.getElementById('recPlaylistView').style.display = 'block';
     document.getElementById('recPageTitle').textContent = 'Class Recordings';
-    document.getElementById('btnAddVideos').style.display = 'none';
-    if (isTeacher) document.getElementById('btnNewPlaylist').style.display = 'inline-flex';
+    setPlaylistView();
 }
 
 // ── Create playlist ───────────────────────────────────────────
 
 function showCreateForm() {
     document.getElementById('recCreateForm').style.display = 'block';
+    document.getElementById('recPlaylistView').style.display = 'none';
     document.getElementById('plName').focus();
+    setCreateView();
 }
 
 function hideCreateForm() {
     document.getElementById('recCreateForm').style.display = 'none';
+    document.getElementById('recPlaylistView').style.display = 'block';
+    setPlaylistView();
     document.getElementById('plName').value = '';
     document.getElementById('plDesc').value = '';
-    document.getElementById('plSubject').value = '';
-    document.getElementById('plGrade').value = '';
+    document.querySelectorAll('input[name="plSubjectRadio"], input[name="plGradeRadio"]').forEach(r => r.checked = false);
 }
 
 async function savePlaylist() {
@@ -201,8 +202,8 @@ async function savePlaylist() {
     const payload = {
         name,
         description: document.getElementById('plDesc').value.trim() || null,
-        subject: document.getElementById('plSubject').value || null,
-        grade: document.getElementById('plGrade').value || null,
+        subject: document.querySelector('input[name="plSubjectRadio"]:checked')?.value || null,
+        grade: document.querySelector('input[name="plGradeRadio"]:checked')?.value || null,
         created_by: session.user.id,
     };
 
@@ -323,8 +324,6 @@ window.openRecordingModal = function (videoId, title, subject, grade, recordedAt
     document.getElementById('recordingModalTitle').textContent = title;
     document.getElementById('recordingModalMeta').textContent = metaStr(subject, grade, recordedAt);
     iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-    const ytLink = document.getElementById('recordingYTLink');
-    if (ytLink) ytLink.href = `https://www.youtube.com/watch?v=${videoId}`;
     overlay.classList.add('is-open');
     document.body.style.overflow = 'hidden';
 };
@@ -339,27 +338,72 @@ window.closeRecordingModal = function () {
 
 // ── Init / Refresh ────────────────────────────────────────────
 
-export async function init() {
-    // Teacher-only controls
+function setPlaylistView() {
+    document.getElementById('btnViewPlaylists').style.display = 'inline-flex';
+    document.getElementById('btnViewPlaylists').classList.add('pill-toggle__btn--active');
+    document.getElementById('btnBackToPlaylists').style.display = 'none';
+    document.getElementById('btnAddVideos').style.display = 'none';
     if (isTeacher) {
         document.getElementById('btnNewPlaylist').style.display = 'inline-flex';
+        document.getElementById('btnNewPlaylist').classList.remove('pill-toggle__btn--active');
         document.getElementById('btnRenewWatch').style.display = 'inline-flex';
+    }
+}
+
+function setDetailView() {
+    document.getElementById('btnViewPlaylists').classList.remove('pill-toggle__btn--active');
+    document.getElementById('btnBackToPlaylists').style.display = 'inline-flex';
+    document.getElementById('btnNewPlaylist').style.display = 'none';
+    if (isTeacher) document.getElementById('btnAddVideos').style.display = 'inline-flex';
+}
+
+function setCreateView() {
+    document.getElementById('btnNewPlaylist').classList.add('pill-toggle__btn--active');
+    document.getElementById('btnViewPlaylists').classList.remove('pill-toggle__btn--active');
+}
+
+export async function init() {
+    // Move modals to <body> so position:fixed works correctly regardless of
+    // any CSS transform on the dashboard panel ancestor.
+    ['recordingModal', 'recPickerModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.parentElement !== document.body) document.body.appendChild(el);
+    });
+
+    if (isTeacher) {
         document.getElementById('btnEmptyNewPlaylist')?.addEventListener('click', showCreateForm);
     }
 
-    // Populate selects from shared constants
-    window.populateSubjectSelect('plSubject', true);
-    window.populateGradeSelect('plGrade', true);
+    // Populate subject pills (radio — single select)
+    const pillsContainer = document.getElementById('plSubjectPills');
+    if (pillsContainer) {
+        pillsContainer.innerHTML = window._Subjects.map(s => `
+            <label class="subject-pill">
+                <input type="radio" name="plSubjectRadio" value="${s}">
+                <span class="subject-pill__label">${s}</span>
+            </label>`).join('');
+    }
+    // Populate grade pills (radio — single select)
+    const gradePills = document.getElementById('plGradePills');
+    if (gradePills) {
+        gradePills.innerHTML = [window._Grade11, window._Grade12].map(g => `
+            <label class="subject-pill">
+                <input type="radio" name="plGradeRadio" value="${g}">
+                <span class="subject-pill__label">${g}</span>
+            </label>`).join('');
+    }
 
     // Create playlist
+    document.getElementById('btnViewPlaylists')?.addEventListener('click', () => {
+        if (document.getElementById('recCreateForm').style.display !== 'none') hideCreateForm();
+        else if (currentPlaylist) goBackToPlaylists();
+    });
     document.getElementById('btnNewPlaylist')?.addEventListener('click', showCreateForm);
     document.getElementById('btnCancelCreate')?.addEventListener('click', hideCreateForm);
     document.getElementById('btnSavePlaylist')?.addEventListener('click', savePlaylist);
 
-    // Back navigation
-    document.getElementById('btnBackToPlaylists')?.addEventListener('click', goBackToPlaylists);
-
     // Add videos
+    document.getElementById('btnBackToPlaylists')?.addEventListener('click', goBackToPlaylists);
     document.getElementById('btnAddVideos')?.addEventListener('click', window.openVideoPicker);
     document.getElementById('btnConfirmAddVideos')?.addEventListener('click', confirmAddVideos);
 
@@ -378,6 +422,7 @@ export async function init() {
 
     // Load data
     await Promise.all([loadAllRecordings(), loadPlaylists()]);
+    setPlaylistView();
     renderPlaylistGrid();
 }
 

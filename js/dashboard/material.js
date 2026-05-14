@@ -102,7 +102,7 @@ function attachMaterialListeners() {
     const form = document.getElementById('uploadForm');
     if (!form) return;
 
-    window.populateGradeSelect('fileGrade');
+    window.populateGradePills('fileGrade', true);
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -151,7 +151,7 @@ function attachMaterialListeners() {
             const payload = {
                 title: document.getElementById('fileTitle').value,
                 subject: subjects,
-                grade: document.getElementById('fileGrade').value,
+                grade: window.getSelectedGrade('fileGrade'),
                 file_url: publicUrl,
                 upload_type: uploadType,
                 uploaded_by: user.id

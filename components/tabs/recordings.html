@@ -102,7 +102,7 @@
     .rec-back:hover { color: var(--primary); }
 
     /* Create playlist form */
-    .rec-create-form { background: var(--bg-surface-hover); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .rec-create-form { margin-bottom: 1.5rem; }
     .rec-create-form h4 { margin: 0 0 1rem; font-size: 0.92rem; color: var(--primary); }
     .rec-form-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
     .rec-form-row .form__input { flex: 1; min-width: 140px; }
@@ -144,53 +144,71 @@
     .rec-picker-card p { margin: 0; padding: 0.4rem 0.5rem; font-size: 0.75rem; font-weight: 500; color: var(--text-main); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rec-picker-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem; }
 
-    /* Video modal */
+    /* Video modal — cinema dark */
     .rec-modal-overlay {
         position: fixed; inset: 0;
-        background: rgba(0,0,0,0.72); backdrop-filter: blur(4px);
+        background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
         display: none; align-items: center; justify-content: center;
-        z-index: 1000; padding: 1rem;
+        z-index: 1000; padding: 1.5rem;
     }
     .rec-modal-overlay.is-open { display: flex; animation: fadeIn 0.2s ease; }
-    .rec-modal { background: var(--bg-surface); border-radius: var(--radius-lg); width: 100%; max-width: 880px; overflow: hidden; animation: fadeUp 0.25s ease; }
-    .rec-modal-header { padding: 1.1rem 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 1px solid var(--border-color); }
-    .rec-modal-header h3 { margin: 0 0 0.15rem; font-size: 0.95rem; color: var(--primary); line-height: 1.4; }
-    .rec-modal-header p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
-    .rec-modal-close { background: var(--bg-surface-hover); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.15s; color: var(--text-main); }
-    .rec-modal-close:hover { background: var(--border-color); }
-    .rec-video-wrap { position: relative; padding-top: 56.25%; background: #000; }
+    .rec-modal {
+        background: #111;
+        border-radius: 14px;
+        width: min(760px, 100%);
+        overflow: hidden;
+        animation: fadeUp 0.25s ease;
+        box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
+    }
+    .rec-modal-header { padding: 0.9rem 1.25rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .rec-modal-header h3 { margin: 0 0 0.15rem; font-size: 0.9rem; color: #fff; font-weight: 600; line-height: 1.4; }
+    .rec-modal-header p { margin: 0; font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+    .rec-modal-close { background: rgba(255,255,255,0.08); border: none; border-radius: 50%; width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; color: rgba(255,255,255,0.65); font-size: 1rem; transition: background 0.15s, color 0.15s; }
+    .rec-modal-close:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    /* Explicit height via min() — avoids aspect-ratio+flex ambiguity that caused header clipping.
+       Computes 16:9 of actual modal width, capped so the full modal always fits the viewport. */
+    .rec-video-wrap { position: relative; background: #000; height: min(calc(min(760px, 100vw - 3rem) * 0.5625), calc(100vh - 9rem)); }
     .rec-video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-    .rec-modal-actions { padding: 0.85rem 1.5rem; display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); }
 </style>
 
-<!-- ── Header ─────────────────────────────────────────────── -->
-<div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
-    <h3 style="margin:0;" id="recPageTitle">Class Recordings</h3>
-    <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-        <span id="recordingsWatchExpiry" style="font-size:0.78rem; color:var(--text-muted);"></span>
-        <button class="btn btn--outline btn--sm" id="btnRenewWatch" style="display:none;">
-            <i class="ri-loop-left-line"></i> Renew Watch
-        </button>
-        <button class="btn btn--primary btn--sm" id="btnNewPlaylist" style="display:none;">
-            <i class="ri-add-line"></i> New Playlist
-        </button>
-        <button class="btn btn--outline btn--sm" id="btnAddVideos" style="display:none;">
-            <i class="ri-add-line"></i> Add Videos
-        </button>
+<header class="panel__header">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+        <button class="btn btn--outline btn--sm" id="btnBackToPlaylists" style="display:none;">← Back</button>
+        <h2 id="recPageTitle">Class Recordings</h2>
     </div>
-</div>
+    <div style="display:flex; align-items:center; gap:1rem;">
+        <button class="btn btn--outline btn--sm" id="btnRenewWatch" style="display:none;">Renew Watch</button>
+        <div class="pill-toggle">
+            <button class="pill-toggle__btn pill-toggle__btn--active" id="btnViewPlaylists" style="display:none;">Playlists</button>
+            <button class="pill-toggle__btn" id="btnAddVideos" style="display:none;">+ Add Videos</button>
+            <button class="pill-toggle__btn" id="btnNewPlaylist" style="display:none;">+ New Playlist</button>
+        </div>
+    </div>
+</header>
 
 <div id="recordingsStatus" class="status" style="display:none; margin-bottom:1rem;"></div>
 
 <!-- ── Create playlist form ──────────────────────────────── -->
 <div id="recCreateForm" class="rec-create-form" style="display:none;">
     <h4>New Playlist</h4>
-    <div class="rec-form-row" style="margin-bottom:0.75rem;">
-        <input class="form__input" id="plName" placeholder="Playlist name e.g. Chapter 1 — Journal Entries" style="flex:2;">
-        <select class="form__input" id="plSubject"></select>
-        <select class="form__input" id="plGrade"></select>
+    <div class="form__group" style="margin-bottom:0.75rem;">
+        <label class="form__label">Playlist Name</label>
+        <input class="form__input" id="plName" placeholder="e.g. Chapter 1 — Journal Entries">
     </div>
-    <input class="form__input" id="plDesc" placeholder="Description (optional)" style="width:100%; margin-bottom:0.75rem;">
+    <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+        <div class="form__group" style="flex:1; min-width:160px;">
+            <label class="form__label">Subject</label>
+            <div class="subject-pills" id="plSubjectPills"></div>
+        </div>
+        <div class="form__group" style="flex:1; min-width:140px;">
+            <label class="form__label">Grade</label>
+            <div class="subject-pills" id="plGradePills"></div>
+        </div>
+    </div>
+    <div class="form__group" style="margin-bottom:0.75rem;">
+        <label class="form__label">Description <span style="color:var(--text-muted); font-weight:400;">(optional)</span></label>
+        <input class="form__input" id="plDesc" placeholder="Brief description of this playlist">
+    </div>
     <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
         <button class="btn btn--outline btn--sm" id="btnCancelCreate">Cancel</button>
         <button class="btn btn--primary btn--sm" id="btnSavePlaylist">Create Playlist</button>
@@ -210,9 +228,6 @@
 
 <!-- ── Playlist detail view ──────────────────────────────── -->
 <div id="recDetailView" style="display:none;">
-    <button class="rec-back" id="btnBackToPlaylists">
-        <i class="ri-arrow-left-line"></i> All Playlists
-    </button>
     <div id="recDetailMeta" style="margin-bottom:1.25rem;">
         <p id="recDetailDesc" style="margin:0.25rem 0 0; font-size:0.85rem; color:var(--text-muted);"></p>
     </div>
@@ -256,12 +271,6 @@
             <iframe id="recordingModalIframe"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen src=""></iframe>
-        </div>
-        <div class="rec-modal-actions">
-            <a id="recordingYTLink" href="#" target="_blank" rel="noopener" class="btn btn--outline btn--sm">
-                <i class="ri-youtube-line"></i> YouTube
-            </a>
-            <button class="btn btn--outline btn--sm" onclick="window.closeRecordingModal()">Close</button>
         </div>
     </div>
 </div>

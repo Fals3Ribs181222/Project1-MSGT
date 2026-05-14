@@ -41,6 +41,38 @@ window.populateGradeSelect = function (selectId, includeAll = true) {
     el.innerHTML += `<option value="${window._Grade12}">${window._Grade12}</option>`;
 };
 
+// Populates a container div with radio-based grade pills (single-select).
+// includeAll=true adds an "All Grades" pill (pre-checked, for filter contexts).
+// includeAll=false leaves no pill pre-checked (user must pick, for form contexts).
+window.populateGradePills = function (containerId, includeAll = false) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const name = containerId + '_grade';
+    let html = '';
+    if (includeAll) {
+        html += `<label class="subject-pill">
+            <input type="radio" name="${name}" value="" checked>
+            <span class="subject-pill__label">All Grades</span>
+        </label>`;
+    }
+    [window._Grade11, window._Grade12].forEach(g => {
+        html += `<label class="subject-pill">
+            <input type="radio" name="${name}" value="${g}">
+            <span class="subject-pill__label">${g}</span>
+        </label>`;
+    });
+    el.innerHTML = html;
+};
+
+// Returns the currently selected grade value from a grade-pills container.
+// Returns '' if nothing is selected (filter context) or nothing checked yet.
+window.getSelectedGrade = function (containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return '';
+    const checked = el.querySelector('input[type="radio"]:checked');
+    return checked ? checked.value : '';
+};
+
 window.safeFormReset = function (form) {
     if (!form) return;
     form.reset();
