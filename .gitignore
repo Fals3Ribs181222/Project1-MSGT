@@ -30,3 +30,4 @@ pitch/
 
 # Node
 node_modules/
+client_secret_*.json
