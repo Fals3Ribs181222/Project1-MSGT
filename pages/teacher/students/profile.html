@@ -1,0 +1,171 @@
+<div class="student-detail">
+
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem;">
+        <div>
+            <h2 id="studentDetailName" style="font-size:1.5rem;font-weight:700;margin:0 0 0.3rem;color:var(--text-main);">-</h2>
+            <span style="font-size:0.85rem;color:var(--text-muted);">@<span id="studentDetailUsername">-</span></span>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-shrink:0;">
+            <button class="btn btn--outline btn--sm" id="btnBackToStudents" style="display:inline-flex;align-items:center;gap:0.35rem;" onclick="window.loadPage('page-students', '')">
+                <i class="ri-arrow-left-line"></i> Back
+            </button>
+            <button class="btn btn--danger btn--sm" id="btnDeleteStudentDetail" style="display:inline-flex;align-items:center;gap:0.35rem;">
+                <i class="ri-delete-bin-line"></i> Delete
+            </button>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+        <span id="studentDetailGrade" style="display:inline-block;background:var(--bg-surface-hover);border:1px solid var(--border-color);border-radius:var(--radius-full);padding:0.2rem 0.75rem;font-size:0.82rem;font-weight:500;color:var(--text-main);">-</span>
+        <span id="studentDetailSubjects" style="display:inline-block;background:var(--bg-surface-hover);border:1px solid var(--border-color);border-radius:var(--radius-full);padding:0.2rem 0.75rem;font-size:0.82rem;font-weight:500;color:var(--text-main);">-</span>
+        <span id="studentDetailSchool" style="display:inline-block;background:var(--bg-surface-hover);border:1px solid var(--border-color);border-radius:var(--radius-full);padding:0.2rem 0.75rem;font-size:0.82rem;font-weight:500;color:var(--text-muted);">-</span>
+    </div>
+
+    <div style="display:flex;gap:0;align-items:stretch;">
+        <div style="flex:2;padding-right:1.5rem;">
+            <p style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin:0 0 0.75rem;">Student</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div>
+                    <p class="form__label" style="margin-bottom:0.25rem;">Phone</p>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                        <span id="sdStudentPhone" style="font-size:0.95rem;color:var(--text-main);">-</span>
+                        <a id="sdStudentWaLink" href="#" target="_blank" rel="noopener" style="display:none;color:#25D366;font-size:1.1rem;line-height:1;" title="WhatsApp"><i class="ri-whatsapp-line"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <p class="form__label" style="margin-bottom:0.25rem;">Email</p>
+                    <span id="sdEmail" style="font-size:0.95rem;color:var(--text-main);">-</span>
+                </div>
+            </div>
+        </div>
+        <div style="width:1px;background:var(--border-color);flex-shrink:0;"></div>
+        <div style="flex:1;padding:0 1.5rem;">
+            <p style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin:0 0 0.75rem;">Father</p>
+            <div style="margin-bottom:0.75rem;">
+                <p class="form__label" style="margin-bottom:0.25rem;">Name</p>
+                <span id="sdFatherName" style="font-size:0.95rem;color:var(--text-main);">-</span>
+            </div>
+            <div>
+                <p class="form__label" style="margin-bottom:0.25rem;">Phone</p>
+                <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                    <span id="sdFatherPhone" style="font-size:0.95rem;color:var(--text-main);">-</span>
+                    <a id="sdFatherWaLink" href="#" target="_blank" rel="noopener" style="display:none;color:#25D366;font-size:1.1rem;line-height:1;" title="WhatsApp"><i class="ri-whatsapp-line"></i></a>
+                    <button id="btnEditFatherPhone" class="btn btn--outline btn--sm" style="padding:2px 8px;font-size:0.75rem;display:inline-flex;align-items:center;gap:0.2rem;"><i class="ri-pencil-line"></i></button>
+                </div>
+                <div id="sdFatherPhoneEdit" style="display:none;margin-top:0.5rem;">
+                    <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+                        <input type="tel" id="sdFatherPhoneInput" placeholder="10-digit number" maxlength="10" style="max-width:150px;padding:4px 8px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.85rem;background:var(--bg-surface);color:var(--text-main);">
+                        <button id="btnSaveFatherPhone" class="btn btn--primary btn--sm">Save</button>
+                        <button id="btnCancelFatherPhone" class="btn btn--outline btn--sm">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="width:1px;background:var(--border-color);flex-shrink:0;"></div>
+        <div style="flex:1;padding-left:1.5rem;">
+            <p style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin:0 0 0.75rem;">Mother</p>
+            <div style="margin-bottom:0.75rem;">
+                <p class="form__label" style="margin-bottom:0.25rem;">Name</p>
+                <span id="sdMotherName" style="font-size:0.95rem;color:var(--text-main);">-</span>
+            </div>
+            <div>
+                <p class="form__label" style="margin-bottom:0.25rem;">Phone</p>
+                <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                    <span id="sdMotherPhone" style="font-size:0.95rem;color:var(--text-main);">-</span>
+                    <a id="sdMotherWaLink" href="#" target="_blank" rel="noopener" style="display:none;color:#25D366;font-size:1.1rem;line-height:1;" title="WhatsApp"><i class="ri-whatsapp-line"></i></a>
+                    <button id="btnEditMotherPhone" class="btn btn--outline btn--sm" style="padding:2px 8px;font-size:0.75rem;display:inline-flex;align-items:center;gap:0.2rem;"><i class="ri-pencil-line"></i></button>
+                </div>
+                <div id="sdMotherPhoneEdit" style="display:none;margin-top:0.5rem;">
+                    <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+                        <input type="tel" id="sdMotherPhoneInput" placeholder="10-digit number" maxlength="10" style="max-width:150px;padding:4px 8px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.85rem;background:var(--bg-surface);color:var(--text-main);">
+                        <button id="btnSaveMotherPhone" class="btn btn--primary btn--sm">Save</button>
+                        <button id="btnCancelMotherPhone" class="btn btn--outline btn--sm">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:0.75rem;margin:1.75rem 0 1rem;">
+        <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);white-space:nowrap;">Attendance</span>
+        <div style="flex:1;height:1px;background:var(--border-color);"></div>
+    </div>
+
+    <div class="student-detail__stats" id="studentDetailStats">
+        <div class="student-detail__stat"><div class="student-detail__stat-value" id="sdTotalClasses">-</div><div class="student-detail__stat-label">Total Classes</div></div>
+        <div class="student-detail__stat"><div class="student-detail__stat-value student-detail__stat-value--green" id="sdPresent">-</div><div class="student-detail__stat-label">Present</div></div>
+        <div class="student-detail__stat"><div class="student-detail__stat-value student-detail__stat-value--red" id="sdAbsent">-</div><div class="student-detail__stat-label">Absent</div></div>
+        <div class="student-detail__stat"><div class="student-detail__stat-value student-detail__stat-value--amber" id="sdLate">-</div><div class="student-detail__stat-label">Late</div></div>
+        <div class="student-detail__stat"><div class="student-detail__stat-value" id="sdAttendanceRate">-</div><div class="student-detail__stat-label">Attendance %</div></div>
+    </div>
+
+    <div class="student-detail__twocol">
+        <div>
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+                <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">Calendar</span>
+                <div style="flex:1;height:1px;background:var(--border-color);"></div>
+            </div>
+            <div id="sdAttendanceCalendar" style="min-height:60px;"><div class="loading-text">Loading...</div></div>
+        </div>
+        <div>
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+                <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">Batches</span>
+                <div style="flex:1;height:1px;background:var(--border-color);"></div>
+            </div>
+            <div class="table-wrap">
+                <table id="studentBatchesTable">
+                    <thead><tr><th scope="col">Batch</th><th scope="col">Subject</th><th scope="col">Grade</th><th scope="col">Schedule</th></tr></thead>
+                    <tbody id="studentBatchesBody"><tr><td colspan="4" class="loading-text">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:0.75rem;margin:1.75rem 0 1rem;">
+        <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);white-space:nowrap;">Performance</span>
+        <div style="flex:1;height:1px;background:var(--border-color);"></div>
+    </div>
+    <div id="sdTrendChart" style="margin-bottom:1.5rem;min-height:60px;"><div class="loading-text">Loading...</div></div>
+    <div class="table-wrap" style="margin-bottom:1.5rem;">
+        <table id="studentMarksTable">
+            <thead><tr><th scope="col">Test</th><th scope="col">Subject</th><th scope="col">Marks</th><th scope="col">Max</th><th scope="col">%</th><th scope="col">Rank</th><th scope="col">Date</th></tr></thead>
+            <tbody id="studentMarksBody"><tr><td colspan="7" class="loading-text">Loading...</td></tr></tbody>
+        </table>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:0.75rem;margin:1.75rem 0 1rem;">
+        <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);white-space:nowrap;">Notes & History</span>
+        <div style="flex:1;height:1px;background:var(--border-color);"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+        <div>
+            <textarea id="sdNotesInput" placeholder="Private notes — not visible to the student..." style="width:100%;min-height:120px;padding:0.75rem;border:1px solid var(--border-color);border-radius:var(--radius-md);font-family:var(--font-main);font-size:0.9rem;resize:vertical;background:var(--bg-surface-hover);color:var(--text-main);box-sizing:border-box;"></textarea>
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">
+                <button class="btn btn--primary btn--sm" id="btnSaveNotes">Save Notes</button>
+                <span id="sdNotesSaveStatus" style="font-size:0.85rem;color:var(--text-muted);"></span>
+            </div>
+        </div>
+        <div id="sdWhatsappLog" style="min-height:40px;"><div class="loading-text">Loading...</div></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:0.75rem;margin:1.75rem 0 1rem;">
+        <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);white-space:nowrap;">AI Report</span>
+        <div style="flex:1;height:1px;background:var(--border-color);"></div>
+    </div>
+    <div style="background:var(--bg-surface-hover);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:1.25rem;">
+        <button class="btn btn--primary btn--sm" id="btnGenerateReport" disabled style="display:inline-flex;align-items:center;gap:0.4rem;">
+            <i class="ri-sparkling-line"></i> Generate Progress Report
+        </button>
+        <div id="reportOutputSection" style="display:none;margin-top:1.25rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+                <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);">Generated Report</span>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="btn btn--outline btn--sm" id="btnCopyReport" style="display:none;align-items:center;gap:0.3rem;"><i class="ri-file-copy-line"></i> Copy</button>
+                    <button class="btn btn--sm" id="btnSendWhatsappReport" style="display:none;background:#25D366;border-color:#25D366;color:#fff;align-items:center;gap:0.3rem;"><i class="ri-whatsapp-line"></i> Send</button>
+                </div>
+            </div>
+            <div id="reportOutputText" style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:1.25rem 1.5rem;font-size:0.95rem;line-height:1.8;color:var(--text-main);white-space:pre-wrap;min-height:80px;"></div>
+        </div>
+    </div>
+
+</div>

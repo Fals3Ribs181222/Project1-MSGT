@@ -1,0 +1,104 @@
+<style>
+    .rec-card { background:var(--bg-surface); border:1px solid var(--glass-border); border-radius:var(--radius-lg); overflow:hidden; cursor:pointer; transition:transform 0.2s ease,box-shadow 0.2s ease; position:relative; }
+    .rec-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,0.1); }
+    .rec-card:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+    .rec-thumb { position:relative; aspect-ratio:16/9; background:var(--bg-surface-hover); overflow:hidden; }
+    .rec-thumb img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.3s ease; }
+    .rec-card:hover .rec-thumb img { transform:scale(1.04); }
+    .rec-play-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s ease; }
+    .rec-card:hover .rec-play-overlay { opacity:1; }
+    .rec-play-btn { width:52px; height:52px; background:rgba(255,255,255,0.92); border-radius:50%; display:flex; align-items:center; justify-content:center; transform:scale(0.85); transition:transform 0.2s ease; }
+    .rec-card:hover .rec-play-btn { transform:scale(1); }
+    .rec-play-btn svg { width:20px; height:20px; fill:var(--primary); margin-left:3px; }
+    .rec-info { padding:0.9rem 1rem; }
+    .rec-title { font-weight:600; color:var(--text-main); font-size:0.9rem; line-height:1.4; margin:0 0 0.3rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .rec-meta { font-size:0.76rem; color:var(--text-muted); display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
+    .rec-meta-dot { width:3px; height:3px; border-radius:50%; background:currentColor; opacity:0.4; flex-shrink:0; }
+    .rec-card-remove { position:absolute; top:0.5rem; left:0.5rem; width:26px; height:26px; background:rgba(0,0,0,0.55); color:#fff; border:none; border-radius:50%; display:none; align-items:center; justify-content:center; cursor:pointer; font-size:0.75rem; transition:background 0.15s; z-index:2; }
+    .rec-card:hover .rec-card-remove { display:flex; }
+    .rec-card-remove:hover { background:rgba(220,38,38,0.85); }
+    .rec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1.25rem; }
+    .rec-empty { text-align:center; padding:3.5rem 1rem; color:var(--text-muted); }
+    .rec-empty svg { width:56px; height:56px; margin:0 auto 1rem; opacity:0.2; display:block; color:var(--primary); }
+    .rec-empty h4 { font-size:1rem; color:var(--text-main); margin:0 0 0.4rem; }
+    .rec-empty p { font-size:0.85rem; max-width:320px; margin:0 auto 1.25rem; line-height:1.6; }
+    .rec-picker-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:900; padding:1rem; }
+    .rec-picker-overlay.is-open { display:flex; animation:fadeIn 0.2s ease; }
+    .rec-picker-modal { background:var(--bg-surface); border-radius:var(--radius-lg); width:100%; max-width:720px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; animation:fadeUp 0.25s ease; }
+    .rec-picker-header { padding:1.25rem 1.5rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; }
+    .rec-picker-header h4 { margin:0; font-size:0.95rem; color:var(--primary); }
+    .rec-picker-body { overflow-y:auto; padding:1.25rem; flex:1; }
+    .rec-picker-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:0.75rem; }
+    .rec-picker-card { border:2px solid var(--border-color); border-radius:var(--radius-md); overflow:hidden; cursor:pointer; transition:border-color 0.15s,transform 0.15s; position:relative; }
+    .rec-picker-card:hover { border-color:var(--primary); transform:translateY(-2px); }
+    .rec-picker-card.selected { border-color:var(--secondary); }
+    .rec-picker-card.selected::after { content:'✓'; position:absolute; top:0.4rem; right:0.4rem; background:var(--secondary); color:#fff; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; }
+    .rec-picker-card img { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; }
+    .rec-picker-card p { margin:0; padding:0.4rem 0.5rem; font-size:0.75rem; font-weight:500; color:var(--text-main); line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .rec-picker-footer { padding:1rem 1.5rem; border-top:1px solid var(--border-color); display:flex; justify-content:flex-end; gap:0.75rem; }
+    .rec-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:1000; padding:1.5rem; }
+    .rec-modal-overlay.is-open { display:flex; animation:fadeIn 0.2s ease; }
+    .rec-modal { background:#111; border-radius:14px; width:min(760px,100%); overflow:hidden; animation:fadeUp 0.25s ease; box-shadow:0 32px 80px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.06); }
+    .rec-modal-header { padding:0.9rem 1.25rem; display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+    .rec-modal-header h3 { margin:0 0 0.15rem; font-size:0.9rem; color:#fff; font-weight:600; line-height:1.4; }
+    .rec-modal-header p { margin:0; font-size:0.75rem; color:rgba(255,255,255,0.4); }
+    .rec-modal-close { background:rgba(255,255,255,0.08); border:none; border-radius:50%; width:28px; height:28px; flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:pointer; color:rgba(255,255,255,0.65); font-size:1rem; transition:background 0.15s,color 0.15s; }
+    .rec-modal-close:hover { background:rgba(255,255,255,0.18); color:#fff; }
+    .rec-video-wrap { position:relative; background:#000; height:min(calc(min(760px,100vw - 3rem) * 0.5625),calc(100vh - 9rem)); }
+    .rec-video-wrap iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+</style>
+
+<header class="panel__header">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="btn btn--outline btn--sm" id="btnBackToPlaylists">← Back</button>
+        <h2 id="recPageTitle">Playlist</h2>
+    </div>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn" id="btnAddVideos" style="display:none;">+ Add Videos</button>
+    </div>
+</header>
+
+<p id="recDetailDesc" style="margin:0 0 1.25rem;font-size:0.85rem;color:var(--text-muted);"></p>
+
+<div id="recDetailGrid" class="rec-grid"></div>
+<div id="recDetailEmpty" class="rec-empty" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9A2.25 2.25 0 0013.5 5.25h-9A2.25 2.25 0 002.25 7.5v9A2.25 2.25 0 004.5 18.75z"/></svg>
+    <h4>No videos yet</h4>
+    <p>Add recordings to this playlist using the button above.</p>
+</div>
+
+<!-- Video picker modal -->
+<div class="rec-picker-overlay" id="recPickerModal">
+    <div class="rec-picker-modal">
+        <div class="rec-picker-header">
+            <h4>Add Videos to Playlist</h4>
+            <button class="rec-modal-close" id="btnClosePickerModal" aria-label="Close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="rec-picker-body">
+            <div id="recPickerGrid" class="rec-picker-grid"></div>
+            <p id="recPickerEmpty" style="display:none;text-align:center;color:var(--text-muted);font-size:0.85rem;padding:2rem 0;">All recordings are already in this playlist.</p>
+        </div>
+        <div class="rec-picker-footer">
+            <button class="btn btn--outline btn--sm" id="btnCancelPicker">Cancel</button>
+            <button class="btn btn--primary btn--sm" id="btnConfirmAddVideos">Add Selected</button>
+        </div>
+    </div>
+</div>
+
+<!-- Video embed modal -->
+<div class="rec-modal-overlay" id="recordingModal" role="dialog" aria-modal="true" aria-labelledby="recordingModalTitle">
+    <div class="rec-modal">
+        <div class="rec-modal-header">
+            <div>
+                <h3 id="recordingModalTitle"></h3>
+                <p id="recordingModalMeta"></p>
+            </div>
+            <button class="rec-modal-close" id="btnCloseRecordingModal" aria-label="Close video"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="rec-video-wrap">
+            <iframe id="recordingModalIframe"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen src=""></iframe>
+        </div>
+    </div>
+</div>

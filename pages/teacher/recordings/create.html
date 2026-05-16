@@ -1,0 +1,35 @@
+<header class="panel__header">
+    <h2>New Playlist</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-recordings','')">← Playlists</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active">+ New Playlist</button>
+    </div>
+</header>
+
+<div class="form__group" style="margin-bottom:0.75rem;">
+    <label class="form__label">Playlist Name</label>
+    <input class="form__input" id="plName" placeholder="e.g. Chapter 1 — Journal Entries">
+</div>
+
+<div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+    <div class="form__group" style="flex:1;min-width:160px;">
+        <label class="form__label">Subject</label>
+        <div class="subject-pills" id="plSubjectPills"></div>
+    </div>
+    <div class="form__group" style="flex:1;min-width:140px;">
+        <label class="form__label">Grade</label>
+        <div class="subject-pills" id="plGradePills"></div>
+    </div>
+</div>
+
+<div class="form__group" style="margin-bottom:0.75rem;">
+    <label class="form__label">Description <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+    <input class="form__input" id="plDesc" placeholder="Brief description of this playlist">
+</div>
+
+<div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+    <button class="btn btn--outline btn--sm" id="btnCancelCreate">Cancel</button>
+    <button class="btn btn--primary btn--sm" id="btnSavePlaylist">Create Playlist</button>
+</div>
+
+<div id="createStatus" class="status" style="margin-top:0.75rem;"></div>

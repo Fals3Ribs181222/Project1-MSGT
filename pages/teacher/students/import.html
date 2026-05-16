@@ -1,0 +1,49 @@
+<header class="panel__header">
+    <h2>Import CSV</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-students', '')"><i class="ri-group-line"></i> List</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-students', 'enroll')"><i class="ri-user-add-line"></i> Enroll</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-students', 'import')"><i class="ri-upload-cloud-line"></i> Import</button>
+    </div>
+</header>
+
+<label for="importCsvFile" id="csvDropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.4rem;padding:2rem 1.5rem;border:2px dashed var(--border-color);border-radius:var(--radius-lg);cursor:pointer;background:var(--bg-surface-hover);text-align:center;transition:border-color 0.15s,background 0.15s;">
+    <i class="ri-upload-cloud-2-line" style="font-size:2.25rem;color:var(--text-muted);line-height:1;"></i>
+    <span style="font-weight:600;color:var(--text-main);font-size:0.95rem;">Drop CSV here or <span style="color:var(--primary);text-decoration:underline;">browse files</span></span>
+    <span id="csvFileName" style="font-size:0.82rem;color:var(--text-muted);">No file selected</span>
+    <input type="file" id="importCsvFile" accept=".csv" style="display:none;" aria-label="Upload CSV file">
+</label>
+
+<div style="margin-top:0.75rem;">
+    <button id="btnPreviewCsv" class="btn btn--primary btn--sm">Preview Import</button>
+</div>
+
+<div id="importPreviewSection" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+        <div>
+            <p style="font-weight:600;margin:0;" id="importPreviewCount"></p>
+            <p id="importProgressLabel" style="font-size:0.82rem;color:var(--text-muted);margin:0.2rem 0 0;display:none;"></p>
+        </div>
+        <button id="btnImportAll" class="btn btn--primary btn--sm">Import All Students</button>
+    </div>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem;">Review and edit usernames below before importing.</p>
+    <div class="table-wrap" style="margin-bottom:1rem;">
+        <table id="importPreviewTable" aria-label="Import preview">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Grade</th>
+                    <th>Subjects</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Username (editable)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="importPreviewBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="importStatus" class="status" style="display:none;"></div>

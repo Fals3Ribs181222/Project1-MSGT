@@ -1,0 +1,38 @@
+<header class="panel__header">
+    <h2>Add Testimonial</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-testimonials', '')">Testimonials List</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-testimonials', 'add')">+ Add New</button>
+    </div>
+</header>
+
+<form id="testimonialForm">
+    <div class="form__group">
+        <label for="testimStudentName" class="form__label">Student Name *</label>
+        <input type="text" id="testimStudentName" class="form__control" required placeholder="e.g. John Doe">
+    </div>
+    <div class="form__group">
+        <label for="testimSubject" class="form__label">Subject (Optional)</label>
+        <input type="text" id="testimSubject" class="form__control" placeholder="e.g. Physics & Math">
+    </div>
+    <div class="form__group">
+        <label for="testimYear" class="form__label">Batch Year (Optional)</label>
+        <input type="text" id="testimYear" class="form__control" placeholder="e.g. 2024">
+    </div>
+    <div class="form__group">
+        <label for="testimText" class="form__label">Testimonial Text (Optional)</label>
+        <textarea id="testimText" class="form__control" placeholder="Enter the testimonial text..." rows="4"></textarea>
+    </div>
+    <div class="form__group">
+        <label for="testimMedia" class="form__label">Photo Upload (Optional)</label>
+        <input type="file" id="testimMedia" class="form__control" accept="image/*">
+        <small class="form__help" style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;display:block;">Upload a student photo.</small>
+    </div>
+    <div class="form__group">
+        <label for="testimYouTube" class="form__label">Video Testimonial — YouTube URL (Optional)</label>
+        <input type="url" id="testimYouTube" class="form__control" placeholder="e.g. https://youtu.be/dQw4w9WgXcQ">
+        <small class="form__help" style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;display:block;">Upload the video to YouTube as <strong>Unlisted</strong>, then paste the link here.</small>
+    </div>
+    <button type="submit" class="btn btn--primary btn--full" id="btnAddTestimonial">Add Testimonial</button>
+    <div id="testimonialStatus" class="status"></div>
+</form>

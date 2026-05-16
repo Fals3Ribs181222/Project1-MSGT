@@ -1,0 +1,105 @@
+<header class="panel__header" style="margin-bottom:2rem;">
+    <h2>AI Tools</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn icon-inline" onclick="window.loadPage('page-ai-tools', '')"><i class="ri-question-line" aria-hidden="true"></i> Doubt Solver</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active icon-inline" onclick="window.loadPage('page-ai-tools', 'test-generator')"><i class="ri-file-text-line" aria-hidden="true"></i> Test Generator</button>
+    </div>
+</header>
+
+<div style="margin-bottom:1.5rem;">
+    <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.6;">
+        Generate an ISC-style test paper from uploaded study materials.
+        Questions follow board exam patterns with a full answer key.
+    </p>
+</div>
+
+<div class="form__row" style="margin-bottom:1rem;">
+    <div class="form__row-item">
+        <label class="form__label">Class</label>
+        <div class="subject-pills" id="testGrade"></div>
+    </div>
+    <div class="form__row-item">
+        <label class="form__label">Subject</label>
+        <select id="testSubject" class="form__control">
+            <option value="">Select subject</option>
+            <option value="Accounts">Accounts</option>
+            <option value="Commerce">Commerce</option>
+        </select>
+    </div>
+</div>
+
+<div class="form__group" style="margin-bottom:1rem;">
+    <label class="form__label">Study Material</label>
+    <select id="testMaterial" class="form__control">
+        <option value="">All materials for selected class &amp; subject</option>
+    </select>
+    <p style="margin-top:0.35rem;font-size:0.8rem;color:var(--text-muted);">
+        Selecting a file restricts the AI to that file's content only.
+    </p>
+</div>
+
+<div class="form__group" style="margin-bottom:1rem;">
+    <label class="form__label">Topic / Unit <span style="color:var(--text-muted);font-size:0.8rem;">(optional)</span></label>
+    <input type="text" id="testTopic" class="form__control"
+        placeholder="e.g. Principles of Management — leave blank to cover entire material">
+</div>
+
+<div class="form__group" style="margin-bottom:1.5rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+        <label class="form__label" style="margin:0;">Sections &amp; Marks</label>
+        <span id="testTotalMarksDisplay" style="font-size:0.9rem;color:var(--primary);font-weight:600;">Total: 0 marks</span>
+    </div>
+
+    <div class="form__row" style="margin-bottom:1rem;">
+        <div class="form__row-item time-picker-wrapper">
+            <label class="form__label" style="font-size:0.78rem;">Section A <span style="color:var(--text-muted);font-weight:400;">(1-mark)</span></label>
+            <div class="time-picker-display" id="secADisplay"><span id="secADisplayValue">Not Selected</span></div>
+        </div>
+        <div class="form__row-item time-picker-wrapper">
+            <label class="form__label" style="font-size:0.78rem;">Section B <span style="color:var(--text-muted);font-weight:400;">(4-mark)</span></label>
+            <div class="time-picker-display" id="secBDisplay"><span id="secBDisplayValue">Not Selected</span></div>
+        </div>
+        <div class="form__row-item time-picker-wrapper">
+            <label class="form__label" style="font-size:0.78rem;">Section C <span style="color:var(--text-muted);font-weight:400;">(8-mark)</span></label>
+            <div class="time-picker-display" id="secCDisplay"><span id="secCDisplayValue">Not Selected</span></div>
+        </div>
+    </div>
+
+    <div class="time-picker-panel" id="sectionMarksPanel" style="display:none;width:calc(33.333% - 0.67rem);margin-bottom:1rem;">
+        <div class="time-col" id="sectionMarksOptions"></div>
+    </div>
+</div>
+
+<div class="form__group" style="margin-bottom:1.5rem;">
+    <label class="form__label">Cognitive Focus</label>
+    <div class="tab-pill-selector" style="margin-top:0.4rem;width:100%;display:flex;">
+        <button type="button" class="tab-pill-selector__btn tab-pill-selector__btn--active" data-cog="balanced" style="flex:1;text-align:center;">Balanced</button>
+        <button type="button" class="tab-pill-selector__btn" data-cog="recall" style="flex:1;text-align:center;">Recall-heavy</button>
+        <button type="button" class="tab-pill-selector__btn" data-cog="application" style="flex:1;text-align:center;">Application</button>
+    </div>
+    <input type="hidden" name="cogFocus" id="cogFocusValue" value="balanced">
+</div>
+
+<button class="btn btn--primary" id="btnGenerateTest">✨ Generate Test Paper</button>
+<div id="testStatus" class="status"></div>
+
+<div id="testOutputBox" style="display:none;margin-top:1.5rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <h4 style="color:var(--primary);margin:0;">Generated Test Paper</h4>
+        <div style="display:flex;gap:0.5rem;">
+            <button class="btn btn--outline btn--sm" id="btnCopyTest">Copy</button>
+            <button class="btn btn--outline btn--sm" id="btnDownloadWord">Download Word</button>
+            <button class="btn btn--outline btn--sm" id="btnDownloadPdf">Download PDF</button>
+            <button class="btn btn--primary btn--sm" id="btnSaveToMaterials">Save to Materials</button>
+        </div>
+    </div>
+    <div id="testOutput" style="
+        background:var(--glass-bg);
+        border:1px solid var(--glass-border);
+        border-radius:var(--radius-md);
+        padding:1.25rem;
+        color:var(--text-main);
+        font-size:0.95rem;
+        line-height:1.8;
+    "></div>
+</div>

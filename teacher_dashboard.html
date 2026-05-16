@@ -308,7 +308,7 @@
                 const gradeBar = document.getElementById('gradeBar');
                 gradeBar.style.display = '';
                 gradeBar.querySelectorAll('.grade-pill-btn').forEach(btn => {
-                    btn.classList.toggle('grade-pill-btn--active', btn.dataset.grade === window._activeGrade);
+                    btn.classList.toggle('tab-pill-selector__btn--active', btn.dataset.grade === window._activeGrade);
                 });
 
                 gradeBar.querySelectorAll('.grade-pill-btn').forEach(btn => {
@@ -319,7 +319,7 @@
                         const hash = location.hash || '';
                         history.replaceState(null, '', `?grade=${encodeURIComponent(window._activeGrade)}${hash}`);
                         gradeBar.querySelectorAll('.grade-pill-btn').forEach(b => {
-                            b.classList.toggle('grade-pill-btn--active', b === btn);
+                            b.classList.toggle('tab-pill-selector__btn--active', b === btn);
                         });
                         // Refresh whichever tab is currently active
                         const activePanel = document.querySelector('.pages__panel--active');

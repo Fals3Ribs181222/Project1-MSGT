@@ -1,0 +1,82 @@
+<header class="panel__header">
+    <h2>Schedule Class</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-schedule', '')">Classes</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-schedule', 'new-class')">Schedule New</button>
+    </div>
+</header>
+
+<form id="classForm">
+    <div class="form__row" style="margin-bottom:0.75rem;align-items:flex-end;">
+        <div class="form__row-item">
+            <label class="form__label">Class Type</label>
+            <div class="tab-pill-selector" style="width:fit-content;">
+                <button type="button" class="tab-pill-selector__btn tab-pill-selector__btn--active" id="btnTypeRegular" data-type="regular">Regular</button>
+                <button type="button" class="tab-pill-selector__btn" id="btnTypeExtra" data-type="extra">Extra</button>
+            </div>
+            <input type="hidden" id="classType" value="regular">
+        </div>
+        <div class="form__row-item">
+            <label class="form__label" for="classGrade">Grade</label>
+            <select id="classGrade" class="form__control" required>
+                <option value="">-- Select Grade --</option>
+            </select>
+        </div>
+        <div class="form__row-item">
+            <label class="form__label" for="classBatch">Batch</label>
+            <select id="classBatch" class="form__control">
+                <option value="">Open Class</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form__group" id="groupDayOfWeek">
+        <label class="form__label">Days of the Week</label>
+        <div class="day-picker day-picker--full" id="classDayOfWeek">
+            <label class="day-picker__label"><input type="checkbox" name="classDays" value="1" class="day-picker__input"><span class="day-picker__text">Mon</span></label>
+            <label class="day-picker__label"><input type="checkbox" name="classDays" value="2" class="day-picker__input"><span class="day-picker__text">Tue</span></label>
+            <label class="day-picker__label"><input type="checkbox" name="classDays" value="3" class="day-picker__input"><span class="day-picker__text">Wed</span></label>
+            <label class="day-picker__label"><input type="checkbox" name="classDays" value="4" class="day-picker__input"><span class="day-picker__text">Thu</span></label>
+            <label class="day-picker__label"><input type="checkbox" name="classDays" value="5" class="day-picker__input"><span class="day-picker__text">Fri</span></label>
+            <label class="day-picker__label"><input type="checkbox" name="classDays" value="6" class="day-picker__input"><span class="day-picker__text">Sat</span></label>
+            <label class="day-picker__label"><input type="checkbox" name="classDays" value="0" class="day-picker__input"><span class="day-picker__text">Sun</span></label>
+        </div>
+    </div>
+
+    <div class="form__group" id="groupDate" style="display:none;">
+        <label class="form__label" for="classDate">Class Date</label>
+        <input type="date" id="classDate" class="form__control">
+    </div>
+
+    <div class="form__row" style="margin-bottom:0.75rem;">
+        <div class="form__row-item time-picker-wrapper" id="startPickerWrapper">
+            <label class="form__label" for="classStartTime">Start Time</label>
+            <input type="time" id="classStartTime" name="classStartTime" required style="display:none;">
+            <div class="time-picker-display" id="classStartTimeDisplay">
+                <span id="startDisplayValue">--:-- --</span>
+                <i class="ri-time-line"></i>
+            </div>
+        </div>
+        <div class="form__row-item time-picker-wrapper" id="endPickerWrapper">
+            <label class="form__label" for="classEndTime">End Time</label>
+            <input type="time" id="classEndTime" name="classEndTime" required style="display:none;">
+            <div class="time-picker-display" id="classEndTimeDisplay">
+                <span id="endDisplayValue">--:-- --</span>
+                <i class="ri-time-line"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="time-picker-panel" id="timePickerPanel" style="display:none;margin-bottom:0.75rem;">
+        <div class="time-col" id="timeHourCol"></div>
+        <div class="time-col time-col--minutes" id="timeMinuteCol"></div>
+        <div class="time-col time-col--ampm" id="timeAmPmCol"></div>
+    </div>
+
+    <button type="submit" class="btn btn--primary btn--full" id="btnCreateClass">
+        <span id="btnCreateClassText">Schedule Class</span>
+        <span class="spinner" id="btnCreateClassSpinner" style="display:none;" aria-hidden="true"></span>
+    </button>
+
+    <div id="classFormStatus" class="status" style="display:none;"></div>
+</form>

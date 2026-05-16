@@ -1,0 +1,27 @@
+<header class="panel__header">
+    <h2>Announcements</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-announcement', '')">Announcements List</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-announcement', 'post')">+ Post New</button>
+    </div>
+</header>
+
+<div id="announcementsListStatus" class="status"></div>
+<div class="table-wrap">
+    <table id="announcementsTable" aria-label="Announcements list">
+        <thead>
+            <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Grade</th>
+                <th scope="col">Date</th>
+                <th scope="col">Posted By</th>
+            </tr>
+        </thead>
+        <tbody id="announcementsTableBody">
+            <tr><td colspan="4" class="loading-text">Loading announcements...</td></tr>
+        </tbody>
+    </table>
+</div>
+<div class="text-right">
+    <button class="btn btn--primary btn--sm" id="btnRefreshAnnouncements">Refresh List</button>
+</div>

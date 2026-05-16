@@ -1,0 +1,39 @@
+<header class="panel__header">
+    <h2>Student List</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-students', '')"><i class="ri-group-line"></i> List</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-students', 'enroll')"><i class="ri-user-add-line"></i> Enroll</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-students', 'import')"><i class="ri-upload-cloud-line"></i> Import</button>
+    </div>
+</header>
+
+<div id="studentsListStatus" class="status"></div>
+
+<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;">
+    <div style="position:relative;flex:1;min-width:180px;">
+        <i class="ri-search-line" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;font-size:1rem;"></i>
+        <input type="search" id="studentsSearch" class="form__control" placeholder="Search by name or username…" style="padding-left:2.25rem;margin:0;">
+    </div>
+    <span id="studentsCount" style="font-size:0.85rem;color:var(--text-muted);white-space:nowrap;"></span>
+    <button class="btn btn--outline btn--sm" id="btnRefreshStudents" style="white-space:nowrap;display:flex;align-items:center;gap:0.35rem;">
+        <i class="ri-refresh-line"></i> Refresh
+    </button>
+</div>
+
+<div class="table-wrap">
+    <table id="studentsTable" aria-label="Students list">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Username</th>
+                <th scope="col">Subjects</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="studentsTableBody">
+            <tr>
+                <td colspan="4" class="loading-text">Loading students...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

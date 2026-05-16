@@ -1,0 +1,31 @@
+<header class="panel__header">
+    <h2>Tests</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-material', '')"><i class="ri-folder-open-line"></i> Resources</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-material', 'ai-training')"><i class="ri-brain-line"></i> AI Training</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-material', 'tests')"><i class="ri-file-list-3-line"></i> Tests</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-material', 'upload')"><i class="ri-upload-cloud-line"></i> Upload</button>
+    </div>
+</header>
+
+<div id="testsListStatus" class="status"></div>
+<div class="table-wrap">
+    <table id="testsTable" aria-label="Saved tests list">
+        <thead>
+            <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Subject</th>
+                <th scope="col">Grade</th>
+                <th scope="col">Date</th>
+                <th scope="col">Link</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody id="testsTableBody">
+            <tr><td colspan="6" class="loading-text">Loading tests...</td></tr>
+        </tbody>
+    </table>
+</div>
+<div class="text-right">
+    <button class="btn btn--primary btn--sm" id="btnRefreshTests">Refresh List</button>
+</div>

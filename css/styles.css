@@ -37,6 +37,8 @@
     --danger: #ef4444;
     --grade-11: #C41230;
     --grade-12: #00A36C;
+    --color-present: var(--grade-12);
+    --color-absent: var(--grade-11);
 }
 
 body {
@@ -758,8 +760,8 @@ button:disabled {
     flex: 1;
     text-align: center;
 }
-.dash-grade-bar .grade-pill-btn--active,
-.dash-grade-bar .grade-pill-btn--active:hover {
+.dash-grade-bar .tab-pill-selector__btn--active,
+.dash-grade-bar .tab-pill-selector__btn--active:hover {
     background: var(--amber);
     color: var(--text-main);
     font-weight: 600;
@@ -777,6 +779,9 @@ button:disabled {
 }
 
 .tab-pill-selector__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     background: transparent;
     color: var(--text-main);
     border: none;
@@ -1667,16 +1672,6 @@ button:disabled {
     animation: fadeIn 0.3s ease;
 }
 
-.batch-detail__header {
-    margin-bottom: 2rem;
-}
-
-.batch-detail__header h3 {
-    font-size: 1.5rem;
-    margin-top: 1rem;
-    margin-bottom: 0.25rem;
-    color: var(--text-main);
-}
 
 .batch-detail__meta {
     color: var(--text-muted);
@@ -2766,16 +2761,16 @@ button:disabled {
 
 /* Present - Emerald */
 .attendance-toggle input[value="present"]:checked~.attendance-toggle__mark {
-    background: var(--grade-12);
+    background: var(--color-present);
     color: white;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--color-present) 40%, transparent);
 }
 
 /* Absent - Ruby */
 .attendance-toggle input[value="absent"]:checked~.attendance-toggle__mark {
-    background: var(--grade-11);
+    background: var(--color-absent);
     color: white;
-    box-shadow: 0 2px 6px rgba(184, 50, 50, 0.3);
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--color-absent) 40%, transparent);
 }
 
 /* Late - Amber */
@@ -4051,12 +4046,12 @@ a.dash-sidebar__item {
 
 .class-item--grade-11 {
     --notch-color: var(--grade-11);
-    background: rgba(196, 18, 48, 0.04);
+    background: color-mix(in srgb, var(--grade-11) 4%, transparent);
 }
 
 .class-item--grade-12 {
     --notch-color: var(--grade-12);
-    background: rgba(0, 163, 108, 0.04);
+    background: color-mix(in srgb, var(--grade-12) 4%, transparent);
 }
 
 .class-item:hover {

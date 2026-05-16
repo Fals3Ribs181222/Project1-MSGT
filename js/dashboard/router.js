@@ -1,11 +1,69 @@
+const PAGE_REGISTRY = {
+    // Teacher - students
+    'students':                  { html: 'pages/teacher/students/list.html',              js: '../../pages/teacher/students/list.js' },
+    'students#enroll':           { html: 'pages/teacher/students/enroll.html',            js: '../../pages/teacher/students/enroll.js' },
+    'students#import':           { html: 'pages/teacher/students/import.html',            js: '../../pages/teacher/students/import.js' },
+    'students#profile':          { html: 'pages/teacher/students/profile.html',           js: '../../pages/teacher/students/profile.js' },
+    // Teacher - tests
+    'test':                      { html: 'pages/teacher/tests/list.html',                 js: '../../pages/teacher/tests/list.js' },
+    'test#assign':               { html: 'pages/teacher/tests/assign.html',               js: '../../pages/teacher/tests/assign.js' },
+    // Teacher - batches
+    'batches':                   { html: 'pages/teacher/batches/list.html',               js: '../../pages/teacher/batches/list.js' },
+    'batches#create':            { html: 'pages/teacher/batches/create.html',             js: '../../pages/teacher/batches/create.js' },
+    'batches#detail':            { html: 'pages/teacher/batches/detail.html',             js: '../../pages/teacher/batches/detail.js' },
+    // Teacher - material
+    'material':                  { html: 'pages/teacher/material/resources.html',         js: '../../pages/teacher/material/resources.js' },
+    'material#ai-training':      { html: 'pages/teacher/material/ai-training.html',       js: '../../pages/teacher/material/ai-training.js' },
+    'material#tests':            { html: 'pages/teacher/material/tests.html',             js: '../../pages/teacher/material/tests.js' },
+    'material#upload':           { html: 'pages/teacher/material/upload.html',            js: '../../pages/teacher/material/upload.js' },
+    // Teacher - schedule
+    'schedule':                  { html: 'pages/teacher/schedule/calendar.html',          js: '../../pages/teacher/schedule/calendar.js' },
+    'schedule#new-class':        { html: 'pages/teacher/schedule/new-class.html',         js: '../../pages/teacher/schedule/new-class.js' },
+    // Teacher - announcements
+    'announcement':              { html: 'pages/teacher/announcements/list.html',         js: '../../pages/teacher/announcements/list.js' },
+    'announcement#post':         { html: 'pages/teacher/announcements/post.html',         js: '../../pages/teacher/announcements/post.js' },
+    // Teacher - ai-tools
+    'ai-tools':                  { html: 'pages/teacher/ai-tools/doubt-solver.html',      js: '../../pages/teacher/ai-tools/doubt-solver.js' },
+    'ai-tools#test-generator':   { html: 'pages/teacher/ai-tools/test-generator.html',   js: '../../pages/teacher/ai-tools/test-generator.js' },
+    // Teacher - recordings
+    'recordings':                { html: 'pages/teacher/recordings/playlists.html',       js: '../../pages/teacher/recordings/playlists.js' },
+    'recordings#detail':         { html: 'pages/teacher/recordings/detail.html',          js: '../../pages/teacher/recordings/detail.js' },
+    'recordings#create':         { html: 'pages/teacher/recordings/create.html',          js: '../../pages/teacher/recordings/create.js' },
+    // Teacher - single view
+    'attendance':                { html: 'pages/teacher/attendance/attendance.html',      js: '../../pages/teacher/attendance/attendance.js' },
+    'messages':                  { html: 'pages/teacher/messages/messages.html',          js: '../../pages/teacher/messages/messages.js' },
+    'leaderboard':               { html: 'pages/teacher/leaderboard/leaderboard.html',    js: '../../pages/teacher/leaderboard/leaderboard.js' },
+    // Admin - board results
+    'board_results':             { html: 'pages/admin/board-results/list.html',           js: '../../pages/admin/board-results/list.js' },
+    'board_results#add':         { html: 'pages/admin/board-results/add.html',            js: '../../pages/admin/board-results/add.js' },
+    // Admin - testimonials
+    'testimonials':              { html: 'pages/admin/testimonials/list.html',            js: '../../pages/admin/testimonials/list.js' },
+    'testimonials#add':          { html: 'pages/admin/testimonials/add.html',             js: '../../pages/admin/testimonials/add.js' },
+    // Admin - single view
+    'admin-overview':            { html: 'pages/admin/overview/overview.html',            js: '../../pages/admin/overview/overview.js' },
+    'admin-flags':               { html: 'pages/admin/flags/flags.html',                  js: '../../pages/admin/flags/flags.js' },
+    'admin-users':               { html: 'pages/admin/users/users.html',                  js: '../../pages/admin/users/users.js' },
+    'admin-bulk':                { html: 'pages/admin/bulk/bulk.html',                    js: '../../pages/admin/bulk/bulk.js' },
+    'admin-browse':              { html: 'pages/admin/browse/browse.html',                js: '../../pages/admin/browse/browse.js' },
+    'teachers':                  { html: 'pages/admin/teachers/teachers.html',            js: '../../pages/admin/teachers/teachers.js' },
+    // Student - all single view
+    'student-ask-ai':            { html: 'pages/student/ask-ai/ask-ai.html',              js: '../../pages/student/ask-ai/ask-ai.js' },
+    'student-attendance':        { html: 'pages/student/attendance/attendance.html',      js: '../../pages/student/attendance/attendance.js' },
+    'student-leaderboard':       { html: 'pages/student/leaderboard/leaderboard.html',   js: '../../pages/student/leaderboard/leaderboard.js' },
+    'student-marks':             { html: 'pages/student/marks/marks.html',                js: '../../pages/student/marks/marks.js' },
+    'student-materials':         { html: 'pages/student/materials/materials.html',        js: '../../pages/student/materials/materials.js' },
+    'student-notices':           { html: 'pages/student/notices/notices.html',            js: '../../pages/student/notices/notices.js' },
+    'student-profile':           { html: 'pages/student/profile/profile.html',            js: '../../pages/student/profile/profile.js' },
+    'student-schedule':          { html: 'pages/student/schedule/schedule.html',          js: '../../pages/student/schedule/schedule.js' },
+};
+
 export async function loadPage(targetId, tabSlug) {
     const panelsContainer = document.getElementById('dashboard-content');
 
     // Deactivate all current pages
-    const allPages = panelsContainer.querySelectorAll('.pages__panel');
-    allPages.forEach(p => p.classList.remove('pages__panel--active'));
+    panelsContainer.querySelectorAll('.pages__panel').forEach(p => p.classList.remove('pages__panel--active'));
 
-    // Update URL hash to reflect active page (and tab if provided), preserving query params
+    // Update URL hash, preserving query params
     const pageSlug = targetId.replace('page-', '');
     const hashSuffix = tabSlug ? `${pageSlug}#${tabSlug}` : pageSlug;
     history.replaceState(null, '', `${location.search}#${hashSuffix}`);
@@ -15,77 +73,66 @@ export async function loadPage(targetId, tabSlug) {
         btn.classList.toggle('dash-sidebar__item--active', btn.dataset.target === targetId);
     });
 
-    // Check if the page already exists in the DOM
-    let targetPage = document.getElementById(targetId);
+    const featureName = targetId.replace('page-', '');
+    const registryKey = tabSlug ? `${featureName}#${tabSlug}` : featureName;
+    const page = PAGE_REGISTRY[registryKey] || PAGE_REGISTRY[featureName];
 
-    // If it doesn't exist, fetch and initialise it
+    let targetPage = document.getElementById(targetId);
+    const alreadyLoaded = targetPage && targetPage.dataset.loadedKey === registryKey;
+
     if (!targetPage) {
-        // Map targetId to filename (e.g., page-students -> students)
-        const featureName = targetId.replace('page-', '');
+        targetPage = document.createElement('section');
+        targetPage.className = 'panel pages__panel pages__panel--active';
+        targetPage.id = targetId;
+        panelsContainer.appendChild(targetPage);
+    } else {
+        targetPage.classList.add('pages__panel--active');
+    }
+
+    if (!alreadyLoaded) {
+        if (!page) {
+            // Pre-rendered static section (e.g. home) — just activate, no fetch needed
+            return;
+        }
+
+        targetPage.innerHTML = `<div class="loading-text" style="padding:2rem;text-align:center;">Loading ${featureName}...</div>`;
 
         try {
-            targetPage = document.createElement('section');
-            targetPage.className = 'panel pages__panel pages__panel--active';
-            targetPage.id = targetId;
-            targetPage.innerHTML = `<div class="loading-text" style="padding: 2rem; text-align: center;">Loading ${featureName}...</div>`;
-            panelsContainer.appendChild(targetPage);
-
-            const response = await fetch(`components/tabs/${featureName}`);
+            const response = await fetch(page.html);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-            const html = await response.text();
-            targetPage.innerHTML = html;
+            targetPage.innerHTML = await response.text();
+            targetPage.dataset.loadedKey = registryKey;
 
             try {
-                const module = await import(`./${featureName}.js`);
-                if (module.init) {
-                    try {
-                        await module.init(tabSlug);
-                    } catch (initError) {
-                        console.error(`Error initializing ${featureName}:`, initError);
-                        targetPage.innerHTML = `<div class="status status--error">Error loading ${featureName}: ${initError.message || 'Unknown error'}</div>`;
-                    }
-                }
+                const module = await import(page.js);
+                if (module.init) await module.init(tabSlug);
             } catch (jsError) {
-                console.warn(`No specific JS module found for ${featureName} or failed to load:`, jsError);
+                console.error(`Error initializing ${registryKey}:`, jsError);
+                targetPage.innerHTML = `<div class="status status--error">Error loading ${featureName}: ${jsError.message || 'Unknown error'}</div>`;
             }
-
         } catch (error) {
             console.error(`Error loading page ${featureName}:`, error);
             targetPage.innerHTML = `<div class="status status--error">Failed to load module: ${featureName}</div>`;
         }
     } else {
-        // Already in DOM — activate and refresh
-        targetPage.classList.add('pages__panel--active');
-
-        const featureName = targetId.replace('page-', '');
+        // Same tab already loaded — just refresh
         try {
-            const module = await import(`./${featureName}.js`);
-            if (tabSlug && module.activateTab) {
-                module.activateTab(tabSlug);
-            } else if (module.refresh) {
-                try {
-                    await module.refresh();
-                } catch (refreshError) {
-                    console.error(`Error refreshing ${featureName}:`, refreshError);
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'status status--error';
-                    errorDiv.textContent = `Error refreshing ${featureName}: ${refreshError.message || 'Unknown error'}`;
-                    targetPage.prepend(errorDiv);
-                }
-            }
+            const module = await import(page.js);
+            if (module.refresh) await module.refresh();
         } catch (e) {
-            // Ignore if no module or refresh method
+            // Ignore if no refresh method
         }
     }
-
 }
 
 export async function prefetchPages(pageNames) {
     await new Promise(resolve => setTimeout(resolve, 1000));
     for (const name of pageNames) {
-        fetch(`components/tabs/${name}`).catch(() => {});
-        import(`./${name}.js`).catch(() => {});
+        const page = PAGE_REGISTRY[name];
+        if (page) {
+            fetch(page.html).catch(() => {});
+            import(page.js).catch(() => {});
+        }
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 }
@@ -94,7 +141,11 @@ export function initRouter(defaultPage) {
     const run = () => {
         const hashParts = location.hash.slice(1).split('#');
         const initialPage = hashParts[0];
-        const initialTab = hashParts[1] || '';
+        const rawTab = hashParts[1] || '';
+        const atIdx = rawTab.indexOf('@');
+        const initialTab = atIdx >= 0 ? rawTab.slice(0, atIdx) : rawTab;
+        const initialIdentifier = atIdx >= 0 ? rawTab.slice(atIdx + 1) : null;
+        window._pendingIdentifier = initialIdentifier || null;
         loadPage(initialPage ? `page-${initialPage}` : defaultPage, initialTab || undefined);
 
         document.addEventListener('click', (e) => {
