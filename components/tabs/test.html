@@ -1,35 +1,29 @@
-﻿<header class="panel__header">
-    <h2>Manage Tests</h2>
+<header class="panel__header">
+    <h2 id="testsTabTitle">Test List</h2>
     <div class="tab-pill-selector">
-        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" id="pillViewTests">Tests List</button>
-        <button class="tab-pill-selector__btn" id="pillAddTest">+ Schedule New</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" id="pillViewTests" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-file-list-3-line"></i> List</button>
+        <button class="tab-pill-selector__btn" id="pillAddTest" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-edit-line"></i> Assign</button>
     </div>
 </header>
 
 <!-- Tests List Container (default view) -->
 <div id="testsListContainer">
     <div id="testsListStatus" class="status"></div>
-    <div class="table-wrap">
-        <table id="testsListTable" aria-label="Tests list">
-            <thead>
-                <tr>
-                    <th scope="col">Title</th>
-                    <th scope="col">Subject</th>
-                    <th scope="col">Grade</th>
-                    <th scope="col">Schools</th>
-                    <th scope="col">Date(s)</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody id="testsListTableBody">
-                <tr>
-                    <td colspan="6" class="loading-text">Loading tests...</td>
-                </tr>
-            </tbody>
-        </table>
+
+    <!-- Search + count + refresh toolbar -->
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;">
+        <div style="position:relative;flex:1;min-width:180px;">
+            <i class="ri-search-line" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;font-size:1rem;"></i>
+            <input type="search" id="testsSearch" class="form__control" placeholder="Search by title or subject…" style="padding-left:2.25rem;margin:0;">
+        </div>
+        <span id="testsCount" style="font-size:0.85rem;color:var(--text-muted);white-space:nowrap;"></span>
+        <button class="btn btn--outline btn--sm" id="btnRefreshTestsList" style="white-space:nowrap;display:inline-flex;align-items:center;gap:0.35rem;">
+            <i class="ri-refresh-line"></i> Refresh
+        </button>
     </div>
-    <div class="text-right">
-        <button class="btn btn--primary btn--sm" id="btnRefreshTestsList">Refresh List</button>
+
+    <div id="testsCardsContainer" class="test-cards">
+        <p class="loading-text">Loading tests...</p>
     </div>
 </div>
 

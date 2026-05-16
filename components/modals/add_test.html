@@ -24,7 +24,7 @@
     </div>
 
     <div class="form__group">
-        <label class="form__label">Schools <span style="color:var(--text-muted);font-weight:400;">(leave blank for all schools)</span></label>
+        <label class="form__label">Schools <span style="font-weight:400;color:var(--text-muted);font-size:0.85em;">(leave blank for all)</span></label>
         <div class="subject-pills">
             <label class="subject-pill">
                 <input type="checkbox" name="testSchools" value="Jamnabai Narsee School">
@@ -49,7 +49,7 @@
 
     <div class="form__group">
         <label class="form__label" for="testMaxMarks">Max Marks</label>
-        <input type="number" id="testMaxMarks" class="form__control" required min="1">
+        <input type="number" id="testMaxMarks" class="form__control" required min="1" placeholder="e.g. 100">
     </div>
 
     <button type="submit" class="btn btn--primary btn--full" id="btnScheduleTest">Schedule Test</button>
