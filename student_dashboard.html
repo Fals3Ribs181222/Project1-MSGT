@@ -39,34 +39,34 @@
                 <a href="index"><img src="logo.png" alt="Mitesh Sir's Study Circle"><span class="dash-sidebar__brand">Mitesh Sir's Study Circle</span></a>
             </div>
             <nav class="dash-sidebar__nav">
-                <button class="dash-sidebar__item dash-sidebar__item--active" data-target="panel-student-home">
+                <button class="dash-sidebar__item dash-sidebar__item--active" data-target="page-student-home">
                     <i class="ri-dashboard-line" aria-hidden="true"></i> Dashboard
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-student-marks">
+                <button class="dash-sidebar__item" data-target="page-student-marks">
                     <i class="ri-file-text-line" aria-hidden="true"></i> My Marks
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-student-materials">
+                <button class="dash-sidebar__item" data-target="page-student-materials">
                     <i class="ri-book-2-line" aria-hidden="true"></i> Materials
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-student-notices">
+                <button class="dash-sidebar__item" data-target="page-student-notices">
                     <i class="ri-megaphone-line" aria-hidden="true"></i> Notice Board
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-student-schedule">
+                <button class="dash-sidebar__item" data-target="page-student-schedule">
                     <i class="ri-calendar-line" aria-hidden="true"></i> Schedule
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-student-attendance">
+                <button class="dash-sidebar__item" data-target="page-student-attendance">
                     <i class="ri-checkbox-circle-line" aria-hidden="true"></i> Attendance
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-student-leaderboard">
+                <button class="dash-sidebar__item" data-target="page-student-leaderboard">
                     <i class="ri-trophy-line" aria-hidden="true"></i> Leaderboard
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-student-ask-ai">
+                <button class="dash-sidebar__item" data-target="page-student-ask-ai">
                     <i class="ri-brain-line" aria-hidden="true"></i> Ask AI
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-recordings">
+                <button class="dash-sidebar__item" data-target="page-recordings">
                     <i class="ri-video-line" aria-hidden="true"></i> Recordings
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-student-profile">
+                <button class="dash-sidebar__item" data-target="page-student-profile">
                     <i class="ri-user-3-line" aria-hidden="true"></i> My Profile
                 </button>
             </nav>
@@ -90,7 +90,7 @@
             <div class="panels-container" id="dashboard-content">
 
                 <!-- HOME PANEL (static — widgets populated by loadStudentHomeWidgets) -->
-                <section class="tabs__panel tabs__panel--active" id="panel-student-home" role="tabpanel" aria-label="Home">
+                <section class="pages__panel pages__panel--active" id="page-student-home" role="tabpanel" aria-label="Home">
                     <div class="dash-widgets">
 
                         <!-- Attendance widget -->
@@ -100,7 +100,7 @@
                                     <h3>My Attendance</h3>
                                     <p class="dash-widget__sub" id="homeAttSubtitle">—</p>
                                 </div>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-attendance')">View Full</button>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadPage('page-student-attendance')">View Full</button>
                             </div>
                             <div id="homeAttSubjects" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;"></div>
                         </div>
@@ -109,7 +109,7 @@
                         <div class="dash-widget">
                             <div class="dash-widget__header">
                                 <h3>Tests</h3>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-marks')">My Marks</button>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadPage('page-student-marks')">My Marks</button>
                             </div>
                             <div id="homeUpcomingTests" class="tests-preview-list">
                                 <div class="skeleton skeleton--row" aria-hidden="true"></div>
@@ -126,7 +126,7 @@
                                     <h3><i class="ri-trophy-line" aria-hidden="true"></i> Leaderboard</h3>
                                     <span class="dash-widget__badge" id="homeLBBadge">GRADE</span>
                                 </div>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-leaderboard')">Full Board</button>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadPage('page-student-leaderboard')">Full Board</button>
                             </div>
                             <div class="mini-leaderboard" id="homeMiniLeaderboard">
                                 <div class="skeleton skeleton--row" aria-hidden="true"></div>
@@ -142,7 +142,7 @@
                         <div class="dash-widget">
                             <div class="dash-widget__header">
                                 <h3><i class="ri-brain-line" aria-hidden="true"></i> Ask AI</h3>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-student-ask-ai')">Open AI</button>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadPage('page-student-ask-ai')">Open AI</button>
                             </div>
                             <select id="homeAiSubject" class="form__select">
                                 <option>Accounts</option>
@@ -171,10 +171,10 @@
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
     <script type="module">
-        import { loadTab, initRouter, prefetchTabs } from "./js/dashboard/router.js";
-        window.loadTab = loadTab;
-        initRouter('panel-student-home');
-        prefetchTabs([
+        import { loadPage, initRouter, prefetchPages } from "./js/dashboard/router.js";
+        window.loadPage = loadPage;
+        initRouter('page-student-home');
+        prefetchPages([
             'student-marks', 'student-materials', 'student-notices',
             'student-schedule', 'student-attendance', 'student-leaderboard',
             'student-ask-ai', 'student-profile'
@@ -200,7 +200,7 @@
                 document.querySelector('main').innerHTML =
                     '<div class="status status--error" style="margin:3rem auto;max-width:480px;text-align:center;">' +
                     'The student portal is temporarily unavailable. Please check back later.</div>';
-                window.loadTab = () => {};
+                window.loadPage = () => {};
                 return;
             }
             // Hide individual tabs via flags
@@ -208,9 +208,9 @@
                 const btn = document.querySelector(`.dash-sidebar__item[data-target="${target}"]`);
                 if (btn) btn.style.display = 'none';
             };
-            if (!flags.ai_tools_enabled) hideSidebarItem('panel-student-ask-ai');
-            if (!flags.leaderboard_enabled) hideSidebarItem('panel-student-leaderboard');
-            if (!flags.materials_enabled) hideSidebarItem('panel-student-materials');
+            if (!flags.ai_tools_enabled) hideSidebarItem('page-student-ask-ai');
+            if (!flags.leaderboard_enabled) hideSidebarItem('page-student-leaderboard');
+            if (!flags.materials_enabled) hideSidebarItem('page-student-materials');
         })();
     </script>
 
@@ -230,7 +230,7 @@
 
         document.querySelectorAll('.dash-sidebar__item[data-target]').forEach(btn => {
             btn.addEventListener('click', () => {
-                window.loadTab(btn.dataset.target);
+                window.loadPage(btn.dataset.target);
                 sidebar.classList.remove('dash-sidebar--open');
                 backdrop.classList.remove('dash-sidebar-backdrop--visible');
             });
@@ -414,7 +414,7 @@
                     return;
                 }
                 sessionStorage.setItem('aiQuickAsk', JSON.stringify({ subject, question }));
-                window.loadTab('panel-student-ask-ai');
+                window.loadPage('page-student-ask-ai');
             });
 
             // Also allow Enter key in the question input

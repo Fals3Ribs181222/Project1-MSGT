@@ -43,13 +43,13 @@ async function loadMarks() {
     if (pillsEl) {
         const defaultSubject = studentSubjects.find(s => s.toLowerCase() === 'accounts') || studentSubjects[0] || '';
         pillsEl.innerHTML = studentSubjects.map((s, i) => {
-            const active = s === defaultSubject ? ' pill-toggle__btn--active' : '';
-            return `<button type="button" class="pill-toggle__btn${active}" data-subject="${window.esc(s)}">${window.esc(s)}</button>`;
+            const active = s === defaultSubject ? ' tab-pill-selector__btn--active' : '';
+            return `<button type="button" class="tab-pill-selector__btn${active}" data-subject="${window.esc(s)}">${window.esc(s)}</button>`;
         }).join('');
-        pillsEl.querySelectorAll('.pill-toggle__btn').forEach(btn => {
+        pillsEl.querySelectorAll('.tab-pill-selector__btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                pillsEl.querySelectorAll('.pill-toggle__btn').forEach(b => b.classList.remove('pill-toggle__btn--active'));
-                btn.classList.add('pill-toggle__btn--active');
+                pillsEl.querySelectorAll('.tab-pill-selector__btn').forEach(b => b.classList.remove('tab-pill-selector__btn--active'));
+                btn.classList.add('tab-pill-selector__btn--active');
                 renderMarks();
             });
         });
@@ -212,7 +212,7 @@ async function openStudentLbModal(testId, testTitle) {
 }
 
 function renderMarks() {
-    const activeBtn = document.querySelector('#marksSubjectPills .pill-toggle__btn--active');
+    const activeBtn = document.querySelector('#marksSubjectPills .tab-pill-selector__btn--active');
     const subjectFilter = activeBtn?.dataset.subject || '';
     const tbody = document.getElementById('marksTableBody');
 

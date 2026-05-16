@@ -1,10 +1,22 @@
-<header class="panel__header">
-    <h2>Materials</h2>
-    <div class="pill-toggle">
-        <button class="pill-toggle__btn pill-toggle__btn--active" id="pillViewMaterials">Student Materials</button>
-        <button class="pill-toggle__btn" id="pillViewAiMaterials">AI Materials</button>
-        <button class="pill-toggle__btn" id="pillViewTests">Tests</button>
-        <button class="pill-toggle__btn" id="pillAddMaterial">+ Upload New</button>
+﻿<header class="panel__header">
+    <h2 id="materialsTabTitle">Notes</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" id="pillViewMaterials"
+            style="display:inline-flex;align-items:center;gap:0.35rem;">
+            <i class="ri-folder-open-line"></i> Resources
+        </button>
+        <button class="tab-pill-selector__btn" id="pillViewAiMaterials"
+            style="display:inline-flex;align-items:center;gap:0.35rem;">
+            <i class="ri-brain-line"></i> AI Training
+        </button>
+        <button class="tab-pill-selector__btn" id="pillViewTests"
+            style="display:inline-flex;align-items:center;gap:0.35rem;">
+            <i class="ri-file-list-3-line"></i> Tests
+        </button>
+        <button class="tab-pill-selector__btn" id="pillAddMaterial"
+            style="display:inline-flex;align-items:center;gap:0.35rem;">
+            <i class="ri-upload-cloud-line"></i> Upload
+        </button>
     </div>
 </header>
 
@@ -90,6 +102,6 @@
 </div>
 
 <!-- Add Material Container (loaded via fetch) -->
-<div id="addMaterialContainer" class="panel__divider">
+<div id="addMaterialContainer">
     <div class="loading-text">Loading component...</div>
 </div>

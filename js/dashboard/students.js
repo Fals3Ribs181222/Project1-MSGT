@@ -7,6 +7,7 @@ import { openStudentDetail } from './student-detail.js';
 import { initImportSection } from './student-import.js';
 
 let allStudents = [];
+let _switchStudentsView = null; // set by init(), used by activateTab()
 const user = window.auth.getUser();
 
 const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://tksruuqtzxflgglnljef.supabase.co';
@@ -114,9 +115,9 @@ function hideStudentDetail() {
     const pillView = document.getElementById('pillViewStudents');
     const pillAdd = document.getElementById('pillAddStudent');
     const pillImport = document.getElementById('pillImportStudents');
-    if (pillView) pillView.classList.add('pill-toggle__btn--active');
-    if (pillAdd) pillAdd.classList.remove('pill-toggle__btn--active');
-    if (pillImport) pillImport.classList.remove('pill-toggle__btn--active');
+    if (pillView) pillView.classList.add('tab-pill-selector__btn--active');
+    if (pillAdd) pillAdd.classList.remove('tab-pill-selector__btn--active');
+    if (pillImport) pillImport.classList.remove('tab-pill-selector__btn--active');
 }
 
 
@@ -251,7 +252,7 @@ function attachAddStudentListeners() {
 
 // ── INIT / REFRESH ────────────────────────────────────────────────────────────
 
-export function init() {
+export function init(tabSlug) {
     loadStudents();
     loadAddStudentComponent();
 
@@ -280,19 +281,31 @@ export function init() {
     const importContainer = document.getElementById('importStudentsContainer');
     const studentDetailCtr = document.getElementById('studentDetailContainer');
 
-    const panelTitle = document.getElementById('studentsPanelTitle');
-    function switchStudentsView(active) {
-        [pillView, pillAdd, pillImport].forEach(p => p?.classList.remove('pill-toggle__btn--active'));
+    const tabTitle = document.getElementById('studentsTabTitle');
+
+    const TAB_VIEWS = {
+        student_list:   { pill: pillView,   container: listContainer,   showRefresh: true,  title: 'Student List' },
+        enroll_student: { pill: pillAdd,    container: addContainer,    showRefresh: false, title: 'Enroll Student' },
+        import_csv:     { pill: pillImport, container: importContainer, showRefresh: false, title: 'Import CSV' },
+    };
+
+    _switchStudentsView = (slug) => switchStudentsView(TAB_VIEWS[slug] || TAB_VIEWS.student_list, slug || 'student_list');
+
+    function switchStudentsView(active, slug) {
+        [pillView, pillAdd, pillImport].forEach(p => p?.classList.remove('tab-pill-selector__btn--active'));
         [listContainer, addContainer, importContainer, studentDetailCtr].forEach(c => { if (c) c.style.display = 'none'; });
-        active.pill?.classList.add('pill-toggle__btn--active');
+        active.pill?.classList.add('tab-pill-selector__btn--active');
         if (active.container) active.container.style.display = 'block';
         if (btnRefresh) btnRefresh.style.display = active.showRefresh ? 'inline-flex' : 'none';
-        if (panelTitle && active.title) panelTitle.textContent = active.title;
+        if (tabTitle && active.title) tabTitle.textContent = active.title;
+        // Update URL with active tab slug
+        const pageSlug = location.hash.slice(1).split('#')[0];
+        history.replaceState(null, '', `${location.search}#${pageSlug}#${slug}`);
     }
 
-    pillView?.addEventListener('click', () => switchStudentsView({ pill: pillView, container: listContainer, showRefresh: true, title: 'Student List' }));
-    pillAdd?.addEventListener('click', () => switchStudentsView({ pill: pillAdd, container: addContainer, showRefresh: false, title: 'Enroll Student' }));
-    pillImport?.addEventListener('click', () => switchStudentsView({ pill: pillImport, container: importContainer, showRefresh: false, title: 'Import CSV' }));
+    pillView?.addEventListener('click',   () => switchStudentsView(TAB_VIEWS.student_list,   'student_list'));
+    pillAdd?.addEventListener('click',    () => switchStudentsView(TAB_VIEWS.enroll_student, 'enroll_student'));
+    pillImport?.addEventListener('click', () => switchStudentsView(TAB_VIEWS.import_csv,     'import_csv'));
 
     // Table row delegation — opens detail view
     const tbody = document.getElementById('studentsTableBody');
@@ -362,6 +375,14 @@ export function init() {
 
     // Delegate to import sub-module
     initImportSection(() => allStudents, () => loadStudents());
+
+    // Activate tab from URL slug (or default to student_list)
+    const initialView = TAB_VIEWS[tabSlug] || TAB_VIEWS.student_list;
+    switchStudentsView(initialView, tabSlug || 'student_list');
+}
+
+export function activateTab(tabSlug) {
+    if (_switchStudentsView) _switchStudentsView(tabSlug);
 }
 
 export function refresh() {

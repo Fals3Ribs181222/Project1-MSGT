@@ -45,15 +45,15 @@ function populateBatchPills() {
         const isDefault = bs.batch_id === defaultBatchId;
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'pill-toggle__btn' + (isDefault ? ' pill-toggle__btn--active' : '');
+        btn.className = 'tab-pill-selector__btn' + (isDefault ? ' tab-pill-selector__btn--active' : '');
         btn.dataset.batch = bs.batch_id;
         btn.textContent = b.name || 'Batch';
         pillsEl.appendChild(btn);
     });
-    pillsEl.querySelectorAll('.pill-toggle__btn').forEach(btn => {
+    pillsEl.querySelectorAll('.tab-pill-selector__btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            pillsEl.querySelectorAll('.pill-toggle__btn').forEach(b => b.classList.remove('pill-toggle__btn--active'));
-            btn.classList.add('pill-toggle__btn--active');
+            pillsEl.querySelectorAll('.tab-pill-selector__btn').forEach(b => b.classList.remove('tab-pill-selector__btn--active'));
+            btn.classList.add('tab-pill-selector__btn--active');
             renderAttendance();
         });
     });
@@ -151,7 +151,7 @@ function buildCalendarHtml(records) {
 }
 
 function renderAttendance() {
-    const activeBtn = document.querySelector('#attBatchPills .pill-toggle__btn--active');
+    const activeBtn = document.querySelector('#attBatchPills .tab-pill-selector__btn--active');
     const batchFilter = activeBtn?.dataset.batch || '';
     const tbody = document.getElementById('attendanceTableBody');
 

@@ -41,37 +41,37 @@
             </div>
 
             <nav class="dash-sidebar__nav">
-                <button class="dash-sidebar__item dash-sidebar__item--active" data-target="panel-home">
+                <button class="dash-sidebar__item dash-sidebar__item--active" data-target="page-home">
                     <i class="ri-dashboard-line" aria-hidden="true"></i> Dashboard
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-students">
+                <button class="dash-sidebar__item" data-target="page-students">
                     <i class="ri-graduation-cap-line" aria-hidden="true"></i> Students
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-material">
-                    <i class="ri-book-2-line" aria-hidden="true"></i> Materials
+                <button class="dash-sidebar__item" data-target="page-material">
+                    <i class="ri-book-2-line" aria-hidden="true"></i> Resources
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-test">
+                <button class="dash-sidebar__item" data-target="page-test">
                     <i class="ri-file-text-line" aria-hidden="true"></i> Tests
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-announcement">
+                <button class="dash-sidebar__item" data-target="page-announcement">
                     <i class="ri-megaphone-line" aria-hidden="true"></i> Announcements
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-batches">
+                <button class="dash-sidebar__item" data-target="page-batches">
                     <i class="ri-team-line" aria-hidden="true"></i> Batches
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-schedule">
+                <button class="dash-sidebar__item" data-target="page-schedule">
                     <i class="ri-calendar-line" aria-hidden="true"></i> Schedule
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-messages">
+                <button class="dash-sidebar__item" data-target="page-messages">
                     <i class="ri-chat-3-line" aria-hidden="true"></i> Messages
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-ai-tools">
+                <button class="dash-sidebar__item" data-target="page-ai-tools">
                     <i class="ri-brain-line" aria-hidden="true"></i> AI Tools
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-leaderboard">
+                <button class="dash-sidebar__item" data-target="page-leaderboard">
                     <i class="ri-trophy-line" aria-hidden="true"></i> Leaderboard
                 </button>
-                <button class="dash-sidebar__item" data-target="panel-recordings">
+                <button class="dash-sidebar__item" data-target="page-recordings">
                     <i class="ri-video-line" aria-hidden="true"></i> Recordings
                 </button>
             </nav>
@@ -79,9 +79,9 @@
                 <!-- Grade switcher (shown only for All Grades teachers) -->
                 <div class="dash-grade-bar" id="gradeBar" style="display:none;">
                     <span class="dash-grade-bar__label">Grade</span>
-                    <div class="pill-toggle">
-                        <button class="pill-toggle__btn grade-pill-btn" data-grade="11th">11th</button>
-                        <button class="pill-toggle__btn grade-pill-btn" data-grade="12th">12th</button>
+                    <div class="tab-pill-selector">
+                        <button class="tab-pill-selector__btn grade-pill-btn" data-grade="11th">11th</button>
+                        <button class="tab-pill-selector__btn grade-pill-btn" data-grade="12th">12th</button>
                     </div>
                 </div>
                 <button class="dash-sidebar__logout" id="btnSidebarLogout"><i class="ri-logout-box-r-line" aria-hidden="true"></i> Logout</button>
@@ -103,7 +103,7 @@
             <div class="panels-container" id="dashboard-content">
 
                 <!-- HOME PANEL -->
-                <section class="tabs__panel tabs__panel--active" id="panel-home" role="tabpanel" aria-label="Home">
+                <section class="pages__panel pages__panel--active" id="page-home" role="tabpanel" aria-label="Home">
 
                     <!-- Greeting + Quick Stats -->
                     <div class="home-greeting">
@@ -140,7 +140,7 @@
                                     <h3><i class="ri-calendar-check-line" aria-hidden="true"></i> Today's Classes</h3>
                                     <p class="dash-widget__sub" id="todayDate">—</p>
                                 </div>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-schedule')">View Full Schedule</button>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadPage('page-schedule')">View Full Schedule</button>
                             </div>
                             <div class="classes-list" id="todaysClassesList">
                                 <div class="skeleton skeleton--card" aria-hidden="true"></div>
@@ -153,7 +153,7 @@
                         <div class="dash-widget dash-widget--tests">
                             <div class="dash-widget__header">
                                 <h3><i class="ri-file-list-3-line" aria-hidden="true"></i> Tests</h3>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-test')">View All</button>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadPage('page-test')">View All</button>
                             </div>
                             <div class="tests-preview-list" id="testsPreviewList">
                                 <div class="skeleton skeleton--row" aria-hidden="true"></div>
@@ -167,7 +167,7 @@
                         <div class="dash-widget dash-widget--announce">
                             <div class="dash-widget__header">
                                 <h3><i class="ri-megaphone-line" aria-hidden="true"></i> Quick Announcement</h3>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-announcement')">View All</button>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadPage('page-announcement')">View All</button>
                             </div>
                             <form class="quick-announce-form" id="quickAnnounceForm">
                                 <label for="qaTitle" class="visually-hidden">Announcement title</label>
@@ -189,7 +189,7 @@
                                 <div>
                                     <h3><i class="ri-trophy-line" aria-hidden="true"></i> Leaderboard</h3>
                                 </div>
-                                <button class="btn btn--outline btn--sm" onclick="window.loadTab('panel-leaderboard')">Full Board</button>
+                                <button class="btn btn--outline btn--sm" onclick="window.loadPage('page-leaderboard')">Full Board</button>
                             </div>
                             <div class="mini-leaderboard" id="miniLeaderboard">
                                 <div class="skeleton skeleton--row" aria-hidden="true"></div>
@@ -274,10 +274,10 @@
     <script src="js/app.js"></script>
     <script src="js/whatsapp.js"></script>
     <script type="module">
-        import { loadTab, initRouter, prefetchTabs } from "./js/dashboard/router.js";
-        window.loadTab = loadTab;
-        initRouter('panel-home');
-        prefetchTabs([
+        import { loadPage, initRouter, prefetchPages } from "./js/dashboard/router.js";
+        window.loadPage = loadPage;
+        initRouter('page-home');
+        prefetchPages([
             'students', 'material', 'test', 'announcement',
             'batches', 'schedule', 'messages', 'ai-tools', 'leaderboard'
         ]);
@@ -322,8 +322,8 @@
                             b.classList.toggle('grade-pill-btn--active', b === btn);
                         });
                         // Refresh whichever tab is currently active
-                        const activePanel = document.querySelector('.tabs__panel--active');
-                        if (activePanel && typeof window.loadTab === 'function') window.loadTab(activePanel.id);
+                        const activePanel = document.querySelector('.pages__panel--active');
+                        if (activePanel && typeof window.loadPage === 'function') window.loadPage(activePanel.id);
                     });
                 });
             } else {
@@ -341,16 +341,16 @@
                 const btn = document.querySelector(`.dash-sidebar__item[data-target="${target}"]`);
                 if (btn) btn.style.display = 'none';
             };
-            if (!flags.students_enabled)      hideSidebarItem('panel-students');
-            if (!flags.attendance_enabled)    hideSidebarItem('panel-attendance');
-            if (!flags.materials_enabled)     hideSidebarItem('panel-material');
-            if (!flags.tests_enabled)         hideSidebarItem('panel-test');
-            if (!flags.announcements_enabled) hideSidebarItem('panel-announcement');
-            if (!flags.batches_enabled)       hideSidebarItem('panel-batches');
-            if (!flags.schedule_enabled)      hideSidebarItem('panel-schedule');
-            if (!flags.messages_enabled)      hideSidebarItem('panel-messages');
-            if (!flags.ai_tools_enabled)      hideSidebarItem('panel-ai-tools');
-            if (!flags.leaderboard_enabled)   hideSidebarItem('panel-leaderboard');
+            if (!flags.students_enabled)      hideSidebarItem('page-students');
+            if (!flags.attendance_enabled)    hideSidebarItem('page-attendance');
+            if (!flags.materials_enabled)     hideSidebarItem('page-material');
+            if (!flags.tests_enabled)         hideSidebarItem('page-test');
+            if (!flags.announcements_enabled) hideSidebarItem('page-announcement');
+            if (!flags.batches_enabled)       hideSidebarItem('page-batches');
+            if (!flags.schedule_enabled)      hideSidebarItem('page-schedule');
+            if (!flags.messages_enabled)      hideSidebarItem('page-messages');
+            if (!flags.ai_tools_enabled)      hideSidebarItem('page-ai-tools');
+            if (!flags.leaderboard_enabled)   hideSidebarItem('page-leaderboard');
         })();
     </script>
 
@@ -373,7 +373,7 @@
         // Nav items
         document.querySelectorAll('.dash-sidebar__item[data-target]').forEach(btn => {
             btn.addEventListener('click', () => {
-                window.loadTab(btn.dataset.target);
+                window.loadPage(btn.dataset.target);
                 sidebar.classList.remove('dash-sidebar--open');
                 backdrop.classList.remove('dash-sidebar-backdrop--visible');
             });
@@ -453,7 +453,7 @@
                     todaysList.innerHTML = filteredTodays.map(renderCard).join('');
                     todaysList.querySelectorAll('.class-item[data-class-id]').forEach(item => {
                         item.addEventListener('click', async () => {
-                            await window.loadTab('panel-attendance');
+                            await window.loadPage('page-attendance');
                             if (window.openAttendanceGrid) {
                                 window.openAttendanceGrid(item.dataset.classId, item.dataset.batchId, item.dataset.title, item.dataset.batchName, item.dataset.time);
                             }

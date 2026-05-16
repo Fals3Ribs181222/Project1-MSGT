@@ -54,10 +54,10 @@ async function loadFileList({ tbodyId, btnRefreshId, uploadType, emptyMsg }) {
             <td class="data-table__td">${file.subject || '-'}</td>
             <td class="data-table__td">${file.grade || 'All'}</td>
             <td class="data-table__td">${file.created_at ? new Date(file.created_at).toLocaleDateString() : '-'}</td>
-            <td class="data-table__td"><a href="${window.safeUrl(file.file_url)}" target="_blank" class="navbar__link">View</a></td>
+            <td class="data-table__td"><a href="${window.safeUrl(file.file_url)}" target="_blank" class="btn btn--outline btn--sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;"><i class="ri-external-link-line"></i> View</a></td>
             <td class="data-table__td"><button class="btn btn--danger btn--sm btn-delete-file">Delete</button></td>
         </tr>`).join('')
-        : `<tr><td colspan="6" class="loading-text">${emptyMsg}</td></tr>`;
+        : `<tr><td colspan="6" class="empty-state" style="padding:2.5rem;"><i class="ri-inbox-2-line" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.35;"></i>${emptyMsg}</td></tr>`;
 
     tbody.querySelectorAll('.btn-delete-file').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -72,7 +72,7 @@ async function loadMaterials() {
         tbodyId: 'materialsTableBody',
         btnRefreshId: 'btnRefreshMaterials',
         uploadType: 'student',
-        emptyMsg: 'No student materials uploaded yet.',
+        emptyMsg: 'No notes uploaded yet.',
     });
 }
 
@@ -81,7 +81,7 @@ async function loadAiMaterials() {
         tbodyId: 'aiMaterialsTableBody',
         btnRefreshId: 'btnRefreshAiMaterials',
         uploadType: 'ai',
-        emptyMsg: 'No AI training materials uploaded yet.',
+        emptyMsg: 'No AI Training Resources uploaded yet.',
     });
 }
 
@@ -90,7 +90,7 @@ async function loadTests() {
         tbodyId: 'testsTableBody',
         btnRefreshId: 'btnRefreshTests',
         uploadType: 'test',
-        emptyMsg: 'No tests saved yet. Generate a test in AI Tools and click "Save to Materials".',
+        emptyMsg: 'No Tests uploaded yet.',
     });
 }
 
@@ -102,7 +102,32 @@ function attachMaterialListeners() {
     const form = document.getElementById('uploadForm');
     if (!form) return;
 
-    window.populateGradePills('fileGrade', true);
+    window.populateGradePills('fileGrade', false);
+
+    // Drag-and-drop on upload zone
+    const zone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameLabel = document.getElementById('selectedFileName');
+    if (zone && fileInput) {
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0 && fileNameLabel) {
+                fileNameLabel.textContent = fileInput.files[0].name;
+                fileNameLabel.style.display = 'block';
+            }
+        });
+        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('form__upload-zone--dragover'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('form__upload-zone--dragover'));
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('form__upload-zone--dragover');
+            if (e.dataTransfer.files.length > 0) {
+                const dt = new DataTransfer();
+                dt.items.add(e.dataTransfer.files[0]);
+                fileInput.files = dt.files;
+                if (fileNameLabel) { fileNameLabel.textContent = e.dataTransfer.files[0].name; fileNameLabel.style.display = 'block'; }
+            }
+        });
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -145,8 +170,7 @@ function attachMaterialListeners() {
                 .getPublicUrl(filePath);
 
             // 3. Insert into files table
-            const subjectCheckboxes = document.querySelectorAll('input[name="fileSubjects"]:checked');
-            const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
+            const subjects = document.querySelector('input[name="fileSubjects"]:checked')?.value || '';
 
             const payload = {
                 title: document.getElementById('fileTitle').value,
@@ -194,6 +218,8 @@ function attachMaterialListeners() {
                 }
 
                 window.safeFormReset(e.target);
+                const fnLabel = document.getElementById('selectedFileName');
+                if (fnLabel) { fnLabel.textContent = ''; fnLabel.style.display = 'none'; }
                 loadMaterials();
             } else {
                 throw new Error(response.error);
@@ -208,7 +234,7 @@ function attachMaterialListeners() {
     });
 }
 
-export function init() {
+export function init(tabSlug) {
     loadMaterials();
     loadMaterialComponent();
 
@@ -232,19 +258,40 @@ export function init() {
     const addContainer       = document.getElementById('addMaterialContainer');
     const containers         = [listContainer, aiListContainer, testsContainer, addContainer];
 
-    function showOnly(active, visible) {
-        pills.forEach(p => p?.classList.remove('pill-toggle__btn--active'));
-        active?.classList.add('pill-toggle__btn--active');
+    const tabTitle = document.getElementById('materialsTabTitle');
+
+    function showOnly(active, visible, title, slug) {
+        pills.forEach(p => p?.classList.remove('tab-pill-selector__btn--active'));
+        active?.classList.add('tab-pill-selector__btn--active');
         containers.forEach((c, i) => { if (c) c.style.display = visible[i] ? 'block' : 'none'; });
         if (btnRefresh) btnRefresh.style.display = visible[0] ? 'inline-block' : 'none';
+        if (tabTitle && title) tabTitle.textContent = title;
+        if (slug) {
+            const pageSlug = location.hash.slice(1).split('#')[0];
+            history.replaceState(null, '', `${location.search}#${pageSlug}#${slug}`);
+        }
     }
 
-    pillView?.addEventListener('click',  () => showOnly(pillView,  [true,  false, false, false]));
-    pillAi?.addEventListener('click',    () => { showOnly(pillAi,  [false, true,  false, false]); loadAiMaterials(); });
-    pillTests?.addEventListener('click', () => { showOnly(pillTests,[false, false, true,  false]); loadTests(); });
-    pillAdd?.addEventListener('click',   () => showOnly(pillAdd,   [false, false, false, true]));
+    pillView?.addEventListener('click',  () => showOnly(pillView,  [true,  false, false, false], 'Notes', 'student_materials'));
+    pillAi?.addEventListener('click',    () => { showOnly(pillAi,  [false, true,  false, false], 'AI Training Resources', 'ai_training_files'); loadAiMaterials(); });
+    pillTests?.addEventListener('click', () => { showOnly(pillTests,[false, false, true,  false], 'Tests',             'saved_tests'); loadTests(); });
+    pillAdd?.addEventListener('click',   () => showOnly(pillAdd,   [false, false, false, true],  'Upload Resources',  'upload_material'));
+    // Activate tab from URL slug on initial load
+    if (tabSlug) activateTab(tabSlug);
 }
 
+
+export function activateTab(tabSlug) {
+    const _map = {
+        'student_materials': 'pillViewMaterials',
+        'ai_training_files': 'pillViewAiMaterials', 'ai_materials': 'pillViewAiMaterials',
+        'saved_tests': 'pillViewTests', 'tests_material': 'pillViewTests',
+        'upload_material': 'pillAddMaterial', 'upload_new': 'pillAddMaterial',
+    };
+    const pillId = _map[tabSlug] || _map['student_materials'];
+    const pill = document.getElementById(pillId);
+    if (pill) pill.click();
+}
 export function refresh() {
     loadMaterials();
 }

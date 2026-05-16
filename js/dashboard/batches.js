@@ -129,8 +129,8 @@ window.openBatchDetail = async function (batchId, batchName) {
     if (btnRefreshBatches) btnRefreshBatches.style.display = 'none';
     batchDetailContainer.style.display = 'block';
 
-    if (pillViewBatches) pillViewBatches.classList.add('pill-toggle__btn--active');
-    if (pillAddBatch) pillAddBatch.classList.remove('pill-toggle__btn--active');
+    if (pillViewBatches) pillViewBatches.classList.add('tab-pill-selector__btn--active');
+    if (pillAddBatch) pillAddBatch.classList.remove('tab-pill-selector__btn--active');
 
     document.getElementById('batchDetailName').textContent = batchName;
 
@@ -272,7 +272,7 @@ window.removeStudentFromBatch = async function (batchStudentId) {
     }
 };
 
-export function init() {
+export function init(tabSlug) {
     loadBatches();
     loadBatchComponent();
 
@@ -310,8 +310,8 @@ export function init() {
 
     if (pillView && pillAdd) {
         pillView.addEventListener('click', () => {
-            pillView.classList.add('pill-toggle__btn--active');
-            pillAdd.classList.remove('pill-toggle__btn--active');
+            pillView.classList.add('tab-pill-selector__btn--active');
+            pillAdd.classList.remove('tab-pill-selector__btn--active');
             if (listContainer) listContainer.style.display = 'block';
             if (addContainer) addContainer.style.display = 'none';
             if (detailContainer) detailContainer.style.display = 'none';
@@ -319,8 +319,8 @@ export function init() {
         });
 
         pillAdd.addEventListener('click', () => {
-            pillAdd.classList.add('pill-toggle__btn--active');
-            pillView.classList.remove('pill-toggle__btn--active');
+            pillAdd.classList.add('tab-pill-selector__btn--active');
+            pillView.classList.remove('tab-pill-selector__btn--active');
             if (addContainer) addContainer.style.display = 'block';
             if (listContainer) listContainer.style.display = 'none';
             if (detailContainer) detailContainer.style.display = 'none';
@@ -334,7 +334,7 @@ export function init() {
             if (detailContainer) detailContainer.style.display = 'none';
             if (listContainer) listContainer.style.display = 'block';
             if (btnRefresh) btnRefresh.style.display = 'inline-block';
-            if (pillView) pillView.classList.add('pill-toggle__btn--active');
+            if (pillView) pillView.classList.add('tab-pill-selector__btn--active');
             currentBatchId = null;
             currentBatchGrade = null;
             currentBatchSubject = null;
@@ -396,7 +396,7 @@ export function init() {
                 if (detailContainer) detailContainer.style.display = 'none';
                 if (listContainer) listContainer.style.display = 'block';
                 if (btnRefresh) btnRefresh.style.display = 'inline-block';
-                if (pillView) pillView.classList.add('pill-toggle__btn--active');
+                if (pillView) pillView.classList.add('tab-pill-selector__btn--active');
                 currentBatchId = null;
                 currentBatchGrade = null;
                 currentBatchSubject = null;
@@ -404,8 +404,17 @@ export function init() {
             }
         });
     }
+    // Activate tab from URL slug on initial load
+    if (tabSlug) activateTab(tabSlug);
 }
 
+
+export function activateTab(tabSlug) {
+    const _map = { 'batches_list': 'pillViewBatches', 'create_batch': 'pillAddBatch' };
+    const pillId = _map[tabSlug] || _map['batches_list'];
+    const pill = document.getElementById(pillId);
+    if (pill) pill.click();
+}
 export function refresh() {
     const listContainer = document.getElementById('batchesListContainer');
     const addContainer = document.getElementById('addBatchContainer');
@@ -417,8 +426,8 @@ export function refresh() {
     if (listContainer) listContainer.style.display = 'block';
     if (addContainer) addContainer.style.display = 'none';
     if (detailContainer) detailContainer.style.display = 'none';
-    if (pillView) pillView.classList.add('pill-toggle__btn--active');
-    if (pillAdd) pillAdd.classList.remove('pill-toggle__btn--active');
+    if (pillView) pillView.classList.add('tab-pill-selector__btn--active');
+    if (pillAdd) pillAdd.classList.remove('tab-pill-selector__btn--active');
     if (btnRefresh) btnRefresh.style.display = 'inline-block';
 
     currentBatchId = null;

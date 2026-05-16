@@ -229,7 +229,7 @@ function attachTestListeners() {
     });
 }
 
-export function init() {
+export function init(tabSlug) {
     loadTestsList();
     loadTestComponent();
 
@@ -243,23 +243,32 @@ export function init() {
 
     if (pillView && pillAdd) {
         pillView.addEventListener('click', () => {
-            pillView.classList.add('pill-toggle__btn--active');
-            pillAdd.classList.remove('pill-toggle__btn--active');
+            pillView.classList.add('tab-pill-selector__btn--active');
+            pillAdd.classList.remove('tab-pill-selector__btn--active');
             if (testsListContainer) testsListContainer.style.display = 'block';
             if (addTestContainer)   addTestContainer.style.display   = 'none';
             if (btnRefresh)         btnRefresh.style.display          = 'inline-block';
         });
 
         pillAdd.addEventListener('click', () => {
-            pillAdd.classList.add('pill-toggle__btn--active');
-            pillView.classList.remove('pill-toggle__btn--active');
+            pillAdd.classList.add('tab-pill-selector__btn--active');
+            pillView.classList.remove('tab-pill-selector__btn--active');
             if (addTestContainer)   addTestContainer.style.display   = 'block';
             if (testsListContainer) testsListContainer.style.display = 'none';
             if (btnRefresh)         btnRefresh.style.display          = 'none';
         });
     }
+    // Activate tab from URL slug on initial load
+    if (tabSlug) activateTab(tabSlug);
 }
 
+
+export function activateTab(tabSlug) {
+    const _map = { 'tests_list': 'pillViewTests', 'schedule_test': 'pillAddTest' };
+    const pillId = _map[tabSlug] || _map['tests_list'];
+    const pill = document.getElementById(pillId);
+    if (pill) pill.click();
+}
 export function refresh() {
     loadTestsList();
 }

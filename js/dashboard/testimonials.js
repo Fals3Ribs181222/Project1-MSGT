@@ -175,7 +175,7 @@ window.deleteTestimonial = async function (id, mediaUrl) {
     }
 };
 
-export function init() {
+export function init(tabSlug) {
     loadTestimonials();
     loadTestimonialComponent();
 
@@ -189,23 +189,32 @@ export function init() {
 
     if (pillView && pillAdd) {
         pillView.addEventListener('click', () => {
-            pillView.classList.add('pill-toggle__btn--active');
-            pillAdd.classList.remove('pill-toggle__btn--active');
+            pillView.classList.add('tab-pill-selector__btn--active');
+            pillAdd.classList.remove('tab-pill-selector__btn--active');
             if (listContainer) listContainer.style.display = 'block';
             if (addContainer) addContainer.style.display = 'none';
             if (btnRefresh) btnRefresh.style.display = 'inline-block';
         });
 
         pillAdd.addEventListener('click', () => {
-            pillAdd.classList.add('pill-toggle__btn--active');
-            pillView.classList.remove('pill-toggle__btn--active');
+            pillAdd.classList.add('tab-pill-selector__btn--active');
+            pillView.classList.remove('tab-pill-selector__btn--active');
             if (addContainer) addContainer.style.display = 'block';
             if (listContainer) listContainer.style.display = 'none';
             if (btnRefresh) btnRefresh.style.display = 'none';
         });
     }
+    // Activate tab from URL slug on initial load
+    if (tabSlug) activateTab(tabSlug);
 }
 
+
+export function activateTab(tabSlug) {
+    const _map = { 'testimonials': 'pillViewTestimonials', 'add_testimonial': 'pillAddTestimonial' };
+    const pillId = _map[tabSlug] || _map['testimonials'];
+    const pill = document.getElementById(pillId);
+    if (pill) pill.click();
+}
 export function refresh() {
     loadTestimonials();
 }

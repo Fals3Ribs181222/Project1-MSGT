@@ -340,26 +340,26 @@ window.closeRecordingModal = function () {
 
 function setPlaylistView() {
     document.getElementById('btnViewPlaylists').style.display = 'inline-flex';
-    document.getElementById('btnViewPlaylists').classList.add('pill-toggle__btn--active');
+    document.getElementById('btnViewPlaylists').classList.add('tab-pill-selector__btn--active');
     document.getElementById('btnBackToPlaylists').style.display = 'none';
     document.getElementById('btnAddVideos').style.display = 'none';
     if (isTeacher) {
         document.getElementById('btnNewPlaylist').style.display = 'inline-flex';
-        document.getElementById('btnNewPlaylist').classList.remove('pill-toggle__btn--active');
+        document.getElementById('btnNewPlaylist').classList.remove('tab-pill-selector__btn--active');
         document.getElementById('btnRenewWatch').style.display = 'inline-flex';
     }
 }
 
 function setDetailView() {
-    document.getElementById('btnViewPlaylists').classList.remove('pill-toggle__btn--active');
+    document.getElementById('btnViewPlaylists').classList.remove('tab-pill-selector__btn--active');
     document.getElementById('btnBackToPlaylists').style.display = 'inline-flex';
     document.getElementById('btnNewPlaylist').style.display = 'none';
     if (isTeacher) document.getElementById('btnAddVideos').style.display = 'inline-flex';
 }
 
 function setCreateView() {
-    document.getElementById('btnNewPlaylist').classList.add('pill-toggle__btn--active');
-    document.getElementById('btnViewPlaylists').classList.remove('pill-toggle__btn--active');
+    document.getElementById('btnNewPlaylist').classList.add('tab-pill-selector__btn--active');
+    document.getElementById('btnViewPlaylists').classList.remove('tab-pill-selector__btn--active');
 }
 
 export async function init() {

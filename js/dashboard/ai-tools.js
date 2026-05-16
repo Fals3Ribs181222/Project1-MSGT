@@ -15,15 +15,15 @@ function attachAIToolListeners() {
     const testPanel  = document.getElementById('testGeneratorPanel');
 
     pillDoubt?.addEventListener('click', () => {
-        pillDoubt.classList.add('pill-toggle__btn--active');
-        pillTest.classList.remove('pill-toggle__btn--active');
+        pillDoubt.classList.add('tab-pill-selector__btn--active');
+        pillTest.classList.remove('tab-pill-selector__btn--active');
         doubtPanel.style.display = 'block';
         testPanel.style.display  = 'none';
     });
 
     pillTest?.addEventListener('click', () => {
-        pillTest.classList.add('pill-toggle__btn--active');
-        pillDoubt.classList.remove('pill-toggle__btn--active');
+        pillTest.classList.add('tab-pill-selector__btn--active');
+        pillDoubt.classList.remove('tab-pill-selector__btn--active');
         testPanel.style.display  = 'block';
         doubtPanel.style.display = 'none';
     });
@@ -356,8 +356,8 @@ function attachAIToolListeners() {
     // ── Cognitive Focus pill toggle ───────────────────────────
     document.querySelectorAll('[data-cog]').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('[data-cog]').forEach(b => b.classList.remove('pill-toggle__btn--active'));
-            btn.classList.add('pill-toggle__btn--active');
+            document.querySelectorAll('[data-cog]').forEach(b => b.classList.remove('tab-pill-selector__btn--active'));
+            btn.classList.add('tab-pill-selector__btn--active');
             document.getElementById('cogFocusValue').value = btn.dataset.cog;
         });
     });
@@ -722,11 +722,20 @@ function filterMaterialDropdown() {
     }
 }
 
-export function init() {
+export function init(tabSlug) {
     window.populateGradePills('doubtGrade', true);
     window.populateGradePills('testGrade', false);
     attachAIToolListeners();
     populateMaterialDropdown();
+    // Activate tab from URL slug on initial load
+    if (tabSlug) activateTab(tabSlug);
 }
 
+
+export function activateTab(tabSlug) {
+    const _map = { 'doubt_solver': 'pillDoubtSolver', 'test_generator': 'pillTestGenerator' };
+    const pillId = _map[tabSlug] || _map['doubt_solver'];
+    const pill = document.getElementById(pillId);
+    if (pill) pill.click();
+}
 export function refresh() { }

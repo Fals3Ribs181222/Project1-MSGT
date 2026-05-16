@@ -125,7 +125,7 @@ async function renderCalendar() {
 
             pill.addEventListener('click', async (e) => {
                 const data = JSON.parse(e.currentTarget.dataset.classData);
-                await window.loadTab('panel-attendance');
+                await window.loadPage('page-attendance');
                 if (window.openAttendanceGrid) {
                     window.openAttendanceGrid(data.id, data.batch_id, data.title, data.batchName, data.startTime, data.date, data.grade);
                 }
@@ -223,8 +223,8 @@ function attachClassFormListeners() {
 
     if (btnReg && btnEx) {
         btnReg.addEventListener('click', () => {
-            btnReg.classList.add('pill-toggle__btn--active');
-            btnEx.classList.remove('pill-toggle__btn--active');
+            btnReg.classList.add('tab-pill-selector__btn--active');
+            btnEx.classList.remove('tab-pill-selector__btn--active');
             typeInput.value = 'regular';
             groupDay.style.display = 'block';
             groupDate.style.display = 'none';
@@ -232,8 +232,8 @@ function attachClassFormListeners() {
         });
 
         btnEx.addEventListener('click', () => {
-            btnEx.classList.add('pill-toggle__btn--active');
-            btnReg.classList.remove('pill-toggle__btn--active');
+            btnEx.classList.add('tab-pill-selector__btn--active');
+            btnReg.classList.remove('tab-pill-selector__btn--active');
             typeInput.value = 'extra';
             groupDay.style.display = 'none';
             groupDate.style.display = 'block';
@@ -478,7 +478,7 @@ window.openClassModal = async function (data) {
     }
 };
 
-export function init() {
+export function init(tabSlug) {
     renderCalendar();
     loadClassComponent();
 
@@ -489,8 +489,8 @@ export function init() {
 
     if (pillViewCalendar && pillAddClass) {
         pillViewCalendar.addEventListener('click', () => {
-            pillViewCalendar.classList.add('pill-toggle__btn--active');
-            pillAddClass.classList.remove('pill-toggle__btn--active');
+            pillViewCalendar.classList.add('tab-pill-selector__btn--active');
+            pillAddClass.classList.remove('tab-pill-selector__btn--active');
             if (calendarContainer) calendarContainer.style.display = 'block';
             if (addClassContainer) addClassContainer.style.display = 'none';
             const titleEl = document.getElementById('scheduleTitle');
@@ -499,8 +499,8 @@ export function init() {
         });
 
         pillAddClass.addEventListener('click', () => {
-            pillAddClass.classList.add('pill-toggle__btn--active');
-            pillViewCalendar.classList.remove('pill-toggle__btn--active');
+            pillAddClass.classList.add('tab-pill-selector__btn--active');
+            pillViewCalendar.classList.remove('tab-pill-selector__btn--active');
             if (calendarContainer) calendarContainer.style.display = 'none';
             if (addClassContainer) addClassContainer.style.display = 'block';
             const titleEl = document.getElementById('scheduleTitle');
@@ -576,8 +576,17 @@ export function init() {
         }
     });
 
+    // Activate tab from URL slug on initial load
+    if (tabSlug) activateTab(tabSlug);
 }
 
+
+export function activateTab(tabSlug) {
+    const _map = { 'classes': 'pillViewCalendar', 'schedule_class': 'pillAddClass' };
+    const pillId = _map[tabSlug] || _map['classes'];
+    const pill = document.getElementById(pillId);
+    if (pill) pill.click();
+}
 export function refresh() {
     renderCalendar();
 }

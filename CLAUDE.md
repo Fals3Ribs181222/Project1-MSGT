@@ -43,11 +43,19 @@ vercel --prod
 
 ### Frontend Architecture
 
-The dashboards are **tab-based SPAs** using a custom router ([js/dashboard/router.js](js/dashboard/router.js)):
-- Pill button clicks call `loadTab(targetId)`
+The dashboards are **page-based SPAs** using a custom router ([js/dashboard/router.js](js/dashboard/router.js)).
+
+Navigation hierarchy:
+- **Dashboard** — Teacher / Student / Admin (`teacher_dashboard.html` etc.)
+- **Pages** — Students, Tests, Announcements (main sections; `loadPage(targetId)` in router)
+- **Tabs** — views within a page, each with a **Tab Title** (e.g. "Import CSV") activated by the **Tab Pill Selector** (the pill buttons top-right)
+
+Router mechanics:
+- Sidebar nav clicks call `loadPage(targetId)`
 - HTML is lazily fetched from `components/tabs/<name>.html`
 - The corresponding JS module `js/dashboard/<name>.js` is dynamically imported
-- Each module exports `init()` (first load) and optionally `refresh()` (revisit)
+- Each module exports `init(tabSlug)` (first load), `activateTab(tabSlug)` (revisit with slug), and optionally `refresh()`
+- URL format: `#page#tab_slug` (e.g. `#students#enroll_student`)
 
 Global API wrapper in [js/app.js](js/app.js) exposes `window.api` (Supabase CRUD abstraction) and `window.auth` (session management). Shared utilities in [js/utils.js](js/utils.js).
 

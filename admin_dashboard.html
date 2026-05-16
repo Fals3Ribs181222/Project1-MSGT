@@ -42,28 +42,28 @@
         <div class="panels-container" id="dashboard-content">
 
             <!-- Home Panel -->
-            <section class="panel tabs__panel tabs__panel--active" id="panel-home" role="tabpanel" aria-label="Home">
+            <section class="panel pages__panel pages__panel--active" id="page-home" role="tabpanel" aria-label="Home">
                 <header class="panel__header" style="margin-bottom: 2rem;">
                     <h2>Admin Overview</h2>
                 </header>
                 <div class="landing-grid">
-                    <button class="landing-pill" data-target="panel-admin-overview">
+                    <button class="landing-pill" data-target="page-admin-overview">
                         <span class="landing-pill__icon"><i class="ri-bar-chart-line" aria-hidden="true"></i></span>
                         <span class="landing-pill__text">Overview</span>
                     </button>
-                    <button class="landing-pill" data-target="panel-admin-flags">
+                    <button class="landing-pill" data-target="page-admin-flags">
                         <span class="landing-pill__icon"><i class="ri-tools-line" aria-hidden="true"></i></span>
                         <span class="landing-pill__text">Feature Flags</span>
                     </button>
-                    <button class="landing-pill" data-target="panel-admin-users">
+                    <button class="landing-pill" data-target="page-admin-users">
                         <span class="landing-pill__icon"><i class="ri-team-line" aria-hidden="true"></i></span>
                         <span class="landing-pill__text">Users</span>
                     </button>
-                    <button class="landing-pill" data-target="panel-admin-bulk">
+                    <button class="landing-pill" data-target="page-admin-bulk">
                         <span class="landing-pill__icon"><i class="ri-delete-bin-line" aria-hidden="true"></i></span>
                         <span class="landing-pill__text">Bulk Ops</span>
                     </button>
-                    <button class="landing-pill" data-target="panel-admin-browse">
+                    <button class="landing-pill" data-target="page-admin-browse">
                         <span class="landing-pill__icon"><i class="ri-database-2-line" aria-hidden="true"></i></span>
                         <span class="landing-pill__text">Table Browser</span>
                     </button>
@@ -80,10 +80,10 @@
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
     <script type="module">
-        import { loadTab, initRouter, prefetchTabs } from "./js/dashboard/router.js";
-        window.loadTab = loadTab;
-        initRouter('panel-admin-overview');
-        prefetchTabs([
+        import { loadPage, initRouter, prefetchPages } from "./js/dashboard/router.js";
+        window.loadPage = loadPage;
+        initRouter('page-admin-overview');
+        prefetchPages([
             'admin-flags', 'admin-users', 'admin-bulk', 'admin-browse'
         ]);
     </script>

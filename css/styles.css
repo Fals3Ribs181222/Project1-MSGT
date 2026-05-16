@@ -99,7 +99,7 @@ h4 {
 
 /* Pill-shaped elements — match their border-radius */
 .btn:focus-visible,
-.pill-toggle__btn:focus-visible,
+.tab-pill-selector__btn:focus-visible,
 .tabs__btn:focus-visible,
 .navbar__link:focus-visible {
     border-radius: var(--radius-full);
@@ -723,12 +723,12 @@ button:disabled {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.tabs__panel {
+.pages__panel {
     display: none;
     animation: fadeIn 0.3s ease;
 }
 
-.tabs__panel--active {
+.pages__panel--active {
     display: block;
 }
 
@@ -749,11 +749,11 @@ button:disabled {
     letter-spacing: 0.07em;
     padding: 0 0.1rem;
 }
-.dash-grade-bar .pill-toggle {
+.dash-grade-bar .tab-pill-selector {
     border-radius: var(--radius-md);
     width: 100%;
 }
-.dash-grade-bar .pill-toggle__btn {
+.dash-grade-bar .tab-pill-selector__btn {
     border-radius: var(--radius-md);
     flex: 1;
     text-align: center;
@@ -766,9 +766,9 @@ button:disabled {
 }
 
 /* ============================================================
-   PILL TOGGLE (inside panels)
+   TAB PILL SELECTOR (inside pages)
    ============================================================ */
-.pill-toggle {
+.tab-pill-selector {
     display: inline-flex;
     background: var(--bg-surface-hover);
     border-radius: var(--radius-full);
@@ -776,7 +776,7 @@ button:disabled {
     border: 1px solid var(--border-color);
 }
 
-.pill-toggle__btn {
+.tab-pill-selector__btn {
     background: transparent;
     color: var(--text-main);
     border: none;
@@ -789,7 +789,7 @@ button:disabled {
     transition: all 0.2s;
 }
 
-.pill-toggle__btn--active {
+.tab-pill-selector__btn--active {
     background: var(--primary);
     color: white;
 }
@@ -1498,6 +1498,21 @@ button:disabled {
 /* ============================================================
    SUBJECT PILL SELECTOR
    ============================================================ */
+.form__row-item .subject-pills {
+    display: flex;
+    width: 100%;
+}
+
+.form__row-item .subject-pill {
+    flex: 1;
+}
+
+.form__row-item .subject-pill__label {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
 .subject-pills {
     display: inline-flex;
     background: var(--bg-surface-hover);
@@ -1584,15 +1599,25 @@ button:disabled {
    FORM — FILE UPLOAD ZONE
    ============================================================ */
 .form__upload-zone {
-    padding: 1.5rem;
+    position: relative;
+    padding: 2rem 1.5rem;
     border: 2px dashed var(--border-color);
     border-radius: var(--radius-md);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
     text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    min-height: 140px;
+}
+
+.form__upload-zone:hover,
+.form__upload-zone--dragover {
+    border-color: var(--primary);
+    background: rgba(30, 58, 95, 0.04);
 }
 
 .form__upload-hint {
@@ -3484,12 +3509,12 @@ tr.editing-row {
         min-width: auto;
     }
 
-    /* Pill toggles: full-width on small screens */
-    .pill-toggle {
+    /* Tab Pill Selector: full-width on small screens */
+    .tab-pill-selector {
         width: 100%;
     }
 
-    .pill-toggle__btn {
+    .tab-pill-selector__btn {
         flex: 1;
         text-align: center;
     }
@@ -3543,11 +3568,11 @@ tr.editing-row {
     }
 
     /* Regular/Extra toggle: full width on mobile */
-    #classForm .pill-toggle {
+    #classForm .tab-pill-selector {
         width: 100% !important;
     }
 
-    #classForm .pill-toggle .pill-toggle__btn {
+    #classForm .tab-pill-selector .tab-pill-selector__btn {
         flex: 1;
     }
 
@@ -3905,7 +3930,7 @@ a.dash-sidebar__item {
     flex-direction: column;
 }
 
-.dash-main #panel-home.tabs__panel--active {
+.dash-main #page-home.pages__panel--active {
     display: flex;
     flex: 1;
     flex-direction: column;

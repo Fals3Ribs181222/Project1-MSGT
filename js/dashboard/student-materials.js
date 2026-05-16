@@ -46,13 +46,13 @@ async function loadMaterials() {
 
         const defaultSubject = pillSubjects.find(s => s.toLowerCase() === 'accounts') || pillSubjects[0];
         pillsEl.innerHTML = pillSubjects.map(s => {
-            const active = s === defaultSubject ? ' pill-toggle__btn--active' : '';
-            return `<button type="button" class="pill-toggle__btn${active}" data-subject="${window.esc(s)}">${window.esc(s)}</button>`;
+            const active = s === defaultSubject ? ' tab-pill-selector__btn--active' : '';
+            return `<button type="button" class="tab-pill-selector__btn${active}" data-subject="${window.esc(s)}">${window.esc(s)}</button>`;
         }).join('');
-        pillsEl.querySelectorAll('.pill-toggle__btn').forEach(btn => {
+        pillsEl.querySelectorAll('.tab-pill-selector__btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                pillsEl.querySelectorAll('.pill-toggle__btn').forEach(b => b.classList.remove('pill-toggle__btn--active'));
-                btn.classList.add('pill-toggle__btn--active');
+                pillsEl.querySelectorAll('.tab-pill-selector__btn').forEach(b => b.classList.remove('tab-pill-selector__btn--active'));
+                btn.classList.add('tab-pill-selector__btn--active');
                 renderFiles();
             });
         });
@@ -65,7 +65,7 @@ function renderFiles() {
     const list = document.getElementById('materialsList');
     if (!list) return;
 
-    const activeBtn = document.querySelector('#matSubjectPills .pill-toggle__btn--active');
+    const activeBtn = document.querySelector('#matSubjectPills .tab-pill-selector__btn--active');
     const subj = activeBtn?.dataset.subject || '';
     const search = (document.getElementById('matSearchInput')?.value || '').toLowerCase();
 

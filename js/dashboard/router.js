@@ -1,50 +1,49 @@
-export async function loadTab(targetId) {
+export async function loadPage(targetId, tabSlug) {
     const panelsContainer = document.getElementById('dashboard-content');
 
-    // Deactivate all current panels
-    const allPanels = panelsContainer.querySelectorAll('.tabs__panel');
-    allPanels.forEach(p => p.classList.remove('tabs__panel--active'));
+    // Deactivate all current pages
+    const allPages = panelsContainer.querySelectorAll('.pages__panel');
+    allPages.forEach(p => p.classList.remove('pages__panel--active'));
 
-    // Update URL hash to reflect active tab, preserving any query params (e.g. ?grade=)
-    const featureSlug = targetId.replace('panel-', '');
-    history.replaceState(null, '', `${location.search}#${featureSlug}`);
+    // Update URL hash to reflect active page (and tab if provided), preserving query params
+    const pageSlug = targetId.replace('page-', '');
+    const hashSuffix = tabSlug ? `${pageSlug}#${tabSlug}` : pageSlug;
+    history.replaceState(null, '', `${location.search}#${hashSuffix}`);
 
     // Update active sidebar item
     document.querySelectorAll('.dash-sidebar__item').forEach(btn => {
         btn.classList.toggle('dash-sidebar__item--active', btn.dataset.target === targetId);
     });
 
-    // Check if the panel already exists in the DOM
-    let targetPanel = document.getElementById(targetId);
+    // Check if the page already exists in the DOM
+    let targetPage = document.getElementById(targetId);
 
-    // If it doesn't exist, we need to fetch it
-    if (!targetPanel) {
-        // Map targetId to filename (e.g., panel-students -> students)
-        const featureName = targetId.replace('panel-', '');
+    // If it doesn't exist, fetch and initialise it
+    if (!targetPage) {
+        // Map targetId to filename (e.g., page-students -> students)
+        const featureName = targetId.replace('page-', '');
 
         try {
-            // Show a loading indicator
-            targetPanel = document.createElement('section');
-            targetPanel.className = 'panel tabs__panel tabs__panel--active';
-            targetPanel.id = targetId;
-            targetPanel.innerHTML = `<div class="loading-text" style="padding: 2rem; text-align: center;">Loading ${featureName}...</div>`;
-            panelsContainer.appendChild(targetPanel);
+            targetPage = document.createElement('section');
+            targetPage.className = 'panel pages__panel pages__panel--active';
+            targetPage.id = targetId;
+            targetPage.innerHTML = `<div class="loading-text" style="padding: 2rem; text-align: center;">Loading ${featureName}...</div>`;
+            panelsContainer.appendChild(targetPage);
 
             const response = await fetch(`components/tabs/${featureName}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const html = await response.text();
-            targetPanel.innerHTML = html;
+            targetPage.innerHTML = html;
 
-            // Dynamically load the Javascript for this specific module
             try {
                 const module = await import(`./${featureName}.js`);
                 if (module.init) {
                     try {
-                        await module.init();
+                        await module.init(tabSlug);
                     } catch (initError) {
                         console.error(`Error initializing ${featureName}:`, initError);
-                        targetPanel.innerHTML = `<div class="status status--error">Error loading ${featureName}: ${initError.message || 'Unknown error'}</div>`;
+                        targetPage.innerHTML = `<div class="status status--error">Error loading ${featureName}: ${initError.message || 'Unknown error'}</div>`;
                     }
                 }
             } catch (jsError) {
@@ -52,27 +51,27 @@ export async function loadTab(targetId) {
             }
 
         } catch (error) {
-            console.error(`Error loading tab ${featureName}:`, error);
-            targetPanel.innerHTML = `<div class="status status--error">Failed to load module: ${featureName}</div>`;
+            console.error(`Error loading page ${featureName}:`, error);
+            targetPage.innerHTML = `<div class="status status--error">Failed to load module: ${featureName}</div>`;
         }
     } else {
-        // If it already exists, just make it active
-        targetPanel.classList.add('tabs__panel--active');
+        // Already in DOM — activate and refresh
+        targetPage.classList.add('pages__panel--active');
 
-        // If we switch back to a tab, we might want to refresh its data
-        const featureName = targetId.replace('panel-', '');
+        const featureName = targetId.replace('page-', '');
         try {
             const module = await import(`./${featureName}.js`);
-            if (module.refresh) {
+            if (tabSlug && module.activateTab) {
+                module.activateTab(tabSlug);
+            } else if (module.refresh) {
                 try {
                     await module.refresh();
                 } catch (refreshError) {
                     console.error(`Error refreshing ${featureName}:`, refreshError);
-                    // Show error toast or message to user
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'status status--error';
                     errorDiv.textContent = `Error refreshing ${featureName}: ${refreshError.message || 'Unknown error'}`;
-                    targetPanel.prepend(errorDiv);
+                    targetPage.prepend(errorDiv);
                 }
             }
         } catch (e) {
@@ -82,25 +81,27 @@ export async function loadTab(targetId) {
 
 }
 
-export async function prefetchTabs(tabNames) {
+export async function prefetchPages(pageNames) {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    for (const name of tabNames) {
+    for (const name of pageNames) {
         fetch(`components/tabs/${name}`).catch(() => {});
         import(`./${name}.js`).catch(() => {});
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 }
 
-export function initRouter(defaultTab) {
+export function initRouter(defaultPage) {
     const run = () => {
-        const initialTab = location.hash.slice(1);
-        loadTab(initialTab ? `panel-${initialTab}` : defaultTab);
+        const hashParts = location.hash.slice(1).split('#');
+        const initialPage = hashParts[0];
+        const initialTab = hashParts[1] || '';
+        loadPage(initialPage ? `page-${initialPage}` : defaultPage, initialTab || undefined);
 
         document.addEventListener('click', (e) => {
             const pill = e.target.closest('.landing-pill');
             if (pill) {
                 const target = pill.getAttribute('data-target');
-                if (target) loadTab(target);
+                if (target) loadPage(target);
             }
         });
     };
