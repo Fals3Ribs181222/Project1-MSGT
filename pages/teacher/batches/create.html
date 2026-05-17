@@ -1,13 +1,30 @@
+<style>
+    .create-batch-intro {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(30,58,95,0.05);
+        border: 1px solid rgba(30,58,95,0.12);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.75rem;
+    }
+    .create-batch-intro i { font-size: 1.5rem; color: var(--primary); opacity: 0.7; flex-shrink: 0; }
+    .create-batch-intro p { font-size: 0.875rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
+    #batchForm { max-width: 560px; }
+</style>
+
 <header class="panel__header">
-    <h2>Create New Batch</h2>
+    <h2 id="batchesTabTitle">Register Batches</h2>
     <div class="tab-pill-selector">
-        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-batches', '')">Batch List</button>
-        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-batches', 'create')">+ Create New</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-batches', '')" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-user-community-line"></i> List</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-batches', 'create')" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-play-list-add-line"></i> Add</button>
     </div>
 </header>
 
-<div class="panel__info">
-    <p>Set up a new batch with a name, subject, grade, and schedule. You can add students after creating the batch.</p>
+<div class="create-batch-intro">
+    <i class="ri-information-line"></i>
+    <p>Give the batch a name, grade, and subject. You can enroll students after saving.</p>
 </div>
 
 <form id="batchForm">
@@ -35,7 +52,8 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn--primary btn--full" id="btnCreateBatch">
+    <button type="submit" class="btn btn--primary btn--full" id="btnCreateBatch" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;">
+        <i class="ri-play-list-add-line" id="btnCreateBatchIcon"></i>
         <span id="btnCreateBatchText">Create Batch</span>
         <span class="spinner" id="btnCreateBatchSpinner" style="display:none;" aria-hidden="true"></span>
     </button>

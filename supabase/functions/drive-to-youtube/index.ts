@@ -50,9 +50,18 @@ function parseFilename(filename: string): { title: string; subject: string | nul
     const dateMatch = normalised.match(/(\d{4}[-\/]\d{2}[-\/]\d{2})/);
     const recordedAt = dateMatch ? dateMatch[1].replace(/\//g, '-') : null;
 
-    const title = subject && grade
-        ? `${subject} Grade ${grade}${recordedAt ? ' — ' + recordedAt : ''}`
-        : nameWithoutExt.replace(/[_\-]/g, ' ');
+    // Extract remainder (anything that isn't subject, grade keyword, date, or standalone numbers)
+    const remainder = normalised
+        .replace(/\b(accounts|economics)\b/gi, '')
+        .replace(/\b(?:gr(?:ade)?\s*)?(11|12)\b/gi, '')
+        .replace(/\b\d{4}[-\/]\d{2}[-\/]\d{2}\b/, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const base = subject && grade ? `${subject} Grade ${grade}` : nameWithoutExt.replace(/[_\-]/g, ' ');
+    const suffix = remainder ? ` — ${remainder}` : '';
+    const datePart = recordedAt ? ` — ${recordedAt}` : '';
+    const title = `${base}${suffix}${datePart}`;
 
     return { title, subject, grade, recordedAt };
 }

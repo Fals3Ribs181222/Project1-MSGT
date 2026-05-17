@@ -1,8 +1,8 @@
 <header class="panel__header">
-    <h2>Schedule Class</h2>
+    <h2>Schedule a Class</h2>
     <div class="tab-pill-selector">
-        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-schedule', '')">Classes</button>
-        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-schedule', 'new-class')">Schedule New</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-schedule', '')" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-calendar-2-line"></i> Calendar</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-schedule', 'new-class')" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-calendar-schedule-line"></i> Slot</button>
     </div>
 </header>
 
@@ -17,10 +17,9 @@
             <input type="hidden" id="classType" value="regular">
         </div>
         <div class="form__row-item">
-            <label class="form__label" for="classGrade">Grade</label>
-            <select id="classGrade" class="form__control" required>
-                <option value="">-- Select Grade --</option>
-            </select>
+            <label class="form__label">Grade</label>
+            <div class="tab-pill-selector" id="classGradePills" style="width:fit-content;"></div>
+            <input type="hidden" id="classGrade">
         </div>
         <div class="form__row-item">
             <label class="form__label" for="classBatch">Batch</label>

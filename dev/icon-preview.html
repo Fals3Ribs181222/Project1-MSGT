@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Icon Preview</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+<style>
+    body { font-family: sans-serif; background: #F2EADD; padding: 2rem; }
+    h2 { color: #1E3A5F; margin-bottom: 0.5rem; }
+    p.sub { color: #3D4F63; font-size: 0.9rem; margin-bottom: 2rem; }
+    .section { margin-bottom: 2.5rem; }
+    .section h3 { color: #B05028; margin-bottom: 1rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.4rem; }
+    .grid { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; }
+    .icon-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 100px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .icon-card i { font-size: 1.75rem; color: #1E3A5F; }
+    .icon-card span { font-size: 0.7rem; color: #3D4F63; text-align: center; line-height: 1.4; }
+    .pill-preview {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        background: #1E3A5F; color: white;
+        border-radius: 8px; padding: 0.45rem 1rem;
+        font-size: 0.875rem; font-weight: 600;
+    }
+    .pill-preview.inactive { background: rgba(255,255,255,0.5); color: #1A2332; border: 1px solid rgba(0,0,0,0.1); }
+    .pill-preview i { font-size: 0.95rem; }
+    .pills { display: flex; gap: 0.5rem; align-items: center; }
+</style>
+</head>
+<body>
+
+<h2>Icon Picker — List / Add Pills</h2>
+<p class="sub">Tell me which row you like (or mix and match).</p>
+
+<div class="section">
+    <h3>List options</h3>
+    <div class="grid">
+        <div class="icon-card"><i class="ri-contacts-book-line"></i><span>contacts-book<br>directory feel</span></div>
+        <div class="icon-card"><i class="ri-survey-line"></i><span>survey<br>register/list</span></div>
+        <div class="icon-card"><i class="ri-table-line"></i><span>table<br>structured list</span></div>
+        <div class="icon-card"><i class="ri-layout-2-line"></i><span>layout-2<br>cards view</span></div>
+        <div class="icon-card"><i class="ri-building-2-line"></i><span>building-2<br>institution</span></div>
+        <div class="icon-card"><i class="ri-book-open-line"></i><span>book-open<br>register/log</span></div>
+        <div class="icon-card"><i class="ri-dashboard-2-line"></i><span>dashboard-2<br>overview</span></div>
+        <div class="icon-card"><i class="ri-grid-line"></i><span>grid<br>grid view</span></div>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Add options</h3>
+    <div class="grid">
+        <div class="icon-card"><i class="ri-clipboard-line"></i><span>clipboard<br>register/form</span></div>
+        <div class="icon-card"><i class="ri-form-line"></i><span>form<br>fill in form</span></div>
+        <div class="icon-card"><i class="ri-draft-line"></i><span>draft<br>new entry</span></div>
+        <div class="icon-card"><i class="ri-pencil-line"></i><span>pencil<br>write/create</span></div>
+        <div class="icon-card"><i class="ri-edit-box-line"></i><span>edit-box<br>new record</span></div>
+        <div class="icon-card"><i class="ri-bill-line"></i><span>bill<br>formal record</span></div>
+        <div class="icon-card"><i class="ri-user-settings-line"></i><span>user-settings<br>configure batch</span></div>
+        <div class="icon-card"><i class="ri-calendar-check-line"></i><span>calendar-check<br>schedule/register</span></div>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Quick combos</h3>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div>
+            <div style="font-size:0.78rem;color:#3D4F63;margin-bottom:0.4rem;">contacts-book + clipboard</div>
+            <div class="pills">
+                <span class="pill-preview"><i class="ri-contacts-book-line"></i> List</span>
+                <span class="pill-preview inactive"><i class="ri-clipboard-line"></i> Add</span>
+            </div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem;color:#3D4F63;margin-bottom:0.4rem;">survey + form</div>
+            <div class="pills">
+                <span class="pill-preview"><i class="ri-survey-line"></i> List</span>
+                <span class="pill-preview inactive"><i class="ri-form-line"></i> Add</span>
+            </div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem;color:#3D4F63;margin-bottom:0.4rem;">layout-2 + draft</div>
+            <div class="pills">
+                <span class="pill-preview"><i class="ri-layout-2-line"></i> List</span>
+                <span class="pill-preview inactive"><i class="ri-draft-line"></i> Add</span>
+            </div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem;color:#3D4F63;margin-bottom:0.4rem;">book-open + pencil</div>
+            <div class="pills">
+                <span class="pill-preview"><i class="ri-book-open-line"></i> List</span>
+                <span class="pill-preview inactive"><i class="ri-pencil-line"></i> Add</span>
+            </div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem;color:#3D4F63;margin-bottom:0.4rem;">grid + edit-box</div>
+            <div class="pills">
+                <span class="pill-preview"><i class="ri-grid-line"></i> List</span>
+                <span class="pill-preview inactive"><i class="ri-edit-box-line"></i> Add</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

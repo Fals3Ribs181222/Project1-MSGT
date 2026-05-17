@@ -18,9 +18,10 @@ function filterBatchByGrade(grade) {
 }
 
 async function loadDropdowns() {
-    const gradeSelect = document.getElementById('classGrade');
+    const gradeInput = document.getElementById('classGrade');
+    const gradePills = document.getElementById('classGradePills');
     const batchSelect = document.getElementById('classBatch');
-    if (!gradeSelect || !batchSelect) return;
+    if (!gradeInput || !gradePills || !batchSelect) return;
 
     batchSelect.innerHTML = '<option value="">Open Class</option>';
 
@@ -30,13 +31,27 @@ async function loadDropdowns() {
     const sorted = (res.data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     const grades = [...new Set(sorted.map(b => b.grade).filter(Boolean))].sort();
 
-    gradeSelect.innerHTML = '<option value="" disabled selected>Select Grade</option>';
-    grades.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g;
-        opt.textContent = g;
-        gradeSelect.appendChild(opt);
+    gradePills.innerHTML = '';
+    grades.forEach((g, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tab-pill-selector__btn' + (i === 0 ? ' tab-pill-selector__btn--active' : '');
+        btn.textContent = g;
+        btn.addEventListener('click', () => {
+            gradePills.querySelectorAll('.tab-pill-selector__btn').forEach(b => b.classList.remove('tab-pill-selector__btn--active'));
+            btn.classList.add('tab-pill-selector__btn--active');
+            gradeInput.value = g;
+            batchSelect.disabled = false;
+            filterBatchByGrade(g);
+        });
+        gradePills.appendChild(btn);
     });
+
+    if (grades.length > 0) {
+        gradeInput.value = grades[0];
+        batchSelect.disabled = false;
+        filterBatchByGrade(grades[0]);
+    }
 
     sorted.forEach(batch => {
         const opt = document.createElement('option');
@@ -48,14 +63,6 @@ async function loadDropdowns() {
         opt.dataset.gradeFilter = batch.grade || '';
         batchSelect.appendChild(opt);
     });
-
-    batchSelect.disabled = true;
-    gradeSelect.addEventListener('change', () => {
-        batchSelect.disabled = !gradeSelect.value;
-        if (!gradeSelect.value) batchSelect.value = '';
-        filterBatchByGrade(gradeSelect.value);
-    });
-    filterBatchByGrade(gradeSelect.value);
 }
 
 function initTimePicker() {

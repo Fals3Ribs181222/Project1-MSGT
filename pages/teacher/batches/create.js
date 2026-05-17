@@ -13,6 +13,7 @@ export function init() {
         const btnSpinner = document.getElementById('btnCreateBatchSpinner');
         const status = document.getElementById('batchFormStatus');
 
+        document.getElementById('btnCreateBatchIcon').style.display = 'none';
         btnText.style.display = 'none';
         btnSpinner.style.display = 'inline-block';
         btn.disabled = true;
@@ -28,6 +29,7 @@ export function init() {
             created_by: user.id
         });
 
+        document.getElementById('btnCreateBatchIcon').style.display = '';
         btnText.style.display = 'inline-block';
         btnSpinner.style.display = 'none';
         btn.disabled = false;

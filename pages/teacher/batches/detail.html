@@ -1,14 +1,157 @@
+<style>
+    .batch-detail__header-left { display: flex; align-items: center; gap: 1rem; }
+    .batch-detail__header-title h3 { margin: 0; font-size: 1.35rem; }
+
+    .batch-detail__stats {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+    }
+    .batch-detail__stat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(30,58,95,0.06);
+        border: 1px solid rgba(30,58,95,0.12);
+        border-radius: var(--radius-full);
+        padding: 0.35rem 0.9rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .batch-detail__stat-chip i { color: var(--primary); font-size: 0.95rem; }
+    .batch-detail__stat-chip strong { color: var(--text-main); }
+
+    /* Section headers */
+    .detail-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    .detail-section-header h4 {
+        margin: 0;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+    }
+    .detail-section-header h4 i { opacity: 0.75; }
+    .btn--ghost {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        font-family: var(--font-main);
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-md);
+        transition: var(--transition);
+        font-weight: 500;
+    }
+    .btn--ghost:hover { background: rgba(30,58,95,0.06); color: var(--primary); }
+
+    /* Member avatars */
+    .member-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(30,58,95,0.1);
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        vertical-align: middle;
+        margin-right: 0.5rem;
+    }
+    .picker-avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(30,58,95,0.1);
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* Picker selected state */
+    .student-picker__item:has(input:checked) {
+        background: rgba(30,58,95,0.07);
+        outline: 1px solid rgba(30,58,95,0.2);
+    }
+    .student-picker__item:has(input:checked) .picker-avatar {
+        background: rgba(30,58,95,0.18);
+    }
+
+    /* Empty states */
+    .detail-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .detail-empty i { display: block; font-size: 2rem; opacity: 0.25; margin-bottom: 0.5rem; color: var(--primary); }
+
+    /* Footer */
+    .batch-detail__footer {
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .batch-detail__footer-note {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+</style>
+
 <header class="panel__header">
-    <button class="btn btn--outline btn--sm" id="btnBackToBatches">← Back to Batches</button>
-    <h3 id="batchDetailName">Batch Name</h3>
-    <p id="batchDetailMeta" class="batch-detail__meta"></p>
+    <div class="batch-detail__header-left">
+        <button class="btn btn--outline btn--sm" id="btnBackToBatches" style="display:inline-flex;align-items:center;gap:0.35rem;">
+            <i class="ri-arrow-left-line"></i> Batches
+        </button>
+        <div class="batch-detail__header-title">
+            <h3 id="batchDetailName">Batch Name</h3>
+            <p id="batchDetailMeta" class="batch-detail__meta"></p>
+        </div>
+    </div>
 </header>
+
+<div class="batch-detail__stats">
+    <span class="batch-detail__stat-chip">
+        <i class="ri-group-line"></i>
+        <strong id="batchMemberCount">0</strong> members
+    </span>
+    <span class="batch-detail__stat-chip" id="batchGradeChip" style="display:none;">
+        <i class="ri-graduation-cap-line"></i>
+        <span id="batchGradeLabel">—</span>
+    </span>
+    <span class="batch-detail__stat-chip" id="batchSubjectChip" style="display:none;">
+        <i class="ri-book-2-line"></i>
+        <span id="batchSubjectLabel">—</span>
+    </span>
+</div>
+
+<div id="batchDetailStatus" class="status" style="display:none;"></div>
 
 <div class="batch-detail__body">
     <!-- Current Members -->
     <div class="batch-detail__members">
-        <h4>Current Members <span class="badge" id="batchMemberCount">0</span></h4>
-        <div id="batchDetailStatus" class="status" style="display:none;"></div>
+        <div class="detail-section-header">
+            <h4><i class="ri-group-line"></i> Current Members</h4>
+        </div>
         <div class="table-wrap">
             <table id="batchMembersTable">
                 <thead>
@@ -30,18 +173,28 @@
 
     <!-- Student Picker -->
     <div class="student-picker">
-        <h4>Add Students</h4>
-        <input type="text" id="studentPickerSearch" class="form__control student-picker__search" placeholder="Search students by name...">
+        <div class="detail-section-header">
+            <h4><i class="ri-user-add-line"></i> Add Students</h4>
+            <button class="btn--ghost" id="btnSelectAll">Select all</button>
+        </div>
+        <input type="text" id="studentPickerSearch" class="form__control student-picker__search" placeholder="Search by name…">
         <div class="student-picker__list" id="studentPickerList">
             <p class="loading-text">Loading students...</p>
         </div>
         <div class="student-picker__actions">
-            <button class="btn btn--primary btn--sm" id="btnAddSelectedStudents">Add Selected</button>
+            <button class="btn btn--primary btn--sm" id="btnAddSelectedStudents" style="display:inline-flex;align-items:center;gap:0.35rem;">
+                <i class="ri-user-add-line" id="btnAddIcon"></i>
+                <span id="btnAddText">Add Selected</span>
+                <span class="spinner" id="btnAddSpinner" style="display:none;" aria-hidden="true"></span>
+            </button>
             <span id="selectedCount" class="student-picker__count">0 selected</span>
         </div>
     </div>
 </div>
 
 <div class="batch-detail__footer">
-    <button class="btn btn--danger btn--sm" id="btnDeleteBatch">Delete This Batch</button>
+    <span class="batch-detail__footer-note">Deleting a batch removes all student assignments permanently.</span>
+    <button class="btn btn--danger btn--sm" id="btnDeleteBatch" style="display:inline-flex;align-items:center;gap:0.35rem;">
+        <i class="ri-delete-bin-line"></i> Delete Batch
+    </button>
 </div>

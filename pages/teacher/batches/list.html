@@ -1,31 +1,121 @@
+<style>
+    .batch-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        padding-top: 0.25rem;
+    }
+    @media (max-width: 600px) { .batch-cards { grid-template-columns: 1fr; gap: 1rem; } }
+
+    .batch-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        transition: var(--transition);
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        animation: fadeIn 0.3s ease;
+    }
+    .batch-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.1);
+        border-color: rgba(30,58,95,0.25);
+    }
+    .batch-card__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    .batch-card__name {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary);
+        line-height: 1.3;
+    }
+    .batch-card__grade {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: var(--radius-full);
+        white-space: nowrap;
+        flex-shrink: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .batch-card__grade--11 { background: rgba(196,18,48,0.08); color: var(--grade-11); border: 1px solid rgba(196,18,48,0.2); }
+    .batch-card__grade--12 { background: rgba(0,163,108,0.08); color: var(--grade-12); border: 1px solid rgba(0,163,108,0.2); }
+    .batch-card__grade--other { background: rgba(30,58,95,0.07); color: var(--primary); border: 1px solid rgba(30,58,95,0.15); }
+
+    .batch-card__subject {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .batch-card__footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.85rem;
+        border-top: 1px solid var(--glass-border);
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .batch-card__stat {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .batch-card__sched {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-align: right;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .batch-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3.5rem 1rem;
+        color: var(--text-muted);
+    }
+    .batch-empty i { font-size: 2.75rem; opacity: 0.3; display: block; margin-bottom: 0.75rem; color: var(--primary); }
+    .batch-empty p { font-size: 0.95rem; margin-bottom: 1.25rem; }
+</style>
+
 <header class="panel__header">
-    <h2>Manage Batches</h2>
+    <h2 id="batchesTabTitle">Batch Directory</h2>
     <div class="tab-pill-selector">
-        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-batches', '')">Batch List</button>
-        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-batches', 'create')">+ Create New</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-batches', '')" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-user-community-line"></i> List</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-batches', 'create')" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-play-list-add-line"></i> Add</button>
     </div>
 </header>
 
 <div id="batchesListStatus" class="status"></div>
-<div class="table-wrap">
-    <table id="batchesTable" aria-label="Batches list">
-        <thead>
-            <tr>
-                <th scope="col">Batch Name</th>
-                <th scope="col">Subject</th>
-                <th scope="col">Grade</th>
-                <th scope="col">Schedule</th>
-                <th scope="col">Students</th>
-                <th scope="col">Action</th>
-            </tr>
-        </thead>
-        <tbody id="batchesTableBody">
-            <tr>
-                <td colspan="6" class="loading-text">Loading batches...</td>
-            </tr>
-        </tbody>
-    </table>
+
+<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;flex-wrap:wrap;">
+    <div style="position:relative;flex:1;min-width:180px;">
+        <i class="ri-search-line" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;font-size:1rem;"></i>
+        <input type="search" id="batchesSearch" class="form__control" placeholder="Search by name, subject, or grade…" style="padding-left:2.25rem;margin:0;" aria-label="Search batches">
+    </div>
+    <span id="batchesCount" style="font-size:0.85rem;color:var(--text-muted);white-space:nowrap;"></span>
+    <button class="btn btn--outline btn--sm" id="btnRefreshBatches" style="white-space:nowrap;display:inline-flex;align-items:center;gap:0.35rem;">
+        <i class="ri-refresh-line"></i> Refresh
+    </button>
 </div>
-<div class="text-right">
-    <button class="btn btn--primary btn--sm" id="btnRefreshBatches">Refresh List</button>
+
+<div class="batch-cards" id="batchesCardsContainer" role="list" aria-label="Batches">
+    <p class="loading-text" style="grid-column:1/-1;">Loading batches...</p>
 </div>
