@@ -9,7 +9,7 @@ const PAGE_REGISTRY = {
     'test#assign':               { html: 'pages/teacher/tests/assign.html',               js: '../../pages/teacher/tests/assign.js' },
     'test#marks':                { html: 'pages/teacher/tests/marks.html',                js: '../../pages/teacher/tests/marks.js' },
     // Teacher - batches
-    'batches':                   { html: 'pages/teacher/batches/list.html',               js: '../../pages/teacher/batches/list.js',                defaultTab: 'list' },
+    'batches':                   { html: 'pages/teacher/batches/list.html',               js: '../../pages/teacher/batches/list.js',                defaultTab: 'batch-list' },
     'batches#create':            { html: 'pages/teacher/batches/create.html',             js: '../../pages/teacher/batches/create.js' },
     'batches#detail':            { html: 'pages/teacher/batches/detail.html',             js: '../../pages/teacher/batches/detail.js' },
     // Teacher - material
@@ -18,10 +18,10 @@ const PAGE_REGISTRY = {
     'material#tests':            { html: 'pages/teacher/material/tests.html',             js: '../../pages/teacher/material/tests.js' },
     'material#upload':           { html: 'pages/teacher/material/upload.html',            js: '../../pages/teacher/material/upload.js' },
     // Teacher - schedule
-    'schedule':                  { html: 'pages/teacher/schedule/calendar.html',          js: '../../pages/teacher/schedule/calendar.js',           defaultTab: 'calendar' },
+    'schedule':                  { html: 'pages/teacher/schedule/calendar.html',          js: '../../pages/teacher/schedule/calendar.js',           defaultTab: 'classes' },
     'schedule#new-class':        { html: 'pages/teacher/schedule/new-class.html',         js: '../../pages/teacher/schedule/new-class.js' },
     // Teacher - announcements
-    'announcement':              { html: 'pages/teacher/announcements/list.html',         js: '../../pages/teacher/announcements/list.js',          defaultTab: 'list' },
+    'announcement':              { html: 'pages/teacher/announcements/list.html',         js: '../../pages/teacher/announcements/list.js',          defaultTab: 'feed' },
     'announcement#post':         { html: 'pages/teacher/announcements/post.html',         js: '../../pages/teacher/announcements/post.js' },
     // Teacher - ai-tools
     'ai-tools':                  { html: 'pages/teacher/ai-tools/doubt-solver.html',      js: '../../pages/teacher/ai-tools/doubt-solver.js',       defaultTab: 'doubt-solver' },
@@ -35,10 +35,10 @@ const PAGE_REGISTRY = {
     'messages':                  { html: 'pages/teacher/messages/messages.html',          js: '../../pages/teacher/messages/messages.js' },
     'leaderboard':               { html: 'pages/teacher/leaderboard/leaderboard.html',    js: '../../pages/teacher/leaderboard/leaderboard.js' },
     // Admin - board results
-    'board_results':             { html: 'pages/admin/board-results/list.html',           js: '../../pages/admin/board-results/list.js',            defaultTab: 'list' },
+    'board_results':             { html: 'pages/admin/board-results/list.html',           js: '../../pages/admin/board-results/list.js',            defaultTab: 'results-list' },
     'board_results#add':         { html: 'pages/admin/board-results/add.html',            js: '../../pages/admin/board-results/add.js' },
     // Admin - testimonials
-    'testimonials':              { html: 'pages/admin/testimonials/list.html',            js: '../../pages/admin/testimonials/list.js',             defaultTab: 'list' },
+    'testimonials':              { html: 'pages/admin/testimonials/list.html',            js: '../../pages/admin/testimonials/list.js',             defaultTab: 'testimonials-list' },
     'testimonials#add':          { html: 'pages/admin/testimonials/add.html',             js: '../../pages/admin/testimonials/add.js' },
     // Admin - single view
     'admin-overview':            { html: 'pages/admin/overview/overview.html',            js: '../../pages/admin/overview/overview.js' },

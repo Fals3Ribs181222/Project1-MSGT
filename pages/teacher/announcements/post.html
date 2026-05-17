@@ -1,13 +1,33 @@
+<style>
+    .ann-post-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+    @media (max-width: 768px) { .ann-post-grid { grid-template-columns: 1fr; } }
+    .wa-preview-label { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .wa-preview-shell { background: #ece5dd; border-radius: var(--radius-md); padding: 1rem; }
+    .wa-preview-bubble {
+        background: #d9fdd3;
+        border-radius: 0 10px 10px 10px;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+        font-family: var(--font-main);
+    }
+    .wa-char-count { font-size: 0.78rem; color: var(--text-muted); text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }
+    .wa-hint { font-size: 0.8rem; color: var(--amber); margin-bottom: 0.75rem; }
+</style>
+
 <header class="panel__header">
     <h2>Post Announcement</h2>
     <div class="tab-pill-selector">
-        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-announcement', '')">Announcements List</button>
-        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-announcement', 'post')">+ Post New</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-announcement', '')" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-megaphone-line"></i> Feed</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-announcement', 'post')" style="display:inline-flex;align-items:center;gap:0.35rem;"><i class="ri-quill-pen-line"></i> Post</button>
     </div>
 </header>
 
 <form id="noticeForm">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+    <div class="ann-post-grid">
 
         <!-- Left: form fields -->
         <div>
@@ -26,8 +46,8 @@
                 <textarea id="noticeMessage" class="form__control" rows="8" required placeholder="Type your announcement here..."></textarea>
             </div>
 
-            <div id="waCharCount" style="display:none;font-size:0.78rem;color:var(--text-muted);text-align:right;margin-top:-0.5rem;margin-bottom:0.5rem;">0 / 900</div>
-            <div id="waMessageHint" style="display:none;font-size:0.8rem;color:var(--amber);margin-bottom:0.75rem;">
+            <div id="waCharCount" class="wa-char-count" style="display:none;">0 / 900</div>
+            <div id="waMessageHint" class="wa-hint" style="display:none;">
                 &#9888; Line breaks are stripped before sending — the message will be sent as a single paragraph.
             </div>
 
@@ -38,19 +58,9 @@
 
         <!-- Right: WhatsApp preview -->
         <div>
-            <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;">WhatsApp preview</div>
-            <div style="background:#ece5dd;border-radius:8px;padding:1rem;">
-                <div id="waPreviewBubble" style="
-                    background:#d9fdd3;
-                    border-radius:0 10px 10px 10px;
-                    padding:0.65rem 0.85rem;
-                    font-size:0.85rem;
-                    line-height:1.6;
-                    white-space:pre-wrap;
-                    word-break:break-word;
-                    box-shadow:0 1px 2px rgba(0,0,0,.12);
-                    font-family:inherit;
-                "></div>
+            <p class="wa-preview-label">WhatsApp preview</p>
+            <div class="wa-preview-shell">
+                <div id="waPreviewBubble" class="wa-preview-bubble"></div>
             </div>
         </div>
 

@@ -1,17 +1,17 @@
 async function loadAnnouncements() {
-    const tbody = document.getElementById('announcementsTableBody');
+    const list = document.getElementById('announcementsList');
     const status = document.getElementById('announcementsListStatus');
     const btnRefresh = document.getElementById('btnRefreshAnnouncements');
-    if (!tbody || !status || !btnRefresh) return;
+    if (!list || !status || !btnRefresh) return;
 
     btnRefresh.disabled = true;
     btnRefresh.textContent = 'Refreshing...';
-    window.tableLoading('announcementsTableBody', 4, 'Loading announcements...');
+    list.innerHTML = '<p class="bulletin-empty">Loading announcements...</p>';
 
     const response = await window.api.get('announcements');
 
     btnRefresh.disabled = false;
-    btnRefresh.textContent = 'Refresh List';
+    btnRefresh.textContent = 'Refresh';
 
     if (response.success) {
         const activeGrade = window.getActiveGrade();
@@ -19,18 +19,21 @@ async function loadAnnouncements() {
         if (activeGrade) anns = anns.filter(a => !a.grade || a.grade === activeGrade);
 
         if (anns.length > 0) {
-            tbody.innerHTML = anns.map(ann => `
-                <tr class="data-table__row">
-                    <td class="data-table__td--main">${window.esc(ann.title) || '-'}</td>
-                    <td class="data-table__td">${ann.grade || 'All'}</td>
-                    <td class="data-table__td">${ann.created_at ? new Date(ann.created_at).toLocaleDateString() : '-'}</td>
-                    <td class="data-table__td">${window.esc(ann.posted_by) || '-'}</td>
-                </tr>`).join('');
+            list.innerHTML = anns.map(ann => `
+                <div class="bulletin-card">
+                    <div class="bulletin-card__pin"><i class="ri-pushpin-2-fill"></i></div>
+                    <h3 class="bulletin-card__title">${window.esc(ann.title) || 'Untitled'}</h3>
+                    <p class="bulletin-card__body">${window.esc(ann.message) || ''}</p>
+                    <div class="bulletin-card__footer">
+                        <span class="bulletin-card__date">${ann.created_at ? new Date(ann.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>
+                        <span class="badge${ann.grade ? '' : ' badge--green'}">${ann.grade || 'All'}</span>
+                    </div>
+                </div>`).join('');
         } else {
-            window.tableLoading('announcementsTableBody', 4, 'No announcements posted yet.');
+            list.innerHTML = '<p class="bulletin-empty">No announcements posted yet.</p>';
         }
     } else {
-        tbody.innerHTML = '';
+        list.innerHTML = '';
         window.showStatus('announcementsListStatus', response.error || 'Failed to load announcements.', 'error');
     }
 }

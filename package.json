@@ -1,6 +1,6 @@
 {
   "name": "Mitesh Sir's Study Circle",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "TuteFlow — Educational management system for Mitesh Sir's Study Circle",
   "scripts": {
     "dev": "node -e \"const p=require('./package.json');console.log('\\n\\x1b[36m╔══════════════════════════════════════╗\\x1b[0m');console.log('\\x1b[36m║\\x1b[0m  \\x1b[1mTuteFlow\\x1b[0m v'+p.version+' — Mitesh Sir\\'s Study Circle  \\x1b[36m║\\x1b[0m');console.log('\\x1b[36m╚══════════════════════════════════════╝\\x1b[0m\\n');\" && npx serve -l 8080",
