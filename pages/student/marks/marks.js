@@ -94,27 +94,25 @@ function renderPerfCard() {
             }
         });
 
-        return `<div style="background:var(--bg-surface,#fff);border:1px solid var(--border-color);border-radius:var(--radius-lg,12px);padding:1.25rem;">
-            <p style="font-size:0.8rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 1rem;">${window.esc(subj)}</p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-                <div class="perf-card__stat" style="margin:0;border:none;">
-                    <p class="perf-card__value">${gradedCount}</p>
-                    <p class="perf-card__label">Tests Taken</p>
+        return `<article class="stat-card">
+            <p style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 0.75rem;">${window.esc(subj)}</p>
+            <p class="stat-card__value">${gradedCount > 0 ? Math.round(totalPercent / gradedCount) + '%' : '—'}</p>
+            <p class="stat-card__label">Avg. Score</p>
+            <div style="display:flex;justify-content:center;gap:1.5rem;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border-color);">
+                <div style="text-align:center;">
+                    <p style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;">${gradedCount}</p>
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin:0;">Taken</p>
                 </div>
-                <div class="perf-card__stat" style="margin:0;border:none;">
-                    <p class="perf-card__value">${gradedCount > 0 ? Math.round(totalPercent / gradedCount) + '%' : '—'}</p>
-                    <p class="perf-card__label">Avg. Score</p>
+                <div style="text-align:center;">
+                    <p style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;">${gradedCount > 0 ? Math.round(bestPercent) + '%' : '—'}</p>
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin:0;">Best</p>
                 </div>
-                <div class="perf-card__stat" style="margin:0;border:none;">
-                    <p class="perf-card__value">${gradedCount > 0 ? Math.round(bestPercent) + '%' : '—'}</p>
-                    <p class="perf-card__label">Best Score</p>
-                </div>
-                <div class="perf-card__stat" style="margin:0;border:none;">
-                    <p class="perf-card__value">${pendingCount}</p>
-                    <p class="perf-card__label">Pending</p>
+                <div style="text-align:center;">
+                    <p style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;">${pendingCount}</p>
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin:0;">Pending</p>
                 </div>
             </div>
-        </div>`;
+        </article>`;
     }).join('');
 }
 
@@ -231,8 +229,16 @@ function renderMarks() {
         const earnedDisplay = m
             ? `<span class="data-table__score">${m.marks_obtained}/${t.max_marks || '?'}</span>`
             : `<span style="color:var(--gray-500);font-style:italic;">Not graded yet</span>`;
-        const pctDisplay = m
-            ? `<span style="font-weight:600;color:var(--primary);">${Math.round((Number(m.marks_obtained) / (Number(t.max_marks) || 100)) * 100)}%</span> <button type="button" class="btn-lb-trigger" data-test-id="${t.id}" data-test-title="${window.esc(t.title || 'Test')}" title="View leaderboard" style="background:none;border:none;cursor:pointer;padding:0 0 0 0.2rem;font-size:0.9rem;vertical-align:middle;line-height:1;">🏆</button>`
+        const pctNum = m ? Math.round((Number(m.marks_obtained) / (Number(t.max_marks) || 100)) * 100) : null;
+        const pctColor = pctNum !== null ? (pctNum >= 60 ? 'var(--secondary)' : pctNum >= 40 ? '#b45309' : 'var(--cadmium-red)') : '';
+        const pctDisplay = pctNum !== null
+            ? `<div style="display:flex;align-items:center;gap:0.4rem;">
+                <span style="font-weight:600;color:${pctColor};min-width:2.8rem;">${pctNum}%</span>
+                <div style="flex:1;min-width:40px;background:rgba(0,0,0,0.08);border-radius:2px;height:4px;overflow:hidden;">
+                    <div style="width:${pctNum}%;background:${pctColor};height:4px;border-radius:2px;transition:width 0.3s;"></div>
+                </div>
+                <button type="button" class="btn-lb-trigger" data-test-id="${t.id}" data-test-title="${window.esc(t.title || 'Test')}" title="View leaderboard" aria-label="View leaderboard" style="background:none;border:none;cursor:pointer;padding:0;color:var(--text-muted);line-height:1;flex-shrink:0;"><i class="ri-trophy-line" style="font-size:0.95rem;"></i></button>
+               </div>`
             : '—';
         const dateStr = t.date ? new Date(t.date).toLocaleDateString('en-IN') : '—';
         return `<tr class="data-table__row">

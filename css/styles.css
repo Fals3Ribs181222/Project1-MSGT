@@ -261,6 +261,17 @@ a {
     box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
 }
 
+.btn--whatsapp {
+    background: rgba(37, 211, 102, 0.1);
+    color: #1a9e52;
+    border: 1px solid #25D366;
+}
+
+.btn--whatsapp:hover {
+    background: rgba(37, 211, 102, 0.2);
+    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.25);
+}
+
 .btn--full {
     width: 100%;
     padding: 1rem;
@@ -758,7 +769,7 @@ button:disabled {
 .dash-grade-bar .tab-pill-selector__btn {
     border-radius: var(--radius-md);
     flex: 1;
-    text-align: center;
+    justify-content: center;
 }
 .dash-grade-bar .tab-pill-selector__btn--active,
 .dash-grade-bar .tab-pill-selector__btn--active:hover {
@@ -1476,6 +1487,21 @@ button:disabled {
 
 .breadcrumb__meta {
     color: var(--text-muted);
+}
+
+.meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: var(--bg-surface-hover);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    margin-right: 0.4rem;
+    margin-top: 0.25rem;
 }
 
 /* ============================================================
@@ -2205,6 +2231,7 @@ button:disabled {
 .class-modal__content {
     padding: 1.5rem;
     overflow-y: auto;
+    overflow-x: hidden;
     flex: 1;
 }
 

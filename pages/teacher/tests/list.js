@@ -60,9 +60,9 @@ function renderTestCards(tests) {
                 </div>
             </div>
             <div class="test-card__action">
-                <a href="manage_marks?testId=${test.id}" class="btn btn--primary btn--sm" style="display:inline-flex;align-items:center;justify-content:center;gap:0.3rem;width:100%;">
+                <button class="btn btn--primary btn--sm" style="display:inline-flex;align-items:center;justify-content:center;gap:0.3rem;width:100%;" onclick="window._pendingIdentifier='${test.id}';window.loadPage('page-test','marks')">
                     <i class="ri-edit-line"></i> Marks
-                </a>
+                </button>
             </div>
         </div>`;
     }).join('');

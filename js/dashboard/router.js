@@ -1,32 +1,33 @@
 const PAGE_REGISTRY = {
     // Teacher - students
-    'students':                  { html: 'pages/teacher/students/list.html',              js: '../../pages/teacher/students/list.js' },
+    'students':                  { html: 'pages/teacher/students/list.html',              js: '../../pages/teacher/students/list.js',               defaultTab: 'list' },
     'students#enroll':           { html: 'pages/teacher/students/enroll.html',            js: '../../pages/teacher/students/enroll.js' },
     'students#import':           { html: 'pages/teacher/students/import.html',            js: '../../pages/teacher/students/import.js' },
     'students#profile':          { html: 'pages/teacher/students/profile.html',           js: '../../pages/teacher/students/profile.js' },
     // Teacher - tests
-    'test':                      { html: 'pages/teacher/tests/list.html',                 js: '../../pages/teacher/tests/list.js' },
+    'test':                      { html: 'pages/teacher/tests/list.html',                 js: '../../pages/teacher/tests/list.js',                  defaultTab: 'list' },
     'test#assign':               { html: 'pages/teacher/tests/assign.html',               js: '../../pages/teacher/tests/assign.js' },
+    'test#marks':                { html: 'pages/teacher/tests/marks.html',                js: '../../pages/teacher/tests/marks.js' },
     // Teacher - batches
-    'batches':                   { html: 'pages/teacher/batches/list.html',               js: '../../pages/teacher/batches/list.js' },
+    'batches':                   { html: 'pages/teacher/batches/list.html',               js: '../../pages/teacher/batches/list.js',                defaultTab: 'list' },
     'batches#create':            { html: 'pages/teacher/batches/create.html',             js: '../../pages/teacher/batches/create.js' },
     'batches#detail':            { html: 'pages/teacher/batches/detail.html',             js: '../../pages/teacher/batches/detail.js' },
     // Teacher - material
-    'material':                  { html: 'pages/teacher/material/resources.html',         js: '../../pages/teacher/material/resources.js' },
+    'material':                  { html: 'pages/teacher/material/resources.html',         js: '../../pages/teacher/material/resources.js',          defaultTab: 'resources' },
     'material#ai-training':      { html: 'pages/teacher/material/ai-training.html',       js: '../../pages/teacher/material/ai-training.js' },
     'material#tests':            { html: 'pages/teacher/material/tests.html',             js: '../../pages/teacher/material/tests.js' },
     'material#upload':           { html: 'pages/teacher/material/upload.html',            js: '../../pages/teacher/material/upload.js' },
     // Teacher - schedule
-    'schedule':                  { html: 'pages/teacher/schedule/calendar.html',          js: '../../pages/teacher/schedule/calendar.js' },
+    'schedule':                  { html: 'pages/teacher/schedule/calendar.html',          js: '../../pages/teacher/schedule/calendar.js',           defaultTab: 'calendar' },
     'schedule#new-class':        { html: 'pages/teacher/schedule/new-class.html',         js: '../../pages/teacher/schedule/new-class.js' },
     // Teacher - announcements
-    'announcement':              { html: 'pages/teacher/announcements/list.html',         js: '../../pages/teacher/announcements/list.js' },
+    'announcement':              { html: 'pages/teacher/announcements/list.html',         js: '../../pages/teacher/announcements/list.js',          defaultTab: 'list' },
     'announcement#post':         { html: 'pages/teacher/announcements/post.html',         js: '../../pages/teacher/announcements/post.js' },
     // Teacher - ai-tools
-    'ai-tools':                  { html: 'pages/teacher/ai-tools/doubt-solver.html',      js: '../../pages/teacher/ai-tools/doubt-solver.js' },
+    'ai-tools':                  { html: 'pages/teacher/ai-tools/doubt-solver.html',      js: '../../pages/teacher/ai-tools/doubt-solver.js',       defaultTab: 'doubt-solver' },
     'ai-tools#test-generator':   { html: 'pages/teacher/ai-tools/test-generator.html',   js: '../../pages/teacher/ai-tools/test-generator.js' },
     // Teacher - recordings
-    'recordings':                { html: 'pages/teacher/recordings/playlists.html',       js: '../../pages/teacher/recordings/playlists.js' },
+    'recordings':                { html: 'pages/teacher/recordings/playlists.html',       js: '../../pages/teacher/recordings/playlists.js',        defaultTab: 'playlists' },
     'recordings#detail':         { html: 'pages/teacher/recordings/detail.html',          js: '../../pages/teacher/recordings/detail.js' },
     'recordings#create':         { html: 'pages/teacher/recordings/create.html',          js: '../../pages/teacher/recordings/create.js' },
     // Teacher - single view
@@ -34,10 +35,10 @@ const PAGE_REGISTRY = {
     'messages':                  { html: 'pages/teacher/messages/messages.html',          js: '../../pages/teacher/messages/messages.js' },
     'leaderboard':               { html: 'pages/teacher/leaderboard/leaderboard.html',    js: '../../pages/teacher/leaderboard/leaderboard.js' },
     // Admin - board results
-    'board_results':             { html: 'pages/admin/board-results/list.html',           js: '../../pages/admin/board-results/list.js' },
+    'board_results':             { html: 'pages/admin/board-results/list.html',           js: '../../pages/admin/board-results/list.js',            defaultTab: 'list' },
     'board_results#add':         { html: 'pages/admin/board-results/add.html',            js: '../../pages/admin/board-results/add.js' },
     // Admin - testimonials
-    'testimonials':              { html: 'pages/admin/testimonials/list.html',            js: '../../pages/admin/testimonials/list.js' },
+    'testimonials':              { html: 'pages/admin/testimonials/list.html',            js: '../../pages/admin/testimonials/list.js',             defaultTab: 'list' },
     'testimonials#add':          { html: 'pages/admin/testimonials/add.html',             js: '../../pages/admin/testimonials/add.js' },
     // Admin - single view
     'admin-overview':            { html: 'pages/admin/overview/overview.html',            js: '../../pages/admin/overview/overview.js' },
@@ -63,19 +64,26 @@ export async function loadPage(targetId, tabSlug) {
     // Deactivate all current pages
     panelsContainer.querySelectorAll('.pages__panel').forEach(p => p.classList.remove('pages__panel--active'));
 
-    // Update URL hash, preserving query params
-    const pageSlug = targetId.replace('page-', '');
-    const hashSuffix = tabSlug ? `${pageSlug}#${tabSlug}` : pageSlug;
-    history.replaceState(null, '', `${location.search}#${hashSuffix}`);
-
     // Update active sidebar item
     document.querySelectorAll('.dash-sidebar__item').forEach(btn => {
         btn.classList.toggle('dash-sidebar__item--active', btn.dataset.target === targetId);
     });
 
     const featureName = targetId.replace('page-', '');
-    const registryKey = tabSlug ? `${featureName}#${tabSlug}` : featureName;
-    const page = PAGE_REGISTRY[registryKey] || PAGE_REGISTRY[featureName];
+
+    // Resolve page entry — explicit tab first, fall back to bare feature
+    const page = (tabSlug ? PAGE_REGISTRY[`${featureName}#${tabSlug}`] : null)
+        || PAGE_REGISTRY[featureName];
+
+    // Normalize: treat empty tabSlug or defaultTab match as the default state
+    const isDefault = !tabSlug || tabSlug === page?.defaultTab;
+    const registryKey = isDefault ? featureName : `${featureName}#${tabSlug}`;
+
+    // URL uses the explicit defaultTab slug when landing on the default tab
+    const pageSlug = featureName;
+    const effectiveTab = isDefault ? (page?.defaultTab || '') : tabSlug;
+    const hashSuffix = effectiveTab ? `${pageSlug}#${effectiveTab}` : pageSlug;
+    history.replaceState(null, '', `${location.search}#${hashSuffix}`);
 
     let targetPage = document.getElementById(targetId);
     const alreadyLoaded = targetPage && targetPage.dataset.loadedKey === registryKey;

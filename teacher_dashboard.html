@@ -482,13 +482,13 @@
                     testsList.innerHTML = show.map(t => {
                         const isPast = t.date < todayIso;
                         return `
-                        <a href="manage_marks?testId=${t.id}" class="test-preview-item ${isPast ? 'test-preview-item--past' : ''}" style="text-decoration:none; color:inherit; cursor:pointer;">
+                        <div class="test-preview-item ${isPast ? 'test-preview-item--past' : ''}" style="cursor:pointer;" onclick="window._pendingIdentifier='${t.id}';window.loadPage('page-test','marks')">
                             <span class="test-preview-item__badge">${isPast ? 'Past' : 'Upcoming'}</span>
                             <div class="test-preview-item__body">
                                 <strong>${window.esc(t.title || t.subject || '—')}</strong>
                                 <span class="text-muted">${window.esc(t.subject || '')} · ${t.date || ''} · ${t.max_marks || '?'} marks</span>
                             </div>
-                        </a>`;
+                        </div>`;
                     }).join('');
                 } else {
                     testsList.innerHTML = '<p class="loading-text">No tests found.</p>';

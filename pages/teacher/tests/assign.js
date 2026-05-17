@@ -116,8 +116,7 @@ export function init() {
         const subjectCheckboxes = document.querySelectorAll('input[name="testSubjects"]:checked');
         const subjects = Array.from(subjectCheckboxes).map(cb => cb.value).join(', ');
 
-        const schoolCheckboxes = document.querySelectorAll('input[name="testSchools"]:checked');
-        const schools = Array.from(schoolCheckboxes).map(cb => cb.value);
+        const schools = Array.from(document.querySelectorAll('input[name="testSchool"]:checked')).map(cb => cb.value);
 
         const title       = document.getElementById('testTitle').value;
         const grade       = window.getSelectedGrade('schedTestGrade');
