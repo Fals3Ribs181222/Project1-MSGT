@@ -3,6 +3,7 @@ const PAGE_REGISTRY = {
     'students':                  { html: 'pages/teacher/students/list.html',              js: '../../pages/teacher/students/list.js',               defaultTab: 'list' },
     'students#enroll':           { html: 'pages/teacher/students/enroll.html',            js: '../../pages/teacher/students/enroll.js' },
     'students#import':           { html: 'pages/teacher/students/import.html',            js: '../../pages/teacher/students/import.js' },
+    'students#requests':         { html: 'pages/teacher/students/requests.html',          js: '../../pages/teacher/students/requests.js' },
     'students#profile':          { html: 'pages/teacher/students/profile.html',           js: '../../pages/teacher/students/profile.js' },
     // Teacher - tests
     'test':                      { html: 'pages/teacher/tests/list.html',                 js: '../../pages/teacher/tests/list.js',                  defaultTab: 'list' },

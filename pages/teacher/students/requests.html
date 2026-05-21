@@ -1,0 +1,242 @@
+<header class="panel__header">
+    <h2>Registration Requests</h2>
+    <div class="tab-pill-selector">
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-students', '')"><i class="ri-group-line"></i> List</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-students', 'enroll')"><i class="ri-user-add-line"></i> Enroll</button>
+        <button class="tab-pill-selector__btn" onclick="window.loadPage('page-students', 'import')"><i class="ri-upload-cloud-line"></i> Import</button>
+        <button class="tab-pill-selector__btn tab-pill-selector__btn--active" onclick="window.loadPage('page-students', 'requests')">
+            <i class="ri-inbox-line"></i> Requests
+            <span id="reqPendingBadge" style="display:none;background:var(--secondary);color:#fff;font-size:0.7rem;font-weight:700;border-radius:999px;padding:0.05rem 0.45rem;margin-left:0.25rem;line-height:1.6;"></span>
+        </button>
+    </div>
+</header>
+
+<style>
+/* Filter bar */
+.req-filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.req-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 1rem;
+    min-height: 2.25rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface-hover);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.req-filter-btn:hover { background: var(--bg-surface); color: var(--text-main); }
+
+.req-filter-btn--active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.req-filter-btn--active:hover { background: var(--primary); color: #fff; }
+
+.req-count {
+    font-size: 0.75rem;
+    font-weight: 700;
+    opacity: 0.75;
+}
+
+/* Status badges */
+.req-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: var(--radius-full);
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.req-badge--pending  { background: rgba(196,138,20,0.12); color: #a07010; }
+.req-badge--approved { background: rgba(16,185,129,0.12);  color: #0d7858; }
+.req-badge--rejected { background: rgba(184,50,50,0.1);    color: #b83232; }
+
+/* Empty state */
+.req-empty {
+    text-align: center;
+    padding: 3.5rem 1rem;
+    color: var(--text-muted);
+}
+
+.req-empty i {
+    font-size: 2.5rem;
+    opacity: 0.35;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+.req-empty p {
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+/* Approval modal */
+.req-modal {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-xl);
+    animation: fadeUp 0.25s ease;
+    overflow: hidden;
+}
+
+.req-modal__header {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.req-modal__header h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+
+.req-modal__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    padding: 0.25rem;
+    line-height: 1;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s, background 0.15s;
+}
+
+.req-modal__close:hover { color: var(--text-main); background: var(--bg-surface-hover); }
+
+.req-modal__body { padding: 1.25rem 1.5rem; overflow-y: auto; flex: 1; }
+
+.req-modal__footer {
+    padding: 0.9rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+/* Detail rows in modal */
+.req-detail-grid {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 0.35rem 0.75rem;
+    font-size: 0.84rem;
+    background: var(--bg-surface-hover);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.req-detail-label { color: var(--text-muted); font-weight: 600; }
+.req-detail-value { color: var(--text-main); }
+</style>
+
+<div id="reqStatus" class="status" style="display:none;margin-bottom:0.75rem;"></div>
+
+<!-- Filter bar -->
+<div class="req-filters">
+    <button class="req-filter-btn req-filter-btn--active" data-filter="pending" id="reqFilterPending">
+        <i class="ri-time-line"></i> Pending <span class="req-count" id="reqCountPending"></span>
+    </button>
+    <button class="req-filter-btn" data-filter="approved" id="reqFilterApproved">
+        <i class="ri-checkbox-circle-line"></i> Approved <span class="req-count" id="reqCountApproved"></span>
+    </button>
+    <button class="req-filter-btn" data-filter="rejected" id="reqFilterRejected">
+        <i class="ri-close-circle-line"></i> Rejected <span class="req-count" id="reqCountRejected"></span>
+    </button>
+    <button class="btn btn--outline btn--sm" id="reqRefreshBtn" style="margin-left:auto;display:inline-flex;align-items:center;gap:0.35rem;">
+        <i class="ri-refresh-line"></i> Refresh
+    </button>
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+    <table id="reqTable" aria-label="Registration requests">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Grade</th>
+                <th scope="col">Phone</th>
+                <th scope="col">School</th>
+                <th scope="col">Subjects</th>
+                <th scope="col">Submitted</th>
+                <th scope="col">Status</th>
+                <th scope="col" style="text-align:right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="reqTableBody">
+            <tr>
+                <td colspan="8" class="loading-text">Loading…</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Approval modal -->
+<div class="modal-overlay" id="approveModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="approveModalTitle">
+    <div class="req-modal">
+        <div class="req-modal__header">
+            <h3 id="approveModalTitle"><i class="ri-user-add-line" style="color:var(--primary);margin-right:0.35rem;"></i> Approve Registration</h3>
+            <button class="req-modal__close" onclick="closeApproveModal()" aria-label="Close modal">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="req-modal__body">
+            <div id="approveModalDetails" class="req-detail-grid"></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div>
+                    <label class="form__label" for="approveUsername">Username</label>
+                    <input type="text" id="approveUsername" class="form__control" placeholder="e.g. rahul.sharma" autocomplete="off">
+                </div>
+                <div>
+                    <label class="form__label" for="approvePassword">Password</label>
+                    <div style="position:relative;">
+                        <input type="password" id="approvePassword" class="form__control" placeholder="Auto-filled" minlength="6" style="padding-right:2.75rem;" autocomplete="new-password">
+                        <button type="button" id="approvePwToggle" aria-label="Toggle password visibility"
+                            style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;font-size:1.1rem;line-height:1;display:flex;align-items:center;">
+                            <i class="ri-eye-line" id="approvePwIcon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin:0.5rem 0 0;">
+                <i class="ri-information-line"></i> Username and password can be shared with the student after approval.
+            </p>
+            <div id="approveStatus" class="status" style="display:none;margin-top:0.75rem;"></div>
+        </div>
+        <div class="req-modal__footer">
+            <button class="btn btn--outline" onclick="closeApproveModal()">Cancel</button>
+            <button class="btn btn--primary" id="approveConfirmBtn" style="display:inline-flex;align-items:center;gap:0.4rem;">
+                <span id="approveConfirmText"><i class="ri-user-add-line"></i> Approve &amp; Create Account</span>
+                <span class="spinner" id="approveConfirmSpinner" style="display:none;" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
+</div>
